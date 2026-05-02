@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CredoCms.Application</RootNamespace>
+    <AssemblyName>CredoCms.Application</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CredoCms.Domain\CredoCms.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <!-- Application uses UserManager<TUser>/RoleManager<TRole>; Identity Core gives
+         us those types without dragging in EF Core. -->
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

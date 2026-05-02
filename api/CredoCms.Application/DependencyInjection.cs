@@ -1,0 +1,25 @@
+using CredoCms.Application.Auditing;
+using CredoCms.Application.SiteSettingsManagement;
+using CredoCms.Application.UserManagement;
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace CredoCms.Application;
+
+public static class DependencyInjection
+{
+    /// <summary>
+    /// Registers Application-layer services and FluentValidation validators.
+    /// Must be called from the API's composition root.
+    /// </summary>
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        services.AddScoped<ISiteSettingsService, SiteSettingsService>();
+        services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IUserAdminService, UserAdminService>();
+
+        services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
+
+        return services;
+    }
+}

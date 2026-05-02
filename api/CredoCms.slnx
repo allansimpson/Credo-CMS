@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="CredoCms.Api.Tests/CredoCms.Api.Tests.csproj" />
+  <Project Path="CredoCms.Api/CredoCms.Api.csproj" />
+  <Project Path="CredoCms.Application.Tests/CredoCms.Application.Tests.csproj" />
+  <Project Path="CredoCms.Application/CredoCms.Application.csproj" />
+  <Project Path="CredoCms.Domain.Tests/CredoCms.Domain.Tests.csproj" />
+  <Project Path="CredoCms.Domain/CredoCms.Domain.csproj" />
+  <Project Path="CredoCms.Infrastructure.Tests/CredoCms.Infrastructure.Tests.csproj" />
+  <Project Path="CredoCms.Infrastructure/CredoCms.Infrastructure.csproj" />
+</Solution>

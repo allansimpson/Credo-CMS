@@ -1,0 +1,64 @@
+namespace CredoCms.Application.SiteSettingsManagement;
+
+/// <summary>Public-facing subset, returned to anonymous SPA bootstrap.</summary>
+public sealed record PublicSiteSettingsDto(
+    string ChurchName,
+    string? Tagline,
+    string? LogoUrl,
+    string PrimaryColor,
+    string AccentColor,
+    string? ContactEmail,
+    string? ContactPhone,
+    string? ContactAddress,
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? YouTubeUrl,
+    string? XUrl,
+    string? TikTokUrl,
+    string? OtherSocialLabel,
+    string? OtherSocialUrl,
+    string? FooterText);
+
+/// <summary>Full settings DTO returned to admins.</summary>
+public sealed record SiteSettingsDto(
+    string ChurchName,
+    string? Tagline,
+    string? LogoUrl,
+    string PrimaryColor,
+    string AccentColor,
+    string? ContactEmail,
+    string? ContactPhone,
+    string? ContactAddress,
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? YouTubeUrl,
+    string? XUrl,
+    string? TikTokUrl,
+    string? OtherSocialLabel,
+    string? OtherSocialUrl,
+    string? FooterText,
+    int DefaultVersionRetentionCount,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset ModifiedAt,
+    Guid? ModifiedByUserId,
+    string RowVersion);
+
+public sealed record UpdateSiteSettingsRequest(
+    string ChurchName,
+    string? Tagline,
+    string? LogoUrl,
+    string PrimaryColor,
+    string AccentColor,
+    string? ContactEmail,
+    string? ContactPhone,
+    string? ContactAddress,
+    string? FacebookUrl,
+    string? InstagramUrl,
+    string? YouTubeUrl,
+    string? XUrl,
+    string? TikTokUrl,
+    string? OtherSocialLabel,
+    string? OtherSocialUrl,
+    string? FooterText,
+    int DefaultVersionRetentionCount,
+    string RowVersion);
