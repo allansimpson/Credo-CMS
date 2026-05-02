@@ -1,0 +1,47 @@
+/*
+ * Church theme — applied to all public-facing pages, the login flow, member areas,
+ * and profile pages. Configurable per-church via the SiteSettings row, which
+ * overrides --color-primary and --color-accent at runtime.
+ *
+ * All colours are HSL-channel triples (no hsl() wrapper), matching the shadcn
+ * convention: rgba alpha can be applied via Tailwind's /<alpha> modifier.
+ */
+[data-theme="church"] {
+  /* Brand — set by SiteSettings; defaults match the seeded values. */
+  --color-primary: #1e3a8a;
+  --color-accent: #f59e0b;
+
+  /* Tailwind tokens (HSL channel triples) */
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+
+  --primary: 222 84% 33%;             /* approx of #1e3a8a; runtime-overridden */
+  --primary-foreground: 0 0% 100%;
+
+  --accent: 38 92% 50%;                /* approx of #f59e0b; runtime-overridden */
+  --accent-foreground: 222 47% 11%;
+
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 222 84% 33%;
+
+  --radius: 0.5rem;
+
+  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}

@@ -1,0 +1,40 @@
+/*
+ * System theme — applied to /admin/* and /docs/* only. Fixed across all churches
+ * forever. Only the church name and logo swap in for visual continuity; the rest
+ * of the palette is invariant: clean, professional, neutral grayscale plus a
+ * single accent.
+ */
+[data-theme="system"] {
+  --background: 220 14% 98%;
+  --foreground: 220 26% 14%;
+
+  --primary: 220 26% 14%;
+  --primary-foreground: 0 0% 100%;
+
+  --accent: 220 90% 56%;
+  --accent-foreground: 0 0% 100%;
+
+  --secondary: 220 14% 93%;
+  --secondary-foreground: 220 26% 14%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 98%;
+
+  --muted: 220 14% 93%;
+  --muted-foreground: 220 9% 46%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 220 26% 14%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 26% 14%;
+
+  --border: 220 13% 88%;
+  --input: 220 13% 88%;
+  --ring: 220 90% 56%;
+
+  --radius: 0.5rem;
+
+  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
