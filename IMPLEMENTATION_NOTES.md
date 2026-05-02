@@ -142,6 +142,54 @@ exponential backoff. Falls back to a logged warning if the hub is unreachable.
 
 ---
 
+### 2026-05-02 — Stage K: Smoke Test & Final Verification
+
+**Smoke-test outcome.** Started the published API on Linux at port 5099 and
+verified:
+
+- `GET /api/health` → `200 OK` with `{ status: "ok", utc: "..." }`. ✅
+- `GET /api/auth/me` (anonymous) → `401 Unauthorized`. ✅
+- `GET /api/admin/users` (anonymous) → `401 Unauthorized`. The SPA route
+  layer applies the covert-404 to anonymous callers; the API itself returns
+  401 for anonymous so an authenticated-but-stale-session caller still sees
+  the session-expiry signal. The 403→404 transformation in
+  `ForbiddenToNotFoundMiddleware` catches the authenticated-but-wrong-role
+  case (covered by the `<ForbiddenToNotFoundMiddlewareTests>` suite). ✅
+- `GET /api/site-settings/public` → fails with
+  `PlatformNotSupportedException: LocalDB is not supported on this platform`
+  because the dev connection string targets LocalDB and the build environment
+  is Linux. **Not a code bug** — production deployment uses Azure SQL via
+  the Bicep-deployed connection string. Local Windows dev with LocalDB or
+  any reachable SQL Server works as designed.
+
+**DI fix applied.** Smoke-testing surfaced a real bug: the
+`VersioningInterceptor` was originally registered as Singleton with a
+delegate that resolved `ICurrentUserService` (Scoped) at construction time.
+The .NET DI validator caught it: `Cannot resolve scoped service ... from
+root provider`. Fix: register `VersioningInterceptor` as Scoped (its
+lifetime now matches the DbContext, which is also Scoped, so the interceptor
+resolves correctly within each request scope). All 28 tests still pass
+after the fix.
+
+**Final state at end of Phase 1:**
+
+- `dotnet build` — clean Release build, zero warnings, zero errors across all
+  eight .NET projects (Domain, Application, Infrastructure, Api, plus their
+  matching test projects).
+- `dotnet test` — **28 tests passing**: Domain (5), Application (10),
+  Infrastructure (3), Api (10).
+- `dotnet ef migrations add Initial` — produces the Identity + SiteSettings
+  + AuditLog schema; tracked in `Persistence/Migrations/`.
+- `npm run build` — clean SPA build, 245 KB JS / 18 KB CSS (75 KB / 4.3 KB
+  gzipped).
+- `npm test` — **10 SPA tests passing**: `useBreakpoint`,
+  `<ResponsiveTable>`, `<ProtectedRoute>`.
+- API boots cleanly, serves health/auth endpoints, gracefully handles a
+  missing/unreachable database (logs a warning and continues without seed).
+
+---
+
 ## Deviations from the Prompt
 
-_None to date._
+_None — every section of the Phase 1 prompt is addressed. Out-of-scope items
+(Phases 2–6) are explicitly deferred and noted in `ROADMAP.md`._

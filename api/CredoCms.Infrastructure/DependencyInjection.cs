@@ -45,12 +45,11 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
 
-        services.AddSingleton<VersioningInterceptor>(sp =>
-            new VersioningInterceptor(sp.GetRequiredService<ICurrentUserService>()));
+        // Interceptor is scoped because it depends on the scoped ICurrentUserService.
+        // EF Core's DbContext is itself scoped by default, so resolving the
+        // interceptor inside the DbContext options lambda below uses the request scope.
+        services.AddScoped<VersioningInterceptor>();
 
-        // The interceptor depends on a scoped service (CurrentUserService). EF supports
-        // this only if the interceptor is *also* scoped or accesses scope through
-        // IServiceProvider. We register a scoped delegating wrapper here.
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection")

@@ -1,0 +1,132 @@
+name: Build, test, and deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      run_migrations:
+        description: 'Run dotnet ef database update against production'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  NODE_VERSION: '22.x'
+  AZURE_APP_NAME: credocms-app-production
+  AZURE_RESOURCE_GROUP: credocms-rg
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: spa/package-lock.json
+
+      # ---- API ---------------------------------------------------------------
+      - name: Restore API
+        run: dotnet restore api/CredoCms.slnx
+
+      - name: Build API
+        run: dotnet build api/CredoCms.slnx --configuration Release --no-restore
+
+      - name: Test API
+        run: dotnet test api/CredoCms.slnx --configuration Release --no-build --verbosity normal
+
+      # ---- SPA ---------------------------------------------------------------
+      - name: Install SPA deps
+        working-directory: spa
+        run: npm ci
+
+      - name: Test SPA
+        working-directory: spa
+        run: npm test
+
+      - name: Build SPA
+        working-directory: spa
+        run: npm run build
+
+      # ---- Compose deployment artifact --------------------------------------
+      - name: Copy SPA into API wwwroot
+        run: |
+          mkdir -p api/CredoCms.Api/wwwroot
+          rm -rf api/CredoCms.Api/wwwroot/*
+          cp -r spa/dist/* api/CredoCms.Api/wwwroot/
+
+      - name: Publish API
+        run: |
+          dotnet publish api/CredoCms.Api/CredoCms.Api.csproj \
+            --configuration Release \
+            --output publish \
+            --no-restore
+
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: credocms-api
+          path: publish
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: credocms-api
+          path: publish
+
+      - name: Azure login (federated credentials)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_APP_NAME }}
+          package: publish
+
+  migrate:
+    needs: deploy
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_migrations }}
+    runs-on: ubuntu-latest
+    environment: production-migrate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 10.0.*
+
+      - name: Run migrations
+        env:
+          ConnectionStrings__DefaultConnection: ${{ secrets.SQL_CONNECTION_STRING }}
+        run: |
+          dotnet ef database update \
+            --project api/CredoCms.Infrastructure/CredoCms.Infrastructure.csproj \
+            --startup-project api/CredoCms.Api/CredoCms.Api.csproj

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "//comment-environmentName": "Used as a suffix on resource names. Use 'production' or 'dev'.",
+    "environmentName": { "value": "production" },
+
+    "//comment-baseName": "Resource-name prefix. Keep short and lowercase.",
+    "baseName": { "value": "credocms" },
+
+    "//comment-appServiceSku": "Linux App Service Plan SKU. B1 for dev; S1 or P0v3 for small-church production.",
+    "appServiceSku": { "value": "S1" },
+
+    "//comment-sqlSku": "Azure SQL Database SKU. Basic for dev; S0 for small-church production.",
+    "sqlSku": { "value": "S0" },
+
+    "sqlAdminLogin": { "value": "credocmsadmin" },
+
+    "//comment-sqlAdminPassword": "REPLACE before deploy. Strong password required by Azure SQL (12+ chars, upper, lower, digit, symbol).",
+    "sqlAdminPassword": { "value": "REPLACE-WITH-A-STRONG-PASSWORD" },
+
+    "//comment-customDomain": "Optional. If set, PublicSite:BaseUrl uses https://<customDomain>.",
+    "customDomain": { "value": "" }
+  }
+}
