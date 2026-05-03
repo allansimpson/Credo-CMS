@@ -28,7 +28,8 @@ public sealed class SiteSettingsService : ISiteSettingsService
             s.ChurchName, s.Tagline, s.LogoUrl, s.PrimaryColor, s.AccentColor,
             s.ContactEmail, s.ContactPhone, s.ContactAddress,
             s.FacebookUrl, s.InstagramUrl, s.YouTubeUrl, s.XUrl, s.TikTokUrl,
-            s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText);
+            s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText,
+            s.LeadersPageLabel, s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink);
     }
 
     public async Task<SiteSettingsDto> GetAsync(CancellationToken ct = default)
@@ -58,6 +59,20 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.OtherSocialUrl = request.OtherSocialUrl;
         s.FooterText = request.FooterText;
         s.DefaultVersionRetentionCount = request.DefaultVersionRetentionCount;
+
+        // Phase 2 fields.
+        s.LeadersPageLabel = request.LeadersPageLabel;
+        s.LeaderCategoriesJson = request.LeaderCategoriesJson;
+        s.DocumentCategoriesJson = request.DocumentCategoriesJson;
+        s.MaxDocumentSizeBytes = request.MaxDocumentSizeBytes;
+        s.MaxImageSizeBytes = request.MaxImageSizeBytes;
+        s.ImageMaxWidth = request.ImageMaxWidth;
+        s.ImageQuality = request.ImageQuality;
+        s.MembersWelcomeText = request.MembersWelcomeText;
+        s.HomepageHeroCtaLabel = request.HomepageHeroCtaLabel;
+        s.HomepageHeroCtaLink = request.HomepageHeroCtaLink;
+        s.DefaultMetaDescription = request.DefaultMetaDescription;
+
         s.ModifiedAt = DateTimeOffset.UtcNow;
         s.RowVersion = Convert.FromBase64String(request.RowVersion);
 
@@ -73,6 +88,10 @@ public sealed class SiteSettingsService : ISiteSettingsService
                 s.PrimaryColor,
                 s.AccentColor,
                 s.DefaultVersionRetentionCount,
+                s.LeadersPageLabel,
+                s.ImageMaxWidth,
+                s.ImageQuality,
+                s.MaxDocumentSizeBytes,
             },
             cancellationToken: ct);
 
@@ -84,6 +103,13 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.ContactEmail, s.ContactPhone, s.ContactAddress,
         s.FacebookUrl, s.InstagramUrl, s.YouTubeUrl, s.XUrl, s.TikTokUrl,
         s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText,
-        s.DefaultVersionRetentionCount, s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
+        s.DefaultVersionRetentionCount,
+        s.LeadersPageLabel, s.LeaderCategoriesJson, s.DocumentCategoriesJson,
+        s.MaxDocumentSizeBytes, s.MaxImageSizeBytes,
+        s.ImageMaxWidth, s.ImageQuality,
+        s.MembersWelcomeText,
+        s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink,
+        s.DefaultMetaDescription,
+        s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
         Convert.ToBase64String(s.RowVersion));
 }

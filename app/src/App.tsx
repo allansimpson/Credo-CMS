@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/lib/AuthContext";
 import { SiteSettingsProvider } from "@/lib/SiteSettingsContext";
@@ -17,7 +18,12 @@ import { AdminLayout } from "@/pages/admin/AdminLayout";
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { UsersPage } from "@/pages/admin/UsersPage";
 import { AuditLogPage } from "@/pages/admin/AuditLogPage";
-import { SettingsPage } from "@/pages/admin/SettingsPage";
+
+// SettingsPage pulls in TipTap (~340 KB unzipped). It's admin-only, so
+// lazy-load to keep the public bundle small.
+const SettingsPage = lazy(() =>
+  import("@/pages/admin/SettingsPage").then((m) => ({ default: m.SettingsPage }))
+);
 
 export default function App() {
   return (
@@ -80,7 +86,9 @@ export default function App() {
               path="settings"
               element={
                 <ProtectedRoute mode="admin" roles={["Administrator"]}>
-                  <SettingsPage />
+                  <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                    <SettingsPage />
+                  </Suspense>
                 </ProtectedRoute>
               }
             />

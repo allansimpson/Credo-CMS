@@ -25,6 +25,17 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         OtherSocialUrl: null,
         FooterText: null,
         DefaultVersionRetentionCount: 20,
+        LeadersPageLabel: "Our Leaders",
+        LeaderCategoriesJson: "[\"Pastoral Staff\",\"Elders\"]",
+        DocumentCategoriesJson: "[\"Bulletins\",\"Forms\"]",
+        MaxDocumentSizeBytes: 25L * 1024 * 1024,
+        MaxImageSizeBytes: 10L * 1024 * 1024,
+        ImageMaxWidth: 2400,
+        ImageQuality: 82,
+        MembersWelcomeText: null,
+        HomepageHeroCtaLabel: "Join us Sunday",
+        HomepageHeroCtaLink: "#service-times",
+        DefaultMetaDescription: null,
         RowVersion: "AAAAAAAAB9E=");
 
     [Fact]
@@ -67,5 +78,37 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
     {
         var result = _v.TestValidate(Valid() with { FacebookUrl = bad });
         result.ShouldHaveValidationErrorFor(x => x.FacebookUrl);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("[]")]
+    [InlineData("[\"\"]")]
+    [InlineData("not-json")]
+    [InlineData("[1,2,3]")]
+    [InlineData("{\"a\":1}")]
+    public void Bad_leader_categories_json_fails(string bad)
+    {
+        var result = _v.TestValidate(Valid() with { LeaderCategoriesJson = bad });
+        result.ShouldHaveValidationErrorFor(x => x.LeaderCategoriesJson);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(799)]
+    [InlineData(5001)]
+    public void Bad_image_max_width_fails(int width)
+    {
+        var result = _v.TestValidate(Valid() with { ImageMaxWidth = width });
+        result.ShouldHaveValidationErrorFor(x => x.ImageMaxWidth);
+    }
+
+    [Theory]
+    [InlineData(59)]
+    [InlineData(96)]
+    public void Image_quality_outside_60_to_95_fails(int q)
+    {
+        var result = _v.TestValidate(Valid() with { ImageQuality = q });
+        result.ShouldHaveValidationErrorFor(x => x.ImageQuality);
     }
 }

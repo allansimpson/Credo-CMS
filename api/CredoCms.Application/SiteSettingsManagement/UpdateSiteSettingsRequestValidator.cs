@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentValidation;
 
 namespace CredoCms.Application.SiteSettingsManagement;
@@ -5,6 +6,10 @@ namespace CredoCms.Application.SiteSettingsManagement;
 public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<UpdateSiteSettingsRequest>
 {
     private const string HexColorPattern = @"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$";
+    private const long MinDocumentBytes = 1L * 1024 * 1024;          // 1 MB
+    private const long MaxDocumentBytesCeiling = 200L * 1024 * 1024; // 200 MB
+    private const long MinImageBytes = 1L * 1024 * 1024;             // 1 MB
+    private const long MaxImageBytesCeiling = 50L * 1024 * 1024;     // 50 MB
 
     public UpdateSiteSettingsRequestValidator()
     {
@@ -29,17 +34,6 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
         RuleFor(x => x.ContactPhone).MaximumLength(50);
         RuleFor(x => x.ContactAddress).MaximumLength(500);
 
-        foreach (var url in new[] { nameof(UpdateSiteSettingsRequest.FacebookUrl),
-                                    nameof(UpdateSiteSettingsRequest.InstagramUrl),
-                                    nameof(UpdateSiteSettingsRequest.YouTubeUrl),
-                                    nameof(UpdateSiteSettingsRequest.XUrl),
-                                    nameof(UpdateSiteSettingsRequest.TikTokUrl),
-                                    nameof(UpdateSiteSettingsRequest.OtherSocialUrl) })
-        {
-            // FluentValidation doesn't support reflection-driven rules elegantly, so
-            // each url is also validated below by name. Length cap is centralized here.
-        }
-
         RuleFor(x => x.FacebookUrl).MaximumLength(500).Must(BeValidOptionalAbsoluteUrl);
         RuleFor(x => x.InstagramUrl).MaximumLength(500).Must(BeValidOptionalAbsoluteUrl);
         RuleFor(x => x.YouTubeUrl).MaximumLength(500).Must(BeValidOptionalAbsoluteUrl);
@@ -52,6 +46,33 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
 
         RuleFor(x => x.DefaultVersionRetentionCount).InclusiveBetween(5, 50);
 
+        // ---- Phase 2 ------------------------------------------------------
+
+        RuleFor(x => x.LeadersPageLabel).NotEmpty().MaximumLength(100);
+
+        RuleFor(x => x.LeaderCategoriesJson)
+            .NotEmpty()
+            .Must(BeNonEmptyStringArrayJson)
+            .WithMessage("Leader categories must be a non-empty JSON array of strings.");
+
+        RuleFor(x => x.DocumentCategoriesJson)
+            .NotEmpty()
+            .Must(BeNonEmptyStringArrayJson)
+            .WithMessage("Document categories must be a non-empty JSON array of strings.");
+
+        RuleFor(x => x.MaxDocumentSizeBytes).InclusiveBetween(MinDocumentBytes, MaxDocumentBytesCeiling);
+        RuleFor(x => x.MaxImageSizeBytes).InclusiveBetween(MinImageBytes, MaxImageBytesCeiling);
+
+        RuleFor(x => x.ImageMaxWidth).InclusiveBetween(800, 5000);
+        RuleFor(x => x.ImageQuality).InclusiveBetween(60, 95);
+
+        RuleFor(x => x.HomepageHeroCtaLabel).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.HomepageHeroCtaLink).NotEmpty().MaximumLength(500);
+
+        RuleFor(x => x.DefaultMetaDescription).MaximumLength(300);
+
+        // -------------------------------------------------------------------
+
         RuleFor(x => x.RowVersion).NotEmpty();
     }
 
@@ -59,4 +80,26 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
         string.IsNullOrWhiteSpace(value) ||
         Uri.TryCreate(value, UriKind.Absolute, out var uri)
             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private static bool BeNonEmptyStringArrayJson(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        try
+        {
+            using var doc = JsonDocument.Parse(value);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return false;
+            var any = false;
+            foreach (var el in doc.RootElement.EnumerateArray())
+            {
+                if (el.ValueKind != JsonValueKind.String) return false;
+                if (string.IsNullOrWhiteSpace(el.GetString())) return false;
+                any = true;
+            }
+            return any;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 }

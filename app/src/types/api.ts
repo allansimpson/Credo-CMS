@@ -65,10 +65,21 @@ export interface PublicSiteSettings {
   otherSocialLabel: string | null;
   otherSocialUrl: string | null;
   footerText: string | null;
+  leadersPageLabel: string;
+  homepageHeroCtaLabel: string;
+  homepageHeroCtaLink: string;
 }
 
 export interface SiteSettings extends PublicSiteSettings {
   defaultVersionRetentionCount: number;
+  leaderCategoriesJson: string;
+  documentCategoriesJson: string;
+  maxDocumentSizeBytes: number;
+  maxImageSizeBytes: number;
+  imageMaxWidth: number;
+  imageQuality: number;
+  membersWelcomeText: string | null;
+  defaultMetaDescription: string | null;
   createdAt: string;
   modifiedAt: string;
   modifiedByUserId: string | null;

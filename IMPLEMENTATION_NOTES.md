@@ -189,7 +189,118 @@ after the fix.
 
 ---
 
+# Phase 2 — Decisions Log
+
+### 2026-05-03 — Stage P1: Site Settings Extensions (completed)
+
+The local session committed Stage P1 partway through (commit `149bfcc` —
+WIP: Phase 2 fields added to the Domain entity only, no migration, DTO, or
+UI). This web session resumes from that point. State at resume:
+
+- `dotnet build` and `dotnet test` (28 tests) green.
+- `npm run build` and `npm test` (10 tests) green.
+- Phase 2 properties exist on `SiteSettings` but nothing else references them.
+
+**P1.2a — Migration `AddPhase2SiteSettingsFields`.** Generated via
+`dotnet ef migrations add ... -o Persistence/Migrations`. EF's first pass
+emitted empty/zero defaults (`""`, `0`, `0L`) for the new NOT-NULL columns,
+which would leave existing Phase 1 rows in an unusable state after upgrade.
+Patched the generated `Up()` to set defaults that match the property-level
+initializers on `SiteSettings.cs`:
+
+| Column | Default |
+|---|---|
+| `LeadersPageLabel` | `"Our Leaders"` |
+| `LeaderCategoriesJson` | `["Pastoral Staff","Elders","Deacons","Ministry Directors"]` |
+| `DocumentCategoriesJson` | `["Bulletins","Forms","Policies","Board Minutes","Resources"]` |
+| `MaxDocumentSizeBytes` | `26214400` (25 MB) |
+| `MaxImageSizeBytes` | `10485760` (10 MB) |
+| `ImageMaxWidth` | `2400` |
+| `ImageQuality` | `82` |
+| `HomepageHeroCtaLabel` | `"Join us Sunday"` |
+| `HomepageHeroCtaLink` | `"#service-times"` |
+
+`MembersWelcomeText` and `DefaultMetaDescription` are nullable and stay NULL
+on existing rows.
+
+**P1.2b — Seeder.** No changes required. The seeder constructs
+`new SiteSettings { ... }` with only a few explicitly-overridden properties;
+the Phase 2 property-level defaults take care of the rest. Adding
+redundant assignments would just duplicate the entity defaults.
+
+**P1.3 — DTOs / request / validator / service.** Added Phase 2 fields to
+`SiteSettingsDto` and `UpdateSiteSettingsRequest`. The public DTO
+(`PublicSiteSettingsDto`) only exposes the three fields used by anonymous
+public surface area: `LeadersPageLabel`, `HomepageHeroCtaLabel`,
+`HomepageHeroCtaLink`. Server-side validation (FluentValidation) covers:
+
+- `LeaderCategoriesJson` / `DocumentCategoriesJson` parse as JSON arrays of
+  non-empty strings (otherwise reject).
+- `ImageMaxWidth` ∈ [800, 5000].
+- `ImageQuality` ∈ [60, 95].
+- `MaxImageSizeBytes` ∈ [1, 50] MB.
+- `MaxDocumentSizeBytes` ∈ [1, 200] MB.
+- `LeadersPageLabel`, `HomepageHeroCtaLabel`, `HomepageHeroCtaLink` are
+  required and length-capped.
+- `DefaultMetaDescription` ≤ 300 chars.
+
+Audit-log details emitted from `SiteSettingsService.UpdateAsync` were
+extended to include the new image/upload knobs so an operator can see what
+changed without diffing the row history.
+
+**P1.4 / P1.5 — Admin UI.** Replaced the placeholder `Content` and
+`Advanced` tabs in `app/src/pages/admin/SettingsPage.tsx` with real forms.
+Refactored the per-tab fetch/save into a `useSettingsForm()` hook so each
+tab loads + edits + submits the full record (Site Settings is a single row;
+optimistic concurrency via `RowVersion` detects parallel edits between
+tabs). Tabs:
+
+- **Branding** — unchanged surface, just rebuilt on top of the shared hook.
+- **Content** — Homepage hero CTA, Leaders page label, Leader categories
+  editor, Document categories editor, Members welcome message (TipTap).
+- **Advanced** — Image max width / quality / max size, max document size,
+  default meta description, "Rebuild search index" button (stub, wired in
+  P9).
+
+**TipTap editor.** Added `app/src/components/shared/TipTapEditor.tsx` with
+StarterKit + Link + Placeholder. Toolbar covers bold/italic/H2/H3/lists/link
+/clear — enough for the welcome-message use case in P1; P3 can extend the
+toolbar for Pages/News without changing the storage shape (ProseMirror JSON
+serialized to a string).
+
+**Bundle hygiene.** TipTap pulls in ProseMirror + extensions (~340 KB
+unzipped). Eagerly importing `SettingsPage` into `App.tsx` would have
+penalised every public visitor with that weight. Switched the route to
+`React.lazy(() => import("@/pages/admin/SettingsPage"))` wrapped in
+`<Suspense>`. After-state:
+
+- Public bundle: **239 KB / 74 KB gzip** (matches the Phase 1 baseline).
+- `SettingsPage` chunk: 346 KB / 109 KB gzip — only loaded when an admin
+  navigates to `/admin/settings`.
+
+**P0 cleanup carryover.** The `git mv spa/ → app/` rename in P0 left
+behind empty `spa/src/components/ui`, `spa/src/features`, and `spa/public`
+directories (plus build artifacts `spa/dist/` and `spa/node_modules/`).
+Removed `spa/` entirely in this commit so `git ls-files spa/` is empty
+(it already was) and the repo no longer has a stale top-level folder.
+
+**State at end of P1:**
+
+- `dotnet build` green, zero warnings.
+- `dotnet test` — **39 tests passing** (Domain 5, Application **21**
+  (was 10; +11 new validator cases), Infrastructure 3, Api 10).
+- `npm run build` green; public bundle unchanged at 239 KB / 74 KB gzip;
+  `SettingsPage` chunk lazy-loaded.
+- `npm test` — 10 tests passing (no SPA tests exist yet for the new tabs;
+  P1 is server-side-validated only — SPA test additions for the
+  category-list editor and `<TipTapEditor>` are queued for a later P-stage
+  cleanup pass).
+
+---
+
 ## Deviations from the Prompt
 
 _None — every section of the Phase 1 prompt is addressed. Out-of-scope items
-(Phases 2–6) are explicitly deferred and noted in `ROADMAP.md`._
+(Phases 2–6) are explicitly deferred and noted in `ROADMAP.md`. Phase 2
+work is tracked in `BUILD_PLAN.md` (sections P-0 through P-7) and
+`PHASE_2_BACKLOG.md`._

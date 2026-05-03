@@ -1,6 +1,8 @@
 namespace CredoCms.Application.SiteSettingsManagement;
 
-/// <summary>Public-facing subset, returned to anonymous SPA bootstrap.</summary>
+/// <summary>Public-facing subset, returned to anonymous SPA bootstrap.
+/// Phase 2 additions exposed publicly: LeadersPageLabel (used by the public
+/// nav and routes), HomepageHeroCtaLabel/Link.</summary>
 public sealed record PublicSiteSettingsDto(
     string ChurchName,
     string? Tagline,
@@ -17,7 +19,10 @@ public sealed record PublicSiteSettingsDto(
     string? TikTokUrl,
     string? OtherSocialLabel,
     string? OtherSocialUrl,
-    string? FooterText);
+    string? FooterText,
+    string LeadersPageLabel,
+    string HomepageHeroCtaLabel,
+    string HomepageHeroCtaLink);
 
 /// <summary>Full settings DTO returned to admins.</summary>
 public sealed record SiteSettingsDto(
@@ -38,6 +43,17 @@ public sealed record SiteSettingsDto(
     string? OtherSocialUrl,
     string? FooterText,
     int DefaultVersionRetentionCount,
+    string LeadersPageLabel,
+    string LeaderCategoriesJson,
+    string DocumentCategoriesJson,
+    long MaxDocumentSizeBytes,
+    long MaxImageSizeBytes,
+    int ImageMaxWidth,
+    int ImageQuality,
+    string? MembersWelcomeText,
+    string HomepageHeroCtaLabel,
+    string HomepageHeroCtaLink,
+    string? DefaultMetaDescription,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
     Guid? ModifiedByUserId,
@@ -61,4 +77,15 @@ public sealed record UpdateSiteSettingsRequest(
     string? OtherSocialUrl,
     string? FooterText,
     int DefaultVersionRetentionCount,
+    string LeadersPageLabel,
+    string LeaderCategoriesJson,
+    string DocumentCategoriesJson,
+    long MaxDocumentSizeBytes,
+    long MaxImageSizeBytes,
+    int ImageMaxWidth,
+    int ImageQuality,
+    string? MembersWelcomeText,
+    string HomepageHeroCtaLabel,
+    string HomepageHeroCtaLink,
+    string? DefaultMetaDescription,
     string RowVersion);

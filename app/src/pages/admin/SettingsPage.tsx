@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { siteSettingsApi } from "@/lib/api/siteSettings";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import type { SiteSettings, UpdateSiteSettingsRequest } from "@/types/api";
+import { TipTapEditor } from "@/components/shared/TipTapEditor";
 
 const TABS = [
   { id: "branding", label: "Branding" },
@@ -43,11 +44,11 @@ export function SettingsPage() {
 
       <div className="mt-6">
         {active === "branding" && <BrandingTab />}
-        {active === "content" && <PlaceholderTab name="Content" phase="Phase 2" />}
+        {active === "content" && <ContentTab />}
         {active === "email" && <PlaceholderTab name="Email & Notifications" phase="Phase 5" />}
         {active === "integrations" && <PlaceholderTab name="Integrations" phase="Phase 3+" />}
         {active === "privacy" && <PlaceholderTab name="Privacy & Security" phase="future phase" />}
-        {active === "advanced" && <PlaceholderTab name="Advanced" phase="future phase" />}
+        {active === "advanced" && <AdvancedTab />}
       </div>
     </div>
   );
@@ -65,7 +66,57 @@ function PlaceholderTab({ name, phase }: { name: string; phase: string }) {
   );
 }
 
-function BrandingTab() {
+/**
+ * Builds an UpdateSiteSettingsRequest from a SiteSettings DTO. Used by every
+ * tab so each one round-trips the full record (Site Settings is a single
+ * row; we always replace all fields at once and rely on the optimistic-
+ * concurrency token to detect parallel edits).
+ */
+function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
+  return {
+    churchName: s.churchName,
+    tagline: s.tagline,
+    logoUrl: s.logoUrl,
+    primaryColor: s.primaryColor,
+    accentColor: s.accentColor,
+    contactEmail: s.contactEmail,
+    contactPhone: s.contactPhone,
+    contactAddress: s.contactAddress,
+    facebookUrl: s.facebookUrl,
+    instagramUrl: s.instagramUrl,
+    youTubeUrl: s.youTubeUrl,
+    xUrl: s.xUrl,
+    tikTokUrl: s.tikTokUrl,
+    otherSocialLabel: s.otherSocialLabel,
+    otherSocialUrl: s.otherSocialUrl,
+    footerText: s.footerText,
+    defaultVersionRetentionCount: s.defaultVersionRetentionCount,
+    leadersPageLabel: s.leadersPageLabel,
+    leaderCategoriesJson: s.leaderCategoriesJson,
+    documentCategoriesJson: s.documentCategoriesJson,
+    maxDocumentSizeBytes: s.maxDocumentSizeBytes,
+    maxImageSizeBytes: s.maxImageSizeBytes,
+    imageMaxWidth: s.imageMaxWidth,
+    imageQuality: s.imageQuality,
+    membersWelcomeText: s.membersWelcomeText,
+    homepageHeroCtaLabel: s.homepageHeroCtaLabel,
+    homepageHeroCtaLink: s.homepageHeroCtaLink,
+    defaultMetaDescription: s.defaultMetaDescription,
+    rowVersion: s.rowVersion,
+  };
+}
+
+interface SettingsFormState {
+  settings: SiteSettings | null;
+  setSettings: (s: SiteSettings) => void;
+  loading: boolean;
+  errors: string[];
+  success: boolean;
+  submitting: boolean;
+  submit: () => Promise<void>;
+}
+
+function useSettingsForm(): SettingsFormState {
   const { reload } = useSiteSettings();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,34 +130,13 @@ function BrandingTab() {
       .catch(() => setLoading(false));
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const submit = async () => {
     if (!settings) return;
     setSubmitting(true);
     setErrors([]);
     setSuccess(false);
     try {
-      const req: UpdateSiteSettingsRequest = {
-        churchName: settings.churchName,
-        tagline: settings.tagline,
-        logoUrl: settings.logoUrl,
-        primaryColor: settings.primaryColor,
-        accentColor: settings.accentColor,
-        contactEmail: settings.contactEmail,
-        contactPhone: settings.contactPhone,
-        contactAddress: settings.contactAddress,
-        facebookUrl: settings.facebookUrl,
-        instagramUrl: settings.instagramUrl,
-        youTubeUrl: settings.youTubeUrl,
-        xUrl: settings.xUrl,
-        tikTokUrl: settings.tikTokUrl,
-        otherSocialLabel: settings.otherSocialLabel,
-        otherSocialUrl: settings.otherSocialUrl,
-        footerText: settings.footerText,
-        defaultVersionRetentionCount: settings.defaultVersionRetentionCount,
-        rowVersion: settings.rowVersion,
-      };
-      const updated = await siteSettingsApi.update(req);
+      const updated = await siteSettingsApi.update(buildRequest(settings));
       setSettings(updated);
       setSuccess(true);
       await reload();
@@ -119,13 +149,14 @@ function BrandingTab() {
     } finally {
       setSubmitting(false);
     }
-  }
+  };
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+  return { settings, setSettings, loading, errors, success, submitting, submit };
+}
 
+function FormBanner({ errors, success }: { errors: string[]; success: boolean }) {
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <>
       {errors.length > 0 && (
         <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           <ul className="list-disc pl-5">
@@ -138,6 +169,33 @@ function BrandingTab() {
           Settings saved.
         </div>
       )}
+    </>
+  );
+}
+
+function SubmitButton({ submitting }: { submitting: boolean }) {
+  return (
+    <button
+      type="submit"
+      disabled={submitting}
+      className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+    >
+      {submitting ? "Saving…" : "Save changes"}
+    </button>
+  );
+}
+
+function BrandingTab() {
+  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+
+  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormBanner errors={errors} success={success} />
 
       <Section title="Identity">
         <Field label="Church name" required>
@@ -199,27 +257,257 @@ function BrandingTab() {
         </Field>
       </Section>
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-      >
-        {submitting ? "Saving…" : "Save changes"}
-      </button>
-
-      <style>{`
-        .input {
-          height: 2.5rem;
-          width: 100%;
-          border-radius: 0.375rem;
-          border: 1px solid hsl(var(--input));
-          background: hsl(var(--background));
-          padding: 0 0.75rem;
-          font-size: 0.875rem;
-        }
-      `}</style>
+      <SubmitButton submitting={submitting} />
+      <Styles />
     </form>
   );
+}
+
+function ContentTab() {
+  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+
+  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+
+  const leaderCats = parseCategories(settings.leaderCategoriesJson);
+  const docCats = parseCategories(settings.documentCategoriesJson);
+
+  const setLeaderCats = (next: string[]) =>
+    setSettings({ ...settings, leaderCategoriesJson: JSON.stringify(next) });
+  const setDocCats = (next: string[]) =>
+    setSettings({ ...settings, documentCategoriesJson: JSON.stringify(next) });
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormBanner errors={errors} success={success} />
+
+      <Section title="Homepage hero">
+        <Field label="CTA button label" required>
+          <input
+            value={settings.homepageHeroCtaLabel}
+            required
+            maxLength={100}
+            onChange={(e) => setSettings({ ...settings, homepageHeroCtaLabel: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field label="CTA button link" required hint="Either an absolute URL or an in-page anchor like #service-times.">
+          <input
+            value={settings.homepageHeroCtaLink}
+            required
+            maxLength={500}
+            onChange={(e) => setSettings({ ...settings, homepageHeroCtaLink: e.target.value })}
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Leaders page">
+        <Field label="Page label" required hint='Public label, e.g. "Our Leaders" or "Elders".'>
+          <input
+            value={settings.leadersPageLabel}
+            required
+            maxLength={100}
+            onChange={(e) => setSettings({ ...settings, leadersPageLabel: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field label="Leader categories" hint="Drives the admin category dropdown and the public grouping.">
+          <CategoryListEditor values={leaderCats} onChange={setLeaderCats} />
+        </Field>
+      </Section>
+
+      <Section title="Documents">
+        <Field label="Document categories" hint="Drives admin filtering and public grouping on /documents.">
+          <CategoryListEditor values={docCats} onChange={setDocCats} />
+        </Field>
+      </Section>
+
+      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
+        <legend className="px-2 text-sm font-semibold">Members welcome message</legend>
+        <p className="text-xs text-muted-foreground">
+          Shown on the homepage to authenticated members only. Leave blank to hide the welcome block.
+        </p>
+        <TipTapEditor
+          valueJson={settings.membersWelcomeText}
+          onChangeJson={(json) => setSettings({ ...settings, membersWelcomeText: json })}
+          ariaLabel="Members welcome message"
+          placeholder="Welcome our members back…"
+        />
+      </fieldset>
+
+      <SubmitButton submitting={submitting} />
+      <Styles />
+    </form>
+  );
+}
+
+function AdvancedTab() {
+  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+  const [rebuildState, setRebuildState] = useState<"idle" | "queued">("idle");
+
+  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
+  const handleRebuild = () => {
+    // P9 will wire this to POST /api/admin/search/rebuild. For now the
+    // button exists so the UI is complete and the action is discoverable.
+    setRebuildState("queued");
+    window.setTimeout(() => setRebuildState("idle"), 4000);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormBanner errors={errors} success={success} />
+
+      <Section title="Image uploads">
+        <Field label="Max width (px)" hint="Wider images are resized down on upload. Range: 800–5000.">
+          <input
+            type="number"
+            min={800}
+            max={5000}
+            value={settings.imageMaxWidth}
+            onChange={(e) => setSettings({ ...settings, imageMaxWidth: Number(e.target.value) })}
+            className="input"
+          />
+        </Field>
+        <Field label="JPEG / WebP quality" hint="60–95. Lower = smaller files but more visible compression.">
+          <input
+            type="number"
+            min={60}
+            max={95}
+            value={settings.imageQuality}
+            onChange={(e) => setSettings({ ...settings, imageQuality: Number(e.target.value) })}
+            className="input"
+          />
+        </Field>
+        <Field label="Max image size (MB)" hint="1–50 MB. Uploads larger than this are rejected.">
+          <input
+            type="number"
+            min={1}
+            max={50}
+            value={Math.round(settings.maxImageSizeBytes / (1024 * 1024))}
+            onChange={(e) =>
+              setSettings({ ...settings, maxImageSizeBytes: Number(e.target.value) * 1024 * 1024 })
+            }
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Document uploads">
+        <Field label="Max document size (MB)" hint="1–200 MB. Limits PDF uploads under /admin/documents.">
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={Math.round(settings.maxDocumentSizeBytes / (1024 * 1024))}
+            onChange={(e) =>
+              setSettings({ ...settings, maxDocumentSizeBytes: Number(e.target.value) * 1024 * 1024 })
+            }
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section title="SEO">
+        <Field label="Default meta description" hint="Used when an entity has no description and no excerpt to fall back on. Up to 300 chars.">
+          <textarea
+            value={settings.defaultMetaDescription ?? ""}
+            maxLength={300}
+            onChange={(e) => setSettings({ ...settings, defaultMetaDescription: e.target.value })}
+            className="input min-h-20 py-2"
+          />
+        </Field>
+      </Section>
+
+      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
+        <legend className="px-2 text-sm font-semibold">Search</legend>
+        <p className="text-xs text-muted-foreground">
+          Re-indexes all published Pages, News items, Leaders, and Documents. Safe to run; triggers a
+          background job.
+        </p>
+        <button
+          type="button"
+          onClick={handleRebuild}
+          disabled={rebuildState === "queued"}
+          className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-muted disabled:opacity-50"
+        >
+          {rebuildState === "queued" ? "Queued — wired in P9" : "Rebuild search index"}
+        </button>
+        <p className="text-xs text-muted-foreground">
+          Backend wiring arrives with the Search Infrastructure stage (P9).
+        </p>
+      </fieldset>
+
+      <SubmitButton submitting={submitting} />
+      <Styles />
+    </form>
+  );
+}
+
+interface CategoryListEditorProps {
+  values: string[];
+  onChange: (next: string[]) => void;
+}
+
+function CategoryListEditor({ values, onChange }: CategoryListEditorProps) {
+  const update = (i: number, v: string) => {
+    const next = values.slice();
+    next[i] = v;
+    onChange(next);
+  };
+  const remove = (i: number) => onChange(values.filter((_, idx) => idx !== i));
+  const add = () => onChange([...values, ""]);
+  const moveUp = (i: number) => {
+    if (i === 0) return;
+    const next = values.slice();
+    [next[i - 1], next[i]] = [next[i], next[i - 1]];
+    onChange(next);
+  };
+  const moveDown = (i: number) => {
+    if (i === values.length - 1) return;
+    const next = values.slice();
+    [next[i + 1], next[i]] = [next[i], next[i + 1]];
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      {values.map((v, i) => (
+        <div key={i} className="flex gap-2">
+          <input
+            value={v}
+            onChange={(e) => update(i, e.target.value)}
+            className="input flex-1"
+            aria-label={`Category ${i + 1}`}
+          />
+          <button type="button" onClick={() => moveUp(i)} aria-label="Move up" className="iconbtn">↑</button>
+          <button type="button" onClick={() => moveDown(i)} aria-label="Move down" className="iconbtn">↓</button>
+          <button type="button" onClick={() => remove(i)} aria-label="Remove" className="iconbtn text-destructive">✕</button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={add}
+        className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs hover:bg-muted"
+      >
+        + Add category
+      </button>
+    </div>
+  );
+}
+
+function parseCategories(json: string): string[] {
+  try {
+    const parsed = JSON.parse(json);
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -240,5 +528,32 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
       {children}
       {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
     </label>
+  );
+}
+
+function Styles() {
+  return (
+    <style>{`
+      .input {
+        height: 2.5rem;
+        width: 100%;
+        border-radius: 0.375rem;
+        border: 1px solid hsl(var(--input));
+        background: hsl(var(--background));
+        padding: 0 0.75rem;
+        font-size: 0.875rem;
+      }
+      .iconbtn {
+        height: 2.5rem;
+        width: 2.5rem;
+        border-radius: 0.375rem;
+        border: 1px solid hsl(var(--input));
+        background: hsl(var(--background));
+        font-size: 0.875rem;
+      }
+      .iconbtn:hover {
+        background: hsl(var(--muted));
+      }
+    `}</style>
   );
 }
