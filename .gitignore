@@ -103,6 +103,9 @@ appsettings.*.local.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# ---- Claude Code workspace settings ----
+.claude/
+
 # ---- OS ----
 .DS_Store
 Thumbs.db

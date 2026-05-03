@@ -22,7 +22,7 @@ today and multi-tenant SaaS in a future phase.
     /CredoCms.Domain/            entities, domain interfaces, enums
     /CredoCms.Infrastructure/    EF Core DbContext, migrations, external services
     /CredoCms.*.Tests/           xUnit + FluentAssertions + Moq
-  /spa/                          React + Vite + TypeScript SPA
+  /app/                          React + Vite + TypeScript SPA
   /deploy/                       Bicep templates, deployment guide
   /docs/                         Astro documentation site (placeholder; built in Phase 6)
   /.github/workflows/            CI/CD
@@ -73,7 +73,7 @@ dotnet ef database update --project CredoCms.Infrastructure --startup-project Cr
 dotnet run --project CredoCms.Api
 
 # 6. In a second terminal, run the SPA in dev mode
-cd ../spa
+cd ../app
 npm install
 npm run dev
 ```

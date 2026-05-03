@@ -275,4 +275,4 @@ blob-pairing rule begins to apply.
 | `VersioningInterceptor` | `CredoCms.Infrastructure/Persistence/Interceptors/VersioningInterceptor.cs` |
 | `VersioningTrimBackgroundService` | `CredoCms.Infrastructure/BackgroundServices/VersioningTrimBackgroundService.cs` |
 | `SystemConstants` (Guids) | `CredoCms.Domain/Common/SystemConstants.cs` |
-| `<VersionHistoryPanel>` shell | `spa/src/components/shared/VersionHistoryPanel.tsx` |
+| `<VersionHistoryPanel>` shell | `app/src/components/shared/VersionHistoryPanel.tsx` |

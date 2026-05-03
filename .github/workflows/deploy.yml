@@ -39,7 +39,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-          cache-dependency-path: spa/package-lock.json
+          cache-dependency-path: app/package-lock.json
 
       # ---- API ---------------------------------------------------------------
       - name: Restore API
@@ -53,15 +53,15 @@ jobs:
 
       # ---- SPA ---------------------------------------------------------------
       - name: Install SPA deps
-        working-directory: spa
+        working-directory: app
         run: npm ci
 
       - name: Test SPA
-        working-directory: spa
+        working-directory: app
         run: npm test
 
       - name: Build SPA
-        working-directory: spa
+        working-directory: app
         run: npm run build
 
       # ---- Compose deployment artifact --------------------------------------
@@ -69,7 +69,7 @@ jobs:
         run: |
           mkdir -p api/CredoCms.Api/wwwroot
           rm -rf api/CredoCms.Api/wwwroot/*
-          cp -r spa/dist/* api/CredoCms.Api/wwwroot/
+          cp -r app/dist/* api/CredoCms.Api/wwwroot/
 
       - name: Publish API
         run: |
