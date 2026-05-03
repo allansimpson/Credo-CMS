@@ -70,6 +70,54 @@ public class SiteSettings
     /// </summary>
     public int DefaultVersionRetentionCount { get; set; } = 20;
 
+    // ---- Phase 2 additions ------------------------------------------------
+
+    /// <summary>Public label for the Leaders page (e.g. "Our Leaders", "Elders").</summary>
+    [Required]
+    [MaxLength(100)]
+    public string LeadersPageLabel { get; set; } = "Our Leaders";
+
+    /// <summary>JSON-encoded list of leader category names. Drives the admin
+    /// category dropdown and the public grouping on /leaders.</summary>
+    [Required]
+    public string LeaderCategoriesJson { get; set; } =
+        "[\"Pastoral Staff\",\"Elders\",\"Deacons\",\"Ministry Directors\"]";
+
+    /// <summary>JSON-encoded list of document category names.</summary>
+    [Required]
+    public string DocumentCategoriesJson { get; set; } =
+        "[\"Bulletins\",\"Forms\",\"Policies\",\"Board Minutes\",\"Resources\"]";
+
+    /// <summary>Maximum size in bytes for an uploaded PDF (default 25 MB).</summary>
+    public long MaxDocumentSizeBytes { get; set; } = 25L * 1024 * 1024;
+
+    /// <summary>Maximum size in bytes for an uploaded image before compression
+    /// (default 10 MB).</summary>
+    public long MaxImageSizeBytes { get; set; } = 10L * 1024 * 1024;
+
+    /// <summary>If wider than this, images are resized down on upload.</summary>
+    public int ImageMaxWidth { get; set; } = 2400;
+
+    /// <summary>JPEG / WebP quality for the optimized variant (60–95).</summary>
+    public int ImageQuality { get; set; } = 82;
+
+    /// <summary>Optional ProseMirror JSON shown in the homepage members-only
+    /// welcome block; rendered only to authenticated Member+ viewers.</summary>
+    public string? MembersWelcomeText { get; set; }
+
+    [MaxLength(100)]
+    public string HomepageHeroCtaLabel { get; set; } = "Join us Sunday";
+
+    [MaxLength(500)]
+    public string HomepageHeroCtaLink { get; set; } = "#service-times";
+
+    /// <summary>Default meta-description used when an entity-level override
+    /// and excerpt are both absent. Important for SEO consistency.</summary>
+    [MaxLength(300)]
+    public string? DefaultMetaDescription { get; set; }
+
+    // -----------------------------------------------------------------------
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset ModifiedAt { get; set; }
