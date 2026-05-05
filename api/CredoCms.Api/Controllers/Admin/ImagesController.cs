@@ -43,13 +43,19 @@ public sealed class ImagesController : ControllerBase
             var result = await _images.UploadAsync(file.FileName, file.ContentType, stream, ct)
                 .ConfigureAwait(false);
 
+            // Blob URLs can be hundreds of chars (Azure CDN, query strings, etc.)
+            // so they go in DetailsJson, not EntityId — which is the 100-char
+            // identifier column. Image isn't a first-class entity in the audit
+            // model; we leave EntityId null.
             await _audit.WriteAsync(
                 "Image.Uploaded",
                 "Image",
-                entityId: result.BlobUrl,
+                entityId: null,
                 details: new
                 {
                     OriginalFilename = file.FileName,
+                    result.BlobUrl,
+                    result.WebpBlobUrl,
                     result.Width,
                     result.Height,
                     result.SizeBytes,
