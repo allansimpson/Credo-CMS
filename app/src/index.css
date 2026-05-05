@@ -12,6 +12,18 @@
     box-sizing: border-box;
   }
 
+  /*
+   * Squared-corners design choice: zero out border-radius globally so every
+   * element renders with sharp corners. Wins over Tailwind utilities (rounded-md,
+   * rounded-full, rounded-2xl, etc.) and component-level overrides because of
+   * the universal selector + !important.
+   */
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+  }
+
   html,
   body,
   #root {
