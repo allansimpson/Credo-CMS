@@ -4,6 +4,7 @@ using CredoCms.Application.Auth;
 using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
 using CredoCms.Application.Documents;
+using CredoCms.Application.Events;
 using CredoCms.Application.Leaders;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
@@ -27,6 +28,7 @@ using CredoCms.Infrastructure.Identity;
 using CredoCms.Infrastructure.Announcements;
 using CredoCms.Infrastructure.Caching;
 using CredoCms.Infrastructure.Documents;
+using CredoCms.Infrastructure.Events;
 using CredoCms.Infrastructure.Leaders;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
@@ -118,6 +120,7 @@ public static class DependencyInjection
         services.AddScoped<IScriptureReferenceRepository, ScriptureReferenceRepository>();
         services.AddScoped<ISermonSeriesRepository, SermonSeriesRepository>();
         services.AddScoped<ISermonRepository, SermonRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
 
         // YouTube integration (Phase 3 Q5)
         services.AddScoped<IYouTubeApiClient, YouTubeApiClient>();

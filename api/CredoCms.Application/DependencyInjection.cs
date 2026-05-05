@@ -2,6 +2,7 @@ using CredoCms.Application.Announcements;
 using CredoCms.Application.Auditing;
 using CredoCms.Application.Homepage;
 using CredoCms.Application.Documents;
+using CredoCms.Application.Events;
 using CredoCms.Application.Leaders;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
@@ -38,6 +39,8 @@ public static class DependencyInjection
         services.AddScoped<IScriptureReferenceService, ScriptureReferenceService>();
         services.AddScoped<ISermonSeriesService, SermonSeriesService>();
         services.AddScoped<ISermonService, SermonService>();
+        services.AddSingleton<IEventOccurrenceExpander, EventOccurrenceExpander>();
+        services.AddScoped<IEventService, EventService>();
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 

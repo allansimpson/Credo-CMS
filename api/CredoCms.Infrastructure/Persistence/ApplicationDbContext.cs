@@ -2,6 +2,7 @@ using CredoCms.Application.Common;
 using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Auditing;
 using CredoCms.Domain.Documents;
+using CredoCms.Domain.Events;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
@@ -45,6 +46,9 @@ public class ApplicationDbContext
     public DbSet<Sermon> Sermons => Set<Sermon>();
     public DbSet<SermonTag> SermonTags => Set<SermonTag>();
     public DbSet<SermonAttachment> SermonAttachments => Set<SermonAttachment>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<EventRecurrenceException> EventRecurrenceExceptions => Set<EventRecurrenceException>();
+    public DbSet<EventOccurrenceOverride> EventOccurrenceOverrides => Set<EventOccurrenceOverride>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
