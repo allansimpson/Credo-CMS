@@ -106,6 +106,12 @@ const SermonsByBookPage = lazy(() =>
 const SermonDetailPage = lazy(() =>
   import("@/pages/public/SermonDetailPage").then((m) => ({ default: m.SermonDetailPage }))
 );
+const EventsListPage = lazy(() =>
+  import("@/pages/admin/EventsListPage").then((m) => ({ default: m.EventsListPage }))
+);
+const EventEditorPage = lazy(() =>
+  import("@/pages/admin/EventEditorPage").then((m) => ({ default: m.EventEditorPage }))
+);
 
 export default function App() {
   return (
@@ -375,6 +381,22 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <SermonEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <EventsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events/:id"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <EventEditorPage />
                 </Suspense>
               }
             />
