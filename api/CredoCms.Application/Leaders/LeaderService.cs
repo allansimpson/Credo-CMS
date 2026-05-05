@@ -1,4 +1,6 @@
 using CredoCms.Application.Common;
+using CredoCms.Application.Pages;
+using CredoCms.Application.Search;
 using CredoCms.Domain.Leaders;
 using FluentValidation;
 
@@ -78,14 +80,29 @@ public sealed class LeaderService : ILeaderService
     private readonly IValidator<CreateLeaderRequest> _createValidator;
     private readonly IValidator<UpdateLeaderRequest> _updateValidator;
 
+    private readonly ISearchIndexer? _search;
+
     public LeaderService(
         ILeaderRepository repo,
         IAuditLogger audit,
         IValidator<CreateLeaderRequest> createValidator,
-        IValidator<UpdateLeaderRequest> updateValidator)
+        IValidator<UpdateLeaderRequest> updateValidator,
+        ISearchIndexer? search = null)
     {
         _repo = repo; _audit = audit;
         _createValidator = createValidator; _updateValidator = updateValidator;
+        _search = search;
+    }
+
+    private async Task IndexAsync(Leader l, CancellationToken ct)
+    {
+        if (_search is null) return;
+        await _search.UpsertAsync(new SearchUpsertCommand(
+            EntityType: nameof(Leader), EntityId: l.Id,
+            Title: l.FullName,
+            BodyText: $"{l.Title} {l.Category} {PageService.AutoExcerpt(l.BioJson ?? string.Empty, 8000)}",
+            Url: "/leaders/" + l.Id,
+            IsPublished: true, IsMembersOnly: false), ct).ConfigureAwait(false);
     }
 
     public async Task<List<LeaderDto>> ListAsync(CancellationToken ct = default)
@@ -122,6 +139,7 @@ public sealed class LeaderService : ILeaderService
             CreatedAt = now, ModifiedAt = now,
         };
         await _repo.AddAsync(leader, ct).ConfigureAwait(false);
+        await IndexAsync(leader, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Leader.Created", nameof(Leader), leader.Id.ToString(),
             details: new { leader.FullName, leader.Category }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDto(leader));
@@ -142,6 +160,7 @@ public sealed class LeaderService : ILeaderService
         leader.ModifiedAt = DateTimeOffset.UtcNow;
 
         await _repo.UpdateAsync(leader, ct).ConfigureAwait(false);
+        await IndexAsync(leader, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Leader.Updated", nameof(Leader), id.ToString(),
             details: new { leader.FullName, leader.Category }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDto(leader));
@@ -152,6 +171,8 @@ public sealed class LeaderService : ILeaderService
         var leader = await _repo.GetByIdAsync(id, ct).ConfigureAwait(false);
         if (leader is null) return new(false, new[] { "Leader not found." }, null);
         await _repo.DeleteAsync(id, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.RemoveAsync(nameof(Leader), id, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Leader.Deleted", nameof(Leader), id.ToString(),
             details: new { leader.FullName, leader.Category }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), null);

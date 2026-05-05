@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Menu, X, Search } from "lucide-react";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,19 @@ export function PublicNavBar() {
   const { settings } = useSiteSettings();
   const { isAuthenticated, user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    setSearchOpen(false);
+    setOpen(false);
+    setQ("");
+    navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+  };
 
   return (
     <header className="border-b bg-background">
@@ -47,6 +60,14 @@ export function PublicNavBar() {
               {item.label}
             </NavLink>
           ))}
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => setSearchOpen((v) => !v)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border bg-background hover:bg-muted"
+          >
+            <Search className="h-4 w-4" />
+          </button>
           {isAuthenticated ? (
             <Link
               to="/profile"
@@ -73,6 +94,25 @@ export function PublicNavBar() {
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
+
+      {searchOpen && (
+        <div className="border-t bg-background">
+          <form onSubmit={submitSearch} className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-3">
+            <input
+              type="search"
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search the site…"
+              className="h-10 flex-1 rounded-md border bg-background px-3 text-sm"
+            />
+            <button type="submit"
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+              Search
+            </button>
+          </form>
+        </div>
+      )}
 
       {open && (
         <nav className="md:hidden border-t bg-background">

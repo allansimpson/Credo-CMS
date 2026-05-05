@@ -1,4 +1,5 @@
 using CredoCms.Application.Common;
+using CredoCms.Application.Search;
 using CredoCms.Application.Storage;
 using CredoCms.Domain.Documents;
 using FluentValidation;
@@ -79,13 +80,28 @@ public sealed class DocumentService : IDocumentService
     private readonly IValidator<CreateDocumentRequest> _createValidator;
     private readonly IValidator<UpdateDocumentMetadataRequest> _updateValidator;
 
+    private readonly ISearchIndexer? _search;
+
     public DocumentService(
         IDocumentRepository repo, IAuditLogger audit, IBlobCleanupService cleanup,
         IValidator<CreateDocumentRequest> createValidator,
-        IValidator<UpdateDocumentMetadataRequest> updateValidator)
+        IValidator<UpdateDocumentMetadataRequest> updateValidator,
+        ISearchIndexer? search = null)
     {
         _repo = repo; _audit = audit; _cleanup = cleanup;
         _createValidator = createValidator; _updateValidator = updateValidator;
+        _search = search;
+    }
+
+    private async Task IndexAsync(Document d, CancellationToken ct)
+    {
+        if (_search is null) return;
+        await _search.UpsertAsync(new SearchUpsertCommand(
+            EntityType: nameof(Document), EntityId: d.Id,
+            Title: d.Title,
+            BodyText: $"{d.Description} {d.Category} {d.OriginalFilename}",
+            Url: "/documents/" + d.Id,
+            IsPublished: d.IsPublished, IsMembersOnly: d.IsMembersOnly), ct).ConfigureAwait(false);
     }
 
     public async Task<List<DocumentDto>> ListAsync(string? category, bool includeDeleted, CancellationToken ct = default)
@@ -123,6 +139,7 @@ public sealed class DocumentService : IDocumentService
             CreatedAt = now, ModifiedAt = now,
         };
         await _repo.AddAsync(doc, ct).ConfigureAwait(false);
+        await IndexAsync(doc, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Document.Created", nameof(Document), doc.Id.ToString(),
             details: new { doc.Title, doc.Category }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDto(doc));
@@ -140,6 +157,7 @@ public sealed class DocumentService : IDocumentService
         doc.ModifiedAt = DateTimeOffset.UtcNow;
 
         await _repo.UpdateAsync(doc, ct).ConfigureAwait(false);
+        await IndexAsync(doc, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Document.Updated", nameof(Document), id.ToString(),
             details: new { doc.Title, doc.Category }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDto(doc));
@@ -170,6 +188,8 @@ public sealed class DocumentService : IDocumentService
         doc.IsDeleted = true; doc.IsPublished = false;
         doc.DeletedAt = DateTimeOffset.UtcNow; doc.ModifiedAt = doc.DeletedAt.Value;
         await _repo.UpdateAsync(doc, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.SetPublishedAsync(nameof(Document), id, false, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Document.SoftDeleted", nameof(Document), id.ToString(),
             details: new { doc.Title }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDto(doc));
@@ -196,6 +216,8 @@ public sealed class DocumentService : IDocumentService
         var blob = doc.BlobUrl;
         await _repo.HardDeleteAsync(id, ct).ConfigureAwait(false);
         await _cleanup.EnqueueAsync(blob, $"Document {id} hard-deleted", ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.RemoveAsync(nameof(Document), id, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Document.HardDeleted", nameof(Document), id.ToString(),
             details: new { doc.Title }, cancellationToken: ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), null);

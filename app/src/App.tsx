@@ -73,6 +73,9 @@ const DocumentDetailPage = lazy(() =>
 const AnnouncementAdminPage = lazy(() =>
   import("@/pages/admin/AnnouncementPage").then((m) => ({ default: m.AnnouncementPage }))
 );
+const SearchPage = lazy(() =>
+  import("@/pages/public/SearchPage").then((m) => ({ default: m.SearchPage }))
+);
 
 export default function App() {
   return (
@@ -145,6 +148,16 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted-foreground">Loading…</p>}>
                   <DocumentDetailPage />
+                </Suspense>
+              }
+            />
+
+            {/* Search */}
+            <Route
+              path="search"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <SearchPage />
                 </Suspense>
               }
             />

@@ -1,4 +1,5 @@
 using CredoCms.Application.Common;
+using CredoCms.Application.Search;
 using CredoCms.Domain.Pages;
 using FluentValidation;
 
@@ -8,6 +9,7 @@ public sealed class PageService : IPageService
 {
     private readonly IPageRepository _repo;
     private readonly IAuditLogger _audit;
+    private readonly ISearchIndexer? _search;
     private readonly IValidator<CreatePageRequest> _createValidator;
     private readonly IValidator<UpdatePageRequest> _updateValidator;
 
@@ -15,12 +17,25 @@ public sealed class PageService : IPageService
         IPageRepository repo,
         IAuditLogger audit,
         IValidator<CreatePageRequest> createValidator,
-        IValidator<UpdatePageRequest> updateValidator)
+        IValidator<UpdatePageRequest> updateValidator,
+        ISearchIndexer? search = null)
     {
         _repo = repo;
         _audit = audit;
+        _search = search;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+    }
+
+    private async Task IndexAsync(Page p, CancellationToken ct)
+    {
+        if (_search is null) return;
+        await _search.UpsertAsync(new SearchUpsertCommand(
+            EntityType: nameof(Page), EntityId: p.Id,
+            Title: p.Title,
+            BodyText: AutoExcerpt(p.BodyJson, 8000) + " " + (p.Excerpt ?? ""),
+            Url: "/" + p.Slug,
+            IsPublished: p.IsPublished, IsMembersOnly: p.IsMembersOnly), ct).ConfigureAwait(false);
     }
 
     public Task<PagedResult<PageListItemDto>> ListAsync(PageListQuery query, CancellationToken ct = default)
@@ -72,6 +87,7 @@ public sealed class PageService : IPageService
         };
 
         await _repo.AddAsync(page, ct).ConfigureAwait(false);
+        await IndexAsync(page, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Page.Created", nameof(Page), page.Id.ToString(),
             details: new { page.Slug, page.Title, page.IsPublished, page.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
@@ -120,6 +136,7 @@ public sealed class PageService : IPageService
         }
 
         await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
+        await IndexAsync(page, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Page.Updated", nameof(Page), page.Id.ToString(),
             details: new { page.Slug, page.Title, page.IsPublished, page.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
@@ -138,6 +155,8 @@ public sealed class PageService : IPageService
         page.ModifiedAt = page.DeletedAt.Value;
 
         await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.SetPublishedAsync(nameof(Page), id, false, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Page.SoftDeleted", nameof(Page), id.ToString(),
             details: new { page.Slug, page.Title }, cancellationToken: ct).ConfigureAwait(false);
 
@@ -158,6 +177,7 @@ public sealed class PageService : IPageService
         page.ModifiedAt = DateTimeOffset.UtcNow;
 
         await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
+        await IndexAsync(page, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Page.Restored", nameof(Page), id.ToString(),
             details: new { page.Slug, page.Title }, cancellationToken: ct).ConfigureAwait(false);
 
@@ -175,6 +195,8 @@ public sealed class PageService : IPageService
                 new[] { "Soft-delete the page first, then hard-delete from the deleted tab." }, null);
 
         await _repo.HardDeleteAsync(id, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.RemoveAsync(nameof(Page), id, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Page.HardDeleted", nameof(Page), id.ToString(),
             details: new { page.Slug, page.Title }, cancellationToken: ct).ConfigureAwait(false);
 

@@ -1,5 +1,6 @@
 using CredoCms.Application.Common;
 using CredoCms.Application.Pages;
+using CredoCms.Application.Search;
 using CredoCms.Domain.News;
 using FluentValidation;
 
@@ -9,6 +10,7 @@ public sealed class NewsService : INewsService
 {
     private readonly INewsRepository _repo;
     private readonly IAuditLogger _audit;
+    private readonly ISearchIndexer? _search;
     private readonly IValidator<CreateNewsItemRequest> _createValidator;
     private readonly IValidator<UpdateNewsItemRequest> _updateValidator;
 
@@ -16,12 +18,25 @@ public sealed class NewsService : INewsService
         INewsRepository repo,
         IAuditLogger audit,
         IValidator<CreateNewsItemRequest> createValidator,
-        IValidator<UpdateNewsItemRequest> updateValidator)
+        IValidator<UpdateNewsItemRequest> updateValidator,
+        ISearchIndexer? search = null)
     {
         _repo = repo;
         _audit = audit;
+        _search = search;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+    }
+
+    private async Task IndexAsync(NewsItem n, CancellationToken ct)
+    {
+        if (_search is null) return;
+        await _search.UpsertAsync(new SearchUpsertCommand(
+            EntityType: nameof(NewsItem), EntityId: n.Id,
+            Title: n.Title,
+            BodyText: PageService.AutoExcerpt(n.BodyJson, 8000) + " " + (n.Excerpt ?? ""),
+            Url: "/news/" + n.Slug,
+            IsPublished: n.IsPublished, IsMembersOnly: n.IsMembersOnly), ct).ConfigureAwait(false);
     }
 
     public Task<PagedResult<NewsListItemDto>> ListAsync(NewsListQuery query, CancellationToken ct = default)
@@ -80,6 +95,7 @@ public sealed class NewsService : INewsService
             PublishedAt = request.IsPublished ? now : null,
         };
         await _repo.AddAsync(item, ct).ConfigureAwait(false);
+        await IndexAsync(item, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.Created", nameof(NewsItem), item.Id.ToString(),
             details: new { item.Slug, item.Title, item.IsPublished, item.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
@@ -118,6 +134,7 @@ public sealed class NewsService : INewsService
         if (request.IsPublished && item.PublishedAt is null) item.PublishedAt = item.ModifiedAt;
 
         await _repo.UpdateAsync(item, ct).ConfigureAwait(false);
+        await IndexAsync(item, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.Updated", nameof(NewsItem), id.ToString(),
             details: new { item.Slug, item.Title, item.IsPublished, item.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
@@ -134,6 +151,8 @@ public sealed class NewsService : INewsService
         item.DeletedAt = DateTimeOffset.UtcNow;
         item.ModifiedAt = item.DeletedAt.Value;
         await _repo.UpdateAsync(item, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.SetPublishedAsync(nameof(NewsItem), id, false, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.SoftDeleted", nameof(NewsItem), id.ToString(),
             details: new { item.Slug, item.Title }, cancellationToken: ct).ConfigureAwait(false);
         return new NewsOperationResult(true, Array.Empty<string>(), ToDetail(item));
@@ -166,6 +185,8 @@ public sealed class NewsService : INewsService
                 new[] { "Soft-delete the item first, then hard-delete from the deleted tab." }, null);
 
         await _repo.HardDeleteAsync(id, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.RemoveAsync(nameof(NewsItem), id, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.HardDeleted", nameof(NewsItem), id.ToString(),
             details: new { item.Slug, item.Title }, cancellationToken: ct).ConfigureAwait(false);
         return new NewsOperationResult(true, Array.Empty<string>(), null);

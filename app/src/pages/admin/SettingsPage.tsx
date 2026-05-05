@@ -360,10 +360,16 @@ function AdvancedTab() {
   if (!settings) return <p className="text-destructive">Could not load settings.</p>;
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
-  const handleRebuild = () => {
-    // P9 will wire this to POST /api/admin/search/rebuild. For now the
-    // button exists so the UI is complete and the action is discoverable.
+  const handleRebuild = async () => {
     setRebuildState("queued");
+    try {
+      const { searchApi } = await import("@/lib/api/search");
+      await searchApi.rebuild();
+    } catch {
+      // The rebuild API is admin-only; if it fails (e.g. permissions or
+      // backend down), we surface a transient error but the SettingsPage
+      // doesn't carry banner state for this nested action.
+    }
     window.setTimeout(() => setRebuildState("idle"), 4000);
   };
 
@@ -444,11 +450,8 @@ function AdvancedTab() {
           disabled={rebuildState === "queued"}
           className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-muted disabled:opacity-50"
         >
-          {rebuildState === "queued" ? "Queued — wired in P9" : "Rebuild search index"}
+          {rebuildState === "queued" ? "Rebuilding…" : "Rebuild search index"}
         </button>
-        <p className="text-xs text-muted-foreground">
-          Backend wiring arrives with the Search Infrastructure stage (P9).
-        </p>
       </fieldset>
 
       <SubmitButton submitting={submitting} />

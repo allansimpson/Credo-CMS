@@ -6,6 +6,7 @@ using CredoCms.Application.Documents;
 using CredoCms.Application.Leaders;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
+using CredoCms.Application.Search;
 using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.Storage;
@@ -22,6 +23,7 @@ using CredoCms.Infrastructure.Documents;
 using CredoCms.Infrastructure.Leaders;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
+using CredoCms.Infrastructure.Search;
 using CredoCms.Infrastructure.Services;
 using CredoCms.Infrastructure.Persistence;
 using CredoCms.Infrastructure.Persistence.Interceptors;
@@ -133,7 +135,10 @@ public static class DependencyInjection
             o.ValidationInterval = TimeSpan.FromMinutes(1);
         });
 
+        services.AddSingleton<ISearchIndexer, SearchIndexer>();
+
         services.AddHostedService<VersioningTrimBackgroundService>();
+        services.AddHostedService<SearchIndexBootstrapService>();
 
         return services;
     }
