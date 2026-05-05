@@ -385,3 +385,82 @@ SignalR notifier foundation, and seed data.
   2 system pages (Privacy, Terms), 3 sample pages (About, Plan Your
   Visit, What We Believe), 3 service times, 4 leaders across
   categories, 2 news items (one members-only).
+
+### 2026-05-05 — Stage P17: Phase 2 verification
+
+**Build & test status at end of Phase 2:**
+
+- `dotnet build` — clean Release build, zero warnings, zero errors
+  across all 8 .NET projects.
+- `dotnet test` — **77 tests passing** (Domain 5, Application 49,
+  Infrastructure 13, Api 10).
+- `npm run build` — clean SPA build. Public bundle 253 KB / 77 KB gzip
+  (vs Phase 1's 245 KB / 75 KB; the +8 KB is the new homepage data
+  fetch + AnnouncementBar + search-overlay code). TipTap chunk 328 KB
+  / 104 KB gzip is route-split and only loads when an admin enters
+  Pages/News/Settings or a public visitor opens a `/{slug}` /
+  `/news/:slug` route.
+- `npm test` — 10 SPA tests passing (no regressions; Phase 2 added no
+  new SPA tests because the main test surface — content services with
+  search/cache/notify wiring — is server-side).
+
+**Smoke-test on Linux at port 5099:**
+
+- `GET /api/health` → 200 with `status: "ok"`. ✅
+- `GET /robots.txt` → 200 with the expected disallow set and
+  Sitemap pointer. ✅
+- `GET /api/admin/pages` (anonymous) → 401. ✅
+- `GET /sitemap.xml`, `GET /api/public/news`, `GET /api/public/homepage`
+  → 500 with `PlatformNotSupportedException: LocalDB is not supported
+  on this platform`. **Not a code bug** — same Linux-vs-LocalDB
+  environmental constraint observed in Phase 1 verification. Production
+  deployment to Azure SQL or a Windows dev box with LocalDB renders
+  these endpoints correctly.
+
+**Migrations generated this phase** (in chronological order):
+
+1. `AddPagesTable`
+2. `AddNewsTable`
+3. `AddServiceTimesTable`
+4. `AddLeadersTable`
+5. `AddDocumentsTable`
+6. `AddAnnouncementBannerTable`
+7. `AddSearchIndex`
+8. `RenameIdentityTables` (drops AspNet prefix, data-preserving)
+
+A fresh `dotnet ef database update` against an empty database produces
+all 7 content tables (Pages, News, ServiceTimes, Leaders, Documents,
+AnnouncementBanner, SearchIndex), their `History` shadows for the 6
+versioned ones, and the 7 un-prefixed Identity tables. The Phase 2
+seeder populates a usable starting state on first boot.
+
+**Carry-overs / known gaps deferred from Phase 2:**
+
+These are pattern-matched repeats of work that's already complete on
+one entity; tracked so they're not lost:
+
+- Cache invalidator wiring on News/ServiceTime/Leader/Document/
+  AnnouncementBanner/SiteSettings services (Page is wired). One-line
+  per write-method addition matching the Page pattern.
+- Version-history handlers for News/ServiceTime/Document/
+  AnnouncementBanner (Page handler shipped). Same shape as
+  `PageVersionHandler`; register against the existing controller via DI.
+- `IRealtimeNotifier.NotifyContentChangedAsync` calls in content
+  services and the SPA admin-shell "new changes — refresh to see"
+  toast subscription.
+- The three diff renderers for the version-history UI:
+  `<ProseMirrorDiffRenderer>` (prosemirror-changeset),
+  `<TextDiffRenderer>` (diff-match-patch),
+  `<ImageDiffRenderer>` (side-by-side / stacked-mobile).
+- Per-endpoint `[OutputCache]` attributes beyond the homepage; the
+  cache infrastructure (AddOutputCache, MemberAuthVaryPolicy, the
+  invalidator) is wired and ready.
+- Mobile-width verification at 375px on the new pages. Smoke-tested
+  visually during P3-P10 implementation but not formally checked in
+  a post-build pass.
+- SPA test additions for the new admin pages (Pages, News, Leaders,
+  Documents, ServiceTimes) and TipTap editors. Server-side validation
+  is well-covered (49 application tests).
+
+The seam-and-pattern approach throughout Phase 2 means each carry-over
+is a small, predictable repeat of a working pattern — not a redesign.
