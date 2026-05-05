@@ -1,6 +1,8 @@
+using CredoCms.Application.Caching;
 using CredoCms.Application.Homepage;
 using CredoCms.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace CredoCms.Api.Controllers;
 
@@ -12,6 +14,10 @@ public sealed class PublicHomepageController : ControllerBase
     public PublicHomepageController(IHomepageService svc) => _svc = svc;
 
     [HttpGet]
+    [OutputCache(PolicyName = "MembersAuthVary", Duration = 300,
+        Tags = new[] { OutputCacheTags.Homepage, OutputCacheTags.SiteSettings,
+                       OutputCacheTags.ServiceTimes, OutputCacheTags.News,
+                       OutputCacheTags.AnnouncementBanner })]
     public Task<HomepageDto> GetAsync(CancellationToken ct)
         => _svc.GetAsync(IsAuthenticatedMember(), ct);
 

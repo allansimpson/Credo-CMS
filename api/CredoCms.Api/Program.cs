@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using CredoCms.Api.Caching;
 using CredoCms.Api.Hubs;
 using CredoCms.Api.Middleware;
 using CredoCms.Application;
@@ -145,6 +146,19 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddFluentValidationClientsideAdapters();
 
+    // -- Output cache ---------------------------------------------------------
+    // In-memory store; default policy *does not* cache. Endpoints opt in
+    // explicitly with [OutputCache(...)]. Admin and auth surfaces are
+    // belt-and-braces blocked even if an attribute is added by mistake.
+    builder.Services.AddOutputCache(options =>
+    {
+        options.AddBasePolicy(b => b
+            .AddPolicy<MemberAuthVaryPolicy>()
+            .NoCache());
+        options.AddPolicy("MembersAuthVary", b => b
+            .AddPolicy<MemberAuthVaryPolicy>());
+    });
+
     // -- OpenAPI --------------------------------------------------------------
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -204,6 +218,7 @@ try
     app.UseRouting();
     app.UseAuthorization();
     app.UseRateLimiter();
+    app.UseOutputCache();
 
     // After Authorization but before MapControllers — turns Forbidden into NotFound
     // for the protected admin/docs URL prefixes only.

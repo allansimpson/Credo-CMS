@@ -1,6 +1,7 @@
 using CredoCms.Application.Announcements;
 using CredoCms.Application.Auditing;
 using CredoCms.Application.Auth;
+using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Leaders;
@@ -19,6 +20,7 @@ using CredoCms.Infrastructure.Configuration;
 using CredoCms.Infrastructure.Email;
 using CredoCms.Infrastructure.Identity;
 using CredoCms.Infrastructure.Announcements;
+using CredoCms.Infrastructure.Caching;
 using CredoCms.Infrastructure.Documents;
 using CredoCms.Infrastructure.Leaders;
 using CredoCms.Infrastructure.News;
@@ -136,6 +138,7 @@ public static class DependencyInjection
         });
 
         services.AddSingleton<ISearchIndexer, SearchIndexer>();
+        services.AddScoped<IOutputCacheInvalidator, OutputCacheInvalidator>();
 
         services.AddHostedService<VersioningTrimBackgroundService>();
         services.AddHostedService<SearchIndexBootstrapService>();
