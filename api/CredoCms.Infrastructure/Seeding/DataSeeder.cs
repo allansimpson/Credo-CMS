@@ -200,10 +200,12 @@ public sealed class DataSeeder
     {
         if (await _db.Pages.AnyAsync(p => p.IsSystemPage, ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
+        // Slugs match the Phase 2 prompt's "/privacy-policy" and
+        // "/terms-of-service" public routes and the footer links in the SPA.
         _db.Pages.AddRange(
-            SamplePage("privacy", "Privacy Policy", isSystem: true, now: now,
+            SamplePage("privacy-policy", "Privacy Policy", isSystem: true, now: now,
                 paragraph: "This is a placeholder Privacy Policy. Please replace with the policy that governs your church's data practices."),
-            SamplePage("terms", "Terms of Service", isSystem: true, now: now,
+            SamplePage("terms-of-service", "Terms of Service", isSystem: true, now: now,
                 paragraph: "Placeholder Terms of Service. Replace with the terms that apply to your site."));
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded system pages (Privacy, Terms).");
