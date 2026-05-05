@@ -16,6 +16,7 @@ using CredoCms.Application.Storage;
 using CredoCms.Application.Tags;
 using CredoCms.Application.UserManagement;
 using CredoCms.Application.Versioning;
+using CredoCms.Application.YouTube;
 using CredoCms.Domain.Identity;
 using CredoCms.Infrastructure.Auditing;
 using CredoCms.Infrastructure.Auth;
@@ -34,6 +35,7 @@ using CredoCms.Infrastructure.Search;
 using CredoCms.Infrastructure.Sermons;
 using CredoCms.Infrastructure.Tags;
 using CredoCms.Infrastructure.Versioning;
+using CredoCms.Infrastructure.YouTube;
 using CredoCms.Infrastructure.Services;
 using CredoCms.Infrastructure.Persistence;
 using CredoCms.Infrastructure.Persistence.Interceptors;
@@ -116,6 +118,16 @@ public static class DependencyInjection
         services.AddScoped<IScriptureReferenceRepository, ScriptureReferenceRepository>();
         services.AddScoped<ISermonSeriesRepository, SermonSeriesRepository>();
         services.AddScoped<ISermonRepository, SermonRepository>();
+
+        // YouTube integration (Phase 3 Q5)
+        services.AddScoped<IYouTubeApiClient, YouTubeApiClient>();
+        services.AddHttpClient(YouTubeTranscriptClient.HttpClientName, c =>
+        {
+            c.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddScoped<IYouTubeTranscriptClient, YouTubeTranscriptClient>();
+        services.AddSingleton<YouTubeSyncService>();
+        services.AddHostedService(sp => sp.GetRequiredService<YouTubeSyncService>());
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();

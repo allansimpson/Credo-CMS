@@ -116,6 +116,35 @@ public class SiteSettings
     [MaxLength(300)]
     public string? DefaultMetaDescription { get; set; }
 
+    // ---- Phase 3: YouTube integration -------------------------------------
+    // Stored plain in DB, masked in admin UI per BUILD_PLAN Q-2 #5.
+    // Data Protection encrypt-at-rest queued in PHASE_3_BACKLOG.md.
+
+    [MaxLength(50)]
+    public string? YouTubeChannelId { get; set; }
+
+    [MaxLength(200)]
+    public string? YouTubeApiKey { get; set; }
+
+    [MaxLength(500)]
+    public string? YouTubeOAuthRefreshToken { get; set; }
+
+    public bool YouTubeSyncEnabled { get; set; }
+
+    public int YouTubeSyncIntervalMinutes { get; set; } = 360;
+
+    public bool YouTubeAutoPublishOnSync { get; set; }
+
+    /// <summary>JSON array of default tag names applied to every auto-imported sermon.</summary>
+    public string YouTubeDefaultTagsJson { get; set; } = "[]";
+
+    public DateTimeOffset? YouTubeLastSuccessfulSyncAt { get; set; }
+
+    [MaxLength(500)]
+    public string? YouTubeLastSyncStatus { get; set; }
+
+    public int? YouTubeLastSyncImportedCount { get; set; }
+
     // -----------------------------------------------------------------------
 
     public DateTimeOffset CreatedAt { get; set; }
