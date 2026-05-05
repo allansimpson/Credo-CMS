@@ -51,6 +51,7 @@ public class ApplicationDbContext
     public DbSet<EventOccurrenceOverride> EventOccurrenceOverrides => Set<EventOccurrenceOverride>();
     public DbSet<EventRegistrationField> EventRegistrationFields => Set<EventRegistrationField>();
     public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
+    public DbSet<CalendarFeedToken> CalendarFeedTokens => Set<CalendarFeedToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

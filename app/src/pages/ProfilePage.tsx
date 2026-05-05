@@ -63,6 +63,27 @@ export function ProfilePage() {
           </section>
 
           <section className="mt-8 rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold">My calendar feed</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Subscribe to upcoming events (including members-only) from any
+              calendar app.
+            </p>
+            <a href="/profile/calendar-feed"
+              className="mt-3 inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted">
+              Manage feed URL →
+            </a>
+          </section>
+
+          <section className="mt-8 rounded-lg border bg-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold">My event registrations</h2>
+            <p className="mt-2 text-sm text-muted-foreground">View or cancel your upcoming registrations.</p>
+            <a href="/profile/registrations"
+              className="mt-3 inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted">
+              View registrations →
+            </a>
+          </section>
+
+          <section className="mt-8 rounded-lg border bg-card p-6 shadow-sm">
             <h2 className="text-lg font-semibold">Change password</h2>
             <form onSubmit={handlePasswordChange} className="mt-4 space-y-4">
               {errors.length > 0 && (
