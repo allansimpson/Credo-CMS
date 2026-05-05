@@ -2,6 +2,7 @@ using CredoCms.Application.Auditing;
 using CredoCms.Application.Auth;
 using CredoCms.Application.Common;
 using CredoCms.Application.SiteSettingsManagement;
+using CredoCms.Application.Storage;
 using CredoCms.Application.UserManagement;
 using CredoCms.Domain.Identity;
 using CredoCms.Infrastructure.Auditing;
@@ -14,6 +15,7 @@ using CredoCms.Infrastructure.Persistence;
 using CredoCms.Infrastructure.Persistence.Interceptors;
 using CredoCms.Infrastructure.Seeding;
 using CredoCms.Infrastructure.SiteSettingsManagement;
+using CredoCms.Infrastructure.Storage;
 using CredoCms.Infrastructure.UserManagement;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +44,13 @@ public static class DependencyInjection
         services.AddOptions<CookieAuthOptions>()
             .Bind(configuration.GetSection(CookieAuthOptions.SectionName))
             .ValidateOnStart();
+
+        services.AddOptions<StorageOptions>()
+            .Bind(configuration.GetSection(StorageOptions.SectionName));
+
+        services.AddSingleton<IBlobStorageService, BlobStorageService>();
+        services.AddScoped<IImageStorageService, ImageStorageService>();
+        services.AddSingleton<IBlobCleanupService, BlobCleanupService>();
 
         services.AddHttpContextAccessor();
 

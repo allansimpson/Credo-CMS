@@ -11,6 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="CredoCms.Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Infrastructure provides the ASP.NET Core Identity SignInManager wiring,
          which lives in the ASP.NET Core shared framework. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

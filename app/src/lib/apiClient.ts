@@ -105,3 +105,41 @@ export const apiPut = <T>(path: string, body?: unknown, opts?: RequestOptions) =
   request<T>(path, { ...opts, method: "PUT", body });
 export const apiDelete = <T>(path: string, body?: unknown, opts?: RequestOptions) =>
   request<T>(path, { ...opts, method: "DELETE", body });
+
+/**
+ * Multipart upload. Uses the same fetch shape as `request` but lets the
+ * browser set the Content-Type header itself (so it includes the
+ * multipart boundary).
+ */
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  });
+
+  const expiresAt = response.headers.get(SESSION_EXPIRY_HEADER);
+  if (expiresAt) {
+    window.dispatchEvent(
+      new CustomEvent(ApiEvents.SessionExpiryHeader, { detail: expiresAt }),
+    );
+  }
+  if (response.status === 401) {
+    window.dispatchEvent(new CustomEvent(ApiEvents.Unauthorized));
+  }
+  if (response.status === 204) return undefined as T;
+
+  let parsed: unknown = null;
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    parsed = await response.json().catch(() => null);
+  } else if (response.body) {
+    parsed = await response.text().catch(() => null);
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, parsed);
+  }
+  return parsed as T;
+}

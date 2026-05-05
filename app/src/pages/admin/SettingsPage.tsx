@@ -3,6 +3,7 @@ import { siteSettingsApi } from "@/lib/api/siteSettings";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import type { SiteSettings, UpdateSiteSettingsRequest } from "@/types/api";
 import { TipTapEditor } from "@/components/shared/TipTapEditor";
+import { ImageUpload } from "@/components/shared/ImageUpload";
 
 const TABS = [
   { id: "branding", label: "Branding" },
@@ -204,10 +205,17 @@ function BrandingTab() {
         <Field label="Tagline">
           <input value={settings.tagline ?? ""} onChange={(e) => setSettings({ ...settings, tagline: e.target.value })} className="input" />
         </Field>
-        <Field label="Logo URL" hint="Phase 1: paste a URL. Real upload arrives in Phase 2.">
-          <input value={settings.logoUrl ?? ""} onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })} className="input" />
-        </Field>
       </Section>
+
+      <fieldset className="space-y-4 rounded-lg border bg-card p-4">
+        <legend className="px-2 text-sm font-semibold">Logo</legend>
+        <ImageUpload
+          ariaLabel="Logo upload"
+          hint="Stored in blob storage. Both an optimized variant and a WebP variant are generated; the public site uses the WebP variant via a <picture> element."
+          value={{ url: settings.logoUrl, webpUrl: null, alt: null }}
+          onChange={(next) => setSettings({ ...settings, logoUrl: next.url })}
+        />
+      </fieldset>
 
       <Section title="Colors">
         <Field label="Primary color">
