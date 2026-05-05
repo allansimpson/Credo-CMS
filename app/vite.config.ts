@@ -15,13 +15,17 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     proxy: {
+      // Target matches the https profile in api/CredoCms.Api/Properties/launchSettings.json.
+      // We target HTTPS directly so the API's UseHttpsRedirection() middleware doesn't
+      // 30x us to a different origin (which the browser then blocks via CORS).
+      // secure:false skips dev-cert validation. Override with VITE_API_TARGET if needed.
       "/api": {
-        target: "http://localhost:5000",
+        target: process.env.VITE_API_TARGET ?? "https://localhost:7194",
         changeOrigin: true,
         secure: false,
       },
       "/hubs": {
-        target: "http://localhost:5000",
+        target: process.env.VITE_API_TARGET ?? "https://localhost:7194",
         changeOrigin: true,
         ws: true,
         secure: false,
