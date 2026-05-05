@@ -8,71 +8,89 @@ v1.0 scope (Phases 1–6); items deferred past v1 belong in `ROADMAP.md`.
 
 ## Repo Layout
 
-### Rename `spa/` → `app/`
+### Rename `spa/` → `app/` ✅ Done
 
-The frontend root folder is currently `spa/`. Phase 2 should rename it to
-`app/` to match the more common convention (and because "SPA" is an
-implementation detail — the folder may eventually host SSR pages, MDX
-content packs, or a native shell).
+Completed in Stage P0 (commit `371b1cd`); leftover empty `spa/` directory
+removed in Stage P1 (commit `4d21211`). Kept here for historical reference.
 
-This rename touches more than just the directory name. Every reference
-listed below must be updated in the same commit so CI, dev tooling, and
-deployments don't break:
+The frontend root folder was renamed from `spa/` to `app/` to match the
+more common convention. References swept across docs, CI workflow,
+package metadata, and tooling configs.
 
-**Filesystem**
-- `spa/` → `app/` (the directory itself).
+---
 
-**Top-level docs** (paths and "the SPA" prose where appropriate)
-- `README.md` — quick-start commands, project layout diagram.
-- `BUILD_PLAN.md` — Stage G/H/I narrative references.
-- `IMPLEMENTATION_NOTES.md` — every `spa/...` path mention.
-- `VERSIONING.md`, `MULTI_TENANCY.md` — any code-path references.
+## Database Schema
 
-**Build & deploy**
-- `.github/workflows/deploy.yml` — `working-directory`, the
-  `npm ci` / `npm run build` step paths, and the `cp -r spa/dist/* …`
-  step that copies the build into `wwwroot/`.
-- Any future workflow files (test, preview, lint).
+### Drop the `AspNet` prefix from Identity tables
 
-**API integration points**
-- `api/CredoCms.Api/Properties/launchSettings.json` — if the dev SPA
-  proxy URL is referenced.
-- Vite proxy / CORS allow-list configuration in `app/vite.config.ts`
-  (currently `spa/vite.config.ts`) — paths referencing the API.
-- Any `appsettings.Development.json` SPA-origin entries.
+ASP.NET Core Identity defaults to prefixing every table with `AspNet`
+(`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, `AspNetUserClaims`,
+`AspNetUserLogins`, `AspNetUserTokens`, `AspNetRoleClaims`). The prefix
+exists for historical compatibility with classic ASP.NET Identity and
+adds nothing in a greenfield app. Drop it so our schema reads cleanly
+alongside the domain tables (`SiteSettings`, `AuditLogEntries`, and the
+Phase 2+ entities to come).
 
-**Tooling configs inside the renamed directory**
-- `package.json` `name` field (currently `"credo-cms-spa"` →
-  `"credo-cms-app"`).
-- `tsconfig*.json` `references` and `paths` entries that escape the
-  directory (none today, but verify).
-- Path aliases in `vite.config.ts` (`@` → `./src` is fine; just confirm
-  no absolute path leaks).
+**Final names**
 
-**Editor / IDE**
-- `.vscode/settings.json` if it pins workspace folders.
-- Any `launch.json` / `tasks.json` `cwd` entries.
+| Before | After |
+|---|---|
+| `AspNetUsers` | `Users` |
+| `AspNetRoles` | `Roles` |
+| `AspNetUserRoles` | `UserRoles` |
+| `AspNetUserClaims` | `UserClaims` |
+| `AspNetUserLogins` | `UserLogins` |
+| `AspNetUserTokens` | `UserTokens` |
+| `AspNetRoleClaims` | `RoleClaims` |
 
-**Tests**
-- Update any test files that reference `spa/` in fixtures or snapshots.
-- Verify Playwright / Vitest config paths if they reference the folder
-  by name.
+**Implementation outline**
+
+1. In `ApplicationDbContext.OnModelCreating`, after `base.OnModelCreating`,
+   add `ToTable` overrides for each Identity entity:
+
+   ```csharp
+   modelBuilder.Entity<ApplicationUser>().ToTable("Users");
+   modelBuilder.Entity<ApplicationRole>().ToTable("Roles");
+   modelBuilder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
+   modelBuilder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
+   modelBuilder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
+   modelBuilder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
+   modelBuilder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
+   ```
+
+2. Generate the migration:
+
+   ```bash
+   dotnet ef migrations add RenameIdentityTables \
+     -p CredoCms.Infrastructure -s CredoCms.Api -o Persistence/Migrations
+   ```
+
+3. EF should emit `RenameTable` operations (preserving data and FKs).
+   Verify the generated migration uses `RenameTable` rather than
+   `DropTable` + `CreateTable` — if the latter, the model isn't lined up
+   correctly and existing rows would be lost.
+
+4. Foreign-key constraint names also embed the old table names. EF will
+   typically rename them automatically; if not, add explicit
+   `RenameForeignKey` calls in the migration.
 
 **Acceptance criteria**
-- `npm run build` and `npm test` work from `app/`.
-- `dotnet test` still passes (no API tests reference the SPA path).
-- The deploy workflow builds successfully end-to-end on a feature branch.
-- `git grep -i "spa/"` returns only intentional matches (e.g., the
-  acronym "SPA" in prose, never a path).
-- No broken links in any markdown file.
 
-**Suggested approach**
-1. `git mv spa app` (preserves history per file).
-2. Search-and-replace `spa/` → `app/` across all tracked files
-   (`git grep -l "spa/" | xargs sed -i 's|spa/|app/|g'`, then review
-   diff carefully — the acronym "SPA" in prose must NOT be touched).
-3. Update the `package.json` `name` field manually.
-4. Run `dotnet build`, `dotnet test`, `npm install`, `npm run build`,
-   `npm test` to verify.
-5. Push branch, confirm GitHub Actions `deploy.yml` succeeds end-to-end
-   before merging.
+- Migration applies cleanly to an existing Phase 1 database without data
+  loss (test on a populated dev DB: seeded admin user still logs in,
+  audit-log entries still resolve `UserId` to the right user).
+- Migration's `Down()` restores the `AspNet*` names so a rollback works.
+- All tests still green: `dotnet test`.
+- A fresh `dotnet ef database update` against an empty DB produces only
+  the un-prefixed names (no leftover `AspNet*` artifacts).
+- README / IMPLEMENTATION_NOTES updated where the table names appear.
+
+**Risks**
+
+- Any raw SQL elsewhere that references `AspNetUsers` etc. would break.
+  Audit `git grep -i "AspNet"` before merging — Phase 1 has no raw SQL
+  hits, but Phase 2 search-infrastructure work (`P9.2 AddSearchIndexFullText`)
+  will use raw SQL for `CREATE FULLTEXT INDEX`; if that lands first, it
+  must reference the renamed table.
+
+---
