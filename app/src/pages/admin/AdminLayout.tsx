@@ -14,6 +14,7 @@ import {
   Newspaper,
   Clock,
   UserCircle2,
+  FilePlus2,
 } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -36,6 +37,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/news", label: "News", icon: Newspaper },
   { to: "/admin/service-times", label: "Service Times", icon: Clock },
   { to: "/admin/leaders", label: "Leaders", icon: UserCircle2 },
+  { to: "/admin/documents", label: "Documents", icon: FilePlus2 },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },

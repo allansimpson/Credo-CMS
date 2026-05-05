@@ -61,6 +61,15 @@ const PublicLeadersPage = lazy(() =>
 const LeaderDetailPage = lazy(() =>
   import("@/pages/public/LeaderDetailPage").then((m) => ({ default: m.LeaderDetailPage }))
 );
+const DocumentsAdminPage = lazy(() =>
+  import("@/pages/admin/DocumentsPage").then((m) => ({ default: m.DocumentsPage }))
+);
+const PublicDocumentsListPage = lazy(() =>
+  import("@/pages/public/DocumentsPage").then((m) => ({ default: m.PublicDocumentsListPage }))
+);
+const DocumentDetailPage = lazy(() =>
+  import("@/pages/public/DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage }))
+);
 
 export default function App() {
   return (
@@ -115,6 +124,24 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
                   <LeaderDetailPage />
+                </Suspense>
+              }
+            />
+
+            {/* Documents */}
+            <Route
+              path="documents"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <PublicDocumentsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="documents/:id"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted-foreground">Loading…</p>}>
+                  <DocumentDetailPage />
                 </Suspense>
               }
             />
@@ -203,6 +230,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <LeadersAdminPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="documents"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <DocumentsAdminPage />
                 </Suspense>
               }
             />

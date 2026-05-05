@@ -1,5 +1,6 @@
 using CredoCms.Application.Common;
 using CredoCms.Domain.Auditing;
+using CredoCms.Domain.Documents;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
@@ -29,6 +30,7 @@ public class ApplicationDbContext
     public DbSet<NewsItem> News => Set<NewsItem>();
     public DbSet<ServiceTime> ServiceTimes => Set<ServiceTime>();
     public DbSet<Leader> Leaders => Set<Leader>();
+    public DbSet<Document> Documents => Set<Document>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

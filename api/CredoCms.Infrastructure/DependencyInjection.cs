@@ -1,6 +1,7 @@
 using CredoCms.Application.Auditing;
 using CredoCms.Application.Auth;
 using CredoCms.Application.Common;
+using CredoCms.Application.Documents;
 using CredoCms.Application.Leaders;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
@@ -15,6 +16,7 @@ using CredoCms.Infrastructure.BackgroundServices;
 using CredoCms.Infrastructure.Configuration;
 using CredoCms.Infrastructure.Email;
 using CredoCms.Infrastructure.Identity;
+using CredoCms.Infrastructure.Documents;
 using CredoCms.Infrastructure.Leaders;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
@@ -58,6 +60,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IBlobStorageService, BlobStorageService>();
         services.AddScoped<IImageStorageService, ImageStorageService>();
+        services.AddScoped<IDocumentStorageService, DocumentStorageService>();
         services.AddSingleton<IBlobCleanupService, BlobCleanupService>();
 
         services.AddHttpContextAccessor();
@@ -93,6 +96,7 @@ public static class DependencyInjection
         services.AddScoped<INewsRepository, NewsRepository>();
         services.AddScoped<IServiceTimeRepository, ServiceTimeRepository>();
         services.AddScoped<ILeaderRepository, LeaderRepository>();
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();

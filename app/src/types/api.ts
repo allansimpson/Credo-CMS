@@ -352,6 +352,40 @@ export interface CreateLeaderRequest {
 
 export type UpdateLeaderRequest = CreateLeaderRequest;
 
+export interface DocumentDto {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  blobUrl: string;
+  originalFilename: string | null;
+  sizeBytes: number;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  modifiedAt: string;
+  modifiedByUserId: string | null;
+}
+
+export interface PublicDocument {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  sizeBytes: number;
+  isMembersOnly: boolean;
+  modifiedAt: string;
+}
+
+export interface UpdateDocumentMetadataRequest {
+  title: string;
+  description: string | null;
+  category: string;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+}
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;
