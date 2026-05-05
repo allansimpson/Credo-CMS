@@ -41,6 +41,9 @@ public static class DependencyInjection
         services.AddScoped<ISermonService, SermonService>();
         services.AddSingleton<IEventOccurrenceExpander, EventOccurrenceExpander>();
         services.AddScoped<IEventService, EventService>();
+        services.AddScoped<IEventRegistrationService, EventRegistrationService>();
+        // RegistrationTokenSigner + options bound from configuration in
+        // CredoCms.Infrastructure.DependencyInjection (IConfiguration lives there).
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 

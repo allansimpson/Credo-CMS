@@ -49,6 +49,8 @@ public class ApplicationDbContext
     public DbSet<Event> Events => Set<Event>();
     public DbSet<EventRecurrenceException> EventRecurrenceExceptions => Set<EventRecurrenceException>();
     public DbSet<EventOccurrenceOverride> EventOccurrenceOverrides => Set<EventOccurrenceOverride>();
+    public DbSet<EventRegistrationField> EventRegistrationFields => Set<EventRegistrationField>();
+    public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

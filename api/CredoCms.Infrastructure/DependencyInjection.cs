@@ -121,6 +121,14 @@ public static class DependencyInjection
         services.AddScoped<ISermonSeriesRepository, SermonSeriesRepository>();
         services.AddScoped<ISermonRepository, SermonRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IEventRegistrationRepository, EventRegistrationRepository>();
+
+        // Registration token signer — secret bound from EventRegistration:* section.
+        var tokenOptions = new CredoCms.Application.Events.RegistrationTokenSignerOptions();
+        configuration.GetSection(CredoCms.Application.Events.RegistrationTokenSignerOptions.SectionName).Bind(tokenOptions);
+        services.AddSingleton(tokenOptions);
+        services.AddSingleton<CredoCms.Application.Events.IRegistrationTokenSigner,
+            CredoCms.Application.Events.RegistrationTokenSigner>();
 
         // YouTube integration (Phase 3 Q5)
         services.AddScoped<IYouTubeApiClient, YouTubeApiClient>();

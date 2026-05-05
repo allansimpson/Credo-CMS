@@ -133,6 +133,18 @@ try
                     Window = TimeSpan.FromHours(1),
                     QueueLimit = 0,
                 }));
+
+        // Event registration: 5 submissions per IP per 10 minutes.
+        // Honeypot + time-to-submit defenses also apply server-side.
+        options.AddPolicy("event-register", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(10),
+                    QueueLimit = 0,
+                }));
     });
 
     // -- MVC + Validation -----------------------------------------------------
