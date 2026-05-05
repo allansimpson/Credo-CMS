@@ -106,6 +106,12 @@ appsettings.*.local.json
 # ---- Claude Code workspace settings ----
 .claude/
 
+# ---- Azurite (Azure Storage emulator) local data ----
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/
+__tablestorage__/
+
 # ---- OS ----
 .DS_Store
 Thumbs.db
