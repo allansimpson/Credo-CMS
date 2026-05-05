@@ -72,8 +72,8 @@ export function PublicFooter() {
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-sm text-muted-foreground sm:flex-row sm:justify-between">
           <span>{settings.footerText ?? `© ${new Date().getFullYear()} ${settings.churchName}`}</span>
           <div className="flex gap-4">
-            <Link to="/privacy" className="hover:text-primary">Privacy</Link>
-            <Link to="/terms" className="hover:text-primary">Terms</Link>
+            <Link to="/privacy-policy" className="hover:text-primary">Privacy</Link>
+            <Link to="/terms-of-service" className="hover:text-primary">Terms</Link>
           </div>
         </div>
       </div>

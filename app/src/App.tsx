@@ -86,7 +86,6 @@ export default function App() {
           {/* Public, church-themed */}
           <Route element={<PublicLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="about" element={<PlaceholderPage title="About" />} />
             <Route
               path="service-times"
               element={
@@ -95,8 +94,9 @@ export default function App() {
                 </Suspense>
               }
             />
-            <Route path="privacy" element={<PlaceholderPage title="Privacy Policy" />} />
-            <Route path="terms" element={<PlaceholderPage title="Terms of Service" />} />
+            {/* /about, /privacy-policy, /terms-of-service, /beliefs, etc. resolve
+                via the dynamic :slug route below — they're database-backed Pages,
+                not hardcoded placeholders. */}
 
             {/* News (public) */}
             <Route
@@ -162,9 +162,10 @@ export default function App() {
               }
             />
 
-            {/* Dynamic content pages — must come after the static ones above so
-                /privacy, /terms, etc. keep their placeholder rendering for now.
-                The slug param matches a single non-slash segment. */}
+            {/* Dynamic content pages. The :slug param matches a single non-slash
+                segment, so all database-backed Pages (about, beliefs, privacy-policy,
+                terms-of-service, etc.) resolve here. Member-only filtering and 404s
+                for missing/unpublished slugs happen inside DynamicPagePage. */}
             <Route
               path=":slug"
               element={
