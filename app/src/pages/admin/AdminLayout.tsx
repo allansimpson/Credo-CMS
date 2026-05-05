@@ -41,6 +41,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/leaders", label: "Leaders", icon: UserCircle2 },
   { to: "/admin/documents", label: "Documents", icon: FilePlus2 },
   { to: "/admin/announcement", label: "Announcement", icon: Megaphone },
+  { to: "/admin/sermons", label: "Sermons", icon: Video },
   { to: "/admin/sermon-series", label: "Sermon Series", icon: Video },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
