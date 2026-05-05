@@ -464,3 +464,94 @@ one entity; tracked so they're not lost:
 
 The seam-and-pattern approach throughout Phase 2 means each carry-over
 is a small, predictable repeat of a working pattern — not a redesign.
+
+---
+
+# Phase 3 Decisions Log (in progress)
+
+### 2026-05-05 → present — Stages Q0 through Q8 complete; Q9+ pending
+
+Phase 3 is being built incrementally on `claude/credo-cms-phase-1-06gIY`.
+This entry captures the **mid-Phase-3 checkpoint** state at session
+break.
+
+**Stages complete (Q0–Q8):**
+
+- **Q0** Phase 3 packages installed (Ical.Net 4.2.0, Google.Apis.YouTube.v3,
+  @fullcalendar/react+core+daygrid+timegrid+list+rrule, rrule).
+- **Q1** Tag entity, normalization service, autocomplete API +
+  `<TagAutocomplete>` component, 6 tests.
+- **Q2** Polymorphic ScriptureReference (Domain enum + 66-book static
+  data + table + replace-on-save service + `<ScriptureReferenceInput>`
+  + en-dash formatter + 22 tests).
+- **Q3** SermonSeries (versioned) full slice — Domain through admin
+  list/editor + public list/detail.
+- **Q4** Sermon (versioned) full server-side slice including
+  SermonTag/SermonAttachment join tables. Tag persistence routes
+  through `TagService.NormalizeAndUpsertAsync`. Attachment validation
+  rejects non-PDF, members-only, or unpublished documents.
+- **Q5** YouTube integration: `IYouTubeApiClient`,
+  `IYouTubeTranscriptClient` (best-effort timedtext),
+  `YouTubeUrlParser` with 11 tests, `YouTubeSyncService`
+  `BackgroundService`, `POST /api/admin/sermons/import` and `/sync`,
+  9 new SiteSettings columns. **Decision:** secrets stored plain-text
+  in DB, masked in admin UI per BUILD_PLAN Q-2 #5; Data-Protection
+  encrypt-at-rest queued in `PHASE_3_BACKLOG.md`.
+- **Q6 (partial)** Sermon admin UI: `/admin/sermons` list with import +
+  sync trigger, `/admin/sermons/:id` editor (thumbnail, TipTap,
+  speaker toggle, series, tags, scripture refs, transcript, publish
+  controls). Speaker-linked-to-Leader is GUID-paste pending a Leader
+  picker; attachments multi-select pending.
+- **Q7** Sermon public surface: `/sermons` archive, `/sermons/by-book`
+  index + per-book browse, `/sermons/:slug` detail with embedded
+  YouTube player, formatted scripture references, attachment links,
+  collapsible transcript with `?highlight=` term emphasis,
+  `VideoObject` JSON-LD.
+- **Q8** Event entity (versioned) + recurrence: Domain entity,
+  `EventRecurrenceException` (skip), `EventOccurrenceOverride` (edit),
+  hand-rolled `EventOccurrenceExpander` covering FREQ=DAILY/WEEKLY+
+  BYDAY/MONTHLY+BYMONTHDAY with UNTIL or COUNT, repository,
+  service with skip-occurrence + override-occurrence operations,
+  validators (visibility-required-on-publish), admin controller,
+  migration.
+
+**Verification at checkpoint:**
+- `dotnet build` clean across 8 projects.
+- `dotnet test` — **110 passing** (Domain 15, Application 72,
+  Infrastructure 13, Api 10).
+- `npm run build` clean (public 257 KB / 78 KB gzip).
+- `npm test` — 21 passing.
+
+**Stages remaining (Q9 onward) — to do in subsequent sessions:**
+
+- **Q9** Event admin UI (recurrence builder, hero upload, occurrence
+  exceptions/overrides UI). Prep work shipped: `app/src/lib/recurrence.ts`
+  (RRULE builder + parser for the four patterns) and
+  `app/src/lib/api/events.ts` API client.
+- **Q10** Event registration server-side.
+- **Q11** Event registration UI.
+- **Q12** Public events list + detail + add-to-calendar dropdown.
+- **Q13** Calendar — `GET /api/public/calendar`, FullCalendar React
+  page, admin overview.
+- **Q14** iCal feeds — public + per-member token.
+- **Q15** Cross-cutting wiring + Phase 2 carry-over cleanup.
+- **Q16** Profile additions (calendar-feed, registrations).
+- **Q17** Seed data (sample sermons + events).
+- **Q18** Final verification.
+
+**How to set up YouTube sync today** (until the Q15 admin UI ships):
+
+```sql
+UPDATE SiteSettings
+SET YouTubeChannelId = 'UC...your-channel-id...',
+    YouTubeApiKey = 'AIza...',
+    YouTubeSyncEnabled = 1,
+    YouTubeSyncIntervalMinutes = 360,
+    YouTubeAutoPublishOnSync = 0
+WHERE Id = '11111111-1111-1111-1111-111111111111';
+```
+
+**Repo state at checkpoint:** buildable, runnable, migratable. All
+Phase 1 + Phase 2 features still intact. The Q9+ stages are mostly
+admin/public UI plus calendar/iCal glue with no further schema
+changes (only `CalendarFeedToken` in Q14).
