@@ -311,6 +311,47 @@ export interface CreateServiceTimeRequest {
 
 export type UpdateServiceTimeRequest = CreateServiceTimeRequest;
 
+export interface Leader {
+  id: string;
+  fullName: string;
+  title: string | null;
+  category: string;
+  bioJson: string | null;
+  email: string | null;
+  photoUrl: string | null;
+  photoWebpUrl: string | null;
+  photoAlt: string | null;
+  displayOrder: number;
+  createdAt: string;
+  modifiedAt: string;
+}
+
+export interface PublicLeader {
+  id: string;
+  fullName: string;
+  title: string | null;
+  category: string;
+  bioJson: string | null;
+  photoUrl: string | null;
+  photoWebpUrl: string | null;
+  photoAlt: string | null;
+  displayOrder: number;
+}
+
+export interface CreateLeaderRequest {
+  fullName: string;
+  title: string | null;
+  category: string;
+  bioJson: string | null;
+  email: string | null;
+  photoUrl: string | null;
+  photoWebpUrl: string | null;
+  photoAlt: string | null;
+  displayOrder: number;
+}
+
+export type UpdateLeaderRequest = CreateLeaderRequest;
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;

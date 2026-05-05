@@ -52,6 +52,15 @@ const ServiceTimesAdminPage = lazy(() =>
 const PublicServiceTimesPage = lazy(() =>
   import("@/pages/public/ServiceTimesPage").then((m) => ({ default: m.PublicServiceTimesPage }))
 );
+const LeadersAdminPage = lazy(() =>
+  import("@/pages/admin/LeadersPage").then((m) => ({ default: m.LeadersPage }))
+);
+const PublicLeadersPage = lazy(() =>
+  import("@/pages/public/LeadersPage").then((m) => ({ default: m.PublicLeadersPage }))
+);
+const LeaderDetailPage = lazy(() =>
+  import("@/pages/public/LeaderDetailPage").then((m) => ({ default: m.LeaderDetailPage }))
+);
 
 export default function App() {
   return (
@@ -88,6 +97,24 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
                   <NewsDetailPage />
+                </Suspense>
+              }
+            />
+
+            {/* Leaders */}
+            <Route
+              path="leaders"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                  <PublicLeadersPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="leaders/:id"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <LeaderDetailPage />
                 </Suspense>
               }
             />
@@ -168,6 +195,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <ServiceTimesAdminPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="leaders"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <LeadersAdminPage />
                 </Suspense>
               }
             />
