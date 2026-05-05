@@ -1,6 +1,10 @@
 using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Common;
 using CredoCms.Domain.Identity;
+using CredoCms.Domain.Leaders;
+using CredoCms.Domain.News;
+using CredoCms.Domain.Pages;
+using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using CredoCms.Infrastructure.Configuration;
 using CredoCms.Infrastructure.Persistence;
@@ -45,6 +49,11 @@ public sealed class DataSeeder
         await SeedDefaultAdminAsync(ct).ConfigureAwait(false);
         await SeedSiteSettingsAsync(ct).ConfigureAwait(false);
         await SeedAnnouncementBannerAsync(ct).ConfigureAwait(false);
+        await SeedSystemPagesAsync(ct).ConfigureAwait(false);
+        await SeedSamplePagesAsync(ct).ConfigureAwait(false);
+        await SeedSampleServiceTimesAsync(ct).ConfigureAwait(false);
+        await SeedSampleLeadersAsync(ct).ConfigureAwait(false);
+        await SeedSampleNewsAsync(ct).ConfigureAwait(false);
     }
 
     private async Task SeedRolesAsync(CancellationToken ct)
@@ -185,5 +194,117 @@ public sealed class DataSeeder
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded inactive AnnouncementBanner singleton");
+    }
+
+    private async Task SeedSystemPagesAsync(CancellationToken ct)
+    {
+        if (await _db.Pages.AnyAsync(p => p.IsSystemPage, ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        _db.Pages.AddRange(
+            SamplePage("privacy", "Privacy Policy", isSystem: true, now: now,
+                paragraph: "This is a placeholder Privacy Policy. Please replace with the policy that governs your church's data practices."),
+            SamplePage("terms", "Terms of Service", isSystem: true, now: now,
+                paragraph: "Placeholder Terms of Service. Replace with the terms that apply to your site."));
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded system pages (Privacy, Terms).");
+    }
+
+    private async Task SeedSamplePagesAsync(CancellationToken ct)
+    {
+        if (await _db.Pages.AnyAsync(p => p.Slug == "about" && !p.IsSystemPage, ct).ConfigureAwait(false))
+            return;
+        var now = DateTimeOffset.UtcNow;
+        _db.Pages.AddRange(
+            SamplePage("about", "About Us", now: now,
+                paragraph: "We are a community of believers committed to following Jesus together. Replace this text with your church's story."),
+            SamplePage("plan-your-visit", "Plan Your Visit", now: now,
+                paragraph: "Visiting for the first time? Here's what to expect when you join us on Sunday."),
+            SamplePage("what-we-believe", "What We Believe", now: now,
+                paragraph: "Our beliefs in summary. Replace with your statement of faith."));
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample pages (About, Plan Your Visit, What We Believe).");
+    }
+
+    private async Task SeedSampleServiceTimesAsync(CancellationToken ct)
+    {
+        if (await _db.ServiceTimes.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        _db.ServiceTimes.AddRange(
+            new ServiceTime { Id = Guid.NewGuid(), Name = "Sunday Worship", DayOfWeek = DayOfWeek.Sunday,
+                StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(10, 30),
+                Location = "Main Sanctuary", DisplayOrder = 0, IsActive = true,
+                CreatedAt = now, ModifiedAt = now },
+            new ServiceTime { Id = Guid.NewGuid(), Name = "Sunday School", DayOfWeek = DayOfWeek.Sunday,
+                StartTime = new TimeOnly(11, 0), EndTime = new TimeOnly(12, 0),
+                Location = "Education Wing", DisplayOrder = 1, IsActive = true,
+                CreatedAt = now, ModifiedAt = now },
+            new ServiceTime { Id = Guid.NewGuid(), Name = "Wednesday Bible Study", DayOfWeek = DayOfWeek.Wednesday,
+                StartTime = new TimeOnly(19, 0), EndTime = new TimeOnly(20, 30),
+                Location = "Fellowship Hall", DisplayOrder = 0, IsActive = true,
+                CreatedAt = now, ModifiedAt = now });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample service times.");
+    }
+
+    private async Task SeedSampleLeadersAsync(CancellationToken ct)
+    {
+        if (await _db.Leaders.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        _db.Leaders.AddRange(
+            new Leader { Id = Guid.NewGuid(), FullName = "Lead Pastor",
+                Title = "Senior Pastor", Category = "Pastoral Staff", DisplayOrder = 0,
+                CreatedAt = now, ModifiedAt = now },
+            new Leader { Id = Guid.NewGuid(), FullName = "Associate Pastor",
+                Title = "Family Ministry", Category = "Pastoral Staff", DisplayOrder = 1,
+                CreatedAt = now, ModifiedAt = now },
+            new Leader { Id = Guid.NewGuid(), FullName = "Elder One",
+                Title = null, Category = "Elders", DisplayOrder = 0,
+                CreatedAt = now, ModifiedAt = now },
+            new Leader { Id = Guid.NewGuid(), FullName = "Deacon One",
+                Title = null, Category = "Deacons", DisplayOrder = 0,
+                CreatedAt = now, ModifiedAt = now });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample leaders (placeholder names — replace with real staff).");
+    }
+
+    private async Task SeedSampleNewsAsync(CancellationToken ct)
+    {
+        if (await _db.News.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        _db.News.AddRange(
+            SampleNews("welcome-to-our-new-site", "Welcome to our new site",
+                "We've launched a new website! Take a look around.", isMembersOnly: false, now: now),
+            SampleNews("upcoming-summer-camp", "Summer Camp Registration Open",
+                "Members can now register for this year's summer camp.", isMembersOnly: true, now: now));
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample news items.");
+    }
+
+    private static Page SamplePage(string slug, string title, DateTimeOffset now,
+        string paragraph, bool isSystem = false)
+    {
+        var body = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
+            + paragraph.Replace("\"", "\\\"") + "\"}]}]}";
+        return new Page
+        {
+            Id = Guid.NewGuid(),
+            Slug = slug, Title = title, BodyJson = body, Excerpt = paragraph,
+            IsPublished = true, IsMembersOnly = false, IsSystemPage = isSystem,
+            CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+        };
+    }
+
+    private static NewsItem SampleNews(string slug, string title, string paragraph,
+        bool isMembersOnly, DateTimeOffset now)
+    {
+        var body = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
+            + paragraph.Replace("\"", "\\\"") + "\"}]}]}";
+        return new NewsItem
+        {
+            Id = Guid.NewGuid(),
+            Slug = slug, Title = title, BodyJson = body, Excerpt = paragraph,
+            IsPublished = true, IsMembersOnly = isMembersOnly,
+            CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+        };
     }
 }
