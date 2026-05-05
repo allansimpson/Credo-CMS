@@ -9,6 +9,7 @@ using CredoCms.Domain.Pages;
 using CredoCms.Domain.Search;
 using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
+using CredoCms.Domain.Tags;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,7 @@ public class ApplicationDbContext
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<AnnouncementBanner> AnnouncementBanner => Set<AnnouncementBanner>();
     public DbSet<SearchIndexEntry> SearchIndex => Set<SearchIndexEntry>();
+    public DbSet<Tag> Tags => Set<Tag>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

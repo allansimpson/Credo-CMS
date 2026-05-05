@@ -11,6 +11,7 @@ using CredoCms.Application.Search;
 using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.Storage;
+using CredoCms.Application.Tags;
 using CredoCms.Application.UserManagement;
 using CredoCms.Application.Versioning;
 using CredoCms.Domain.Identity;
@@ -27,6 +28,7 @@ using CredoCms.Infrastructure.Leaders;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
 using CredoCms.Infrastructure.Search;
+using CredoCms.Infrastructure.Tags;
 using CredoCms.Infrastructure.Versioning;
 using CredoCms.Infrastructure.Services;
 using CredoCms.Infrastructure.Persistence;
@@ -106,6 +108,7 @@ public static class DependencyInjection
         services.AddScoped<ILeaderRepository, LeaderRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IAnnouncementBannerRepository, AnnouncementBannerRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();
