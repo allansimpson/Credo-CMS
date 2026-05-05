@@ -25,6 +25,13 @@ public sealed record RegistrationDto(
     DateTimeOffset? CanceledAt, string? CancelReason,
     IReadOnlyDictionary<string, object?> FieldValues);
 
+public sealed record MyRegistrationDto(
+    Guid Id, Guid EventId, string EventSlug, string EventTitle,
+    DateTimeOffset EventStartsAt,
+    DateOnly? OccurrenceDate,
+    EventRegistrationStatus Status,
+    DateTimeOffset SubmittedAt);
+
 public sealed record SubmitRegistrationRequest(
     DateOnly? OccurrenceDate,
     string SubmitterName, string SubmitterEmail, string? SubmitterPhone,
@@ -66,6 +73,8 @@ public interface IEventRegistrationService
     Task<RegistrationDto?> GetAsync(Guid id, CancellationToken ct = default);
     Task<List<RegistrationDto>> ListForEventAsync(Guid eventId, EventRegistrationStatus? status, CancellationToken ct = default);
     Task<List<RegistrationDto>> ListForUserAsync(Guid userId, CancellationToken ct = default);
+    Task<List<MyRegistrationDto>> ListMyRegistrationsAsync(Guid userId, CancellationToken ct = default);
+    Task<bool> CancelMyRegistrationAsync(Guid userId, Guid registrationId, string? reason, CancellationToken ct = default);
     Task<bool> ResendConfirmationAsync(Guid registrationId, CancellationToken ct = default);
     Task<string> ExportCsvAsync(Guid eventId, CancellationToken ct = default);
 }
@@ -250,6 +259,28 @@ public sealed class EventRegistrationService : IEventRegistrationService
     {
         var rows = await _repo.ListForUserAsync(userId, ct).ConfigureAwait(false);
         return rows.Select(ToDto).ToList();
+    }
+
+    public async Task<List<MyRegistrationDto>> ListMyRegistrationsAsync(Guid userId, CancellationToken ct = default)
+    {
+        var rows = await _repo.ListForUserAsync(userId, ct).ConfigureAwait(false);
+        var result = new List<MyRegistrationDto>(rows.Count);
+        foreach (var r in rows)
+        {
+            var evt = await _events.GetByIdAsync(r.EventId, ct: ct).ConfigureAwait(false);
+            if (evt is null) continue;
+            result.Add(new MyRegistrationDto(
+                r.Id, r.EventId, evt.Slug, evt.Title, evt.StartsAt,
+                r.OccurrenceDate, r.Status, r.SubmittedAt));
+        }
+        return result.OrderBy(m => m.EventStartsAt).ToList();
+    }
+
+    public async Task<bool> CancelMyRegistrationAsync(Guid userId, Guid registrationId, string? reason, CancellationToken ct = default)
+    {
+        var reg = await _repo.GetAsync(registrationId, ct).ConfigureAwait(false);
+        if (reg is null || reg.UserId != userId) return false;
+        return await CancelAsync(registrationId, reason, ct).ConfigureAwait(false);
     }
 
     public async Task<bool> ResendConfirmationAsync(Guid registrationId, CancellationToken ct = default)

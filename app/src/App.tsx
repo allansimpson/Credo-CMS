@@ -136,6 +136,9 @@ const EventsCalendarOverviewPage = lazy(() =>
 const ProfileCalendarFeedPage = lazy(() =>
   import("@/pages/ProfileCalendarFeedPage").then((m) => ({ default: m.ProfileCalendarFeedPage }))
 );
+const ProfileRegistrationsPage = lazy(() =>
+  import("@/pages/ProfileRegistrationsPage").then((m) => ({ default: m.ProfileRegistrationsPage }))
+);
 
 export default function App() {
   return (
@@ -349,6 +352,16 @@ export default function App() {
               <ProtectedRoute mode="auth">
                 <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted-foreground">Loading…</p>}>
                   <ProfileCalendarFeedPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="profile/registrations"
+            element={
+              <ProtectedRoute mode="auth">
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <ProfileRegistrationsPage />
                 </Suspense>
               </ProtectedRoute>
             }

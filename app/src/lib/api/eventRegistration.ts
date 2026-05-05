@@ -44,6 +44,23 @@ export interface SubmitRegistrationResponse {
   cancelToken: string;
 }
 
+export interface MyRegistration {
+  id: string;
+  eventId: string;
+  eventSlug: string;
+  eventTitle: string;
+  eventStartsAt: string;
+  occurrenceDate: string | null;
+  status: 0 | 1 | 2;
+  submittedAt: string;
+}
+
+export const profileRegistrationsApi = {
+  list: () => apiGet<MyRegistration[]>("/api/profile/registrations"),
+  cancel: (id: string, reason?: string) =>
+    apiPost<void>(`/api/profile/registrations/${id}/cancel`, { reason }),
+};
+
 export const eventRegistrationApi = {
   listPublicFields: (slug: string) =>
     apiGet<EventRegistrationField[]>(`/api/public/events/${encodeURIComponent(slug)}/registration-fields`,
