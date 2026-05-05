@@ -21,7 +21,14 @@ package metadata, and tooling configs.
 
 ## Database Schema
 
-### Drop the `AspNet` prefix from Identity tables
+### Drop the `AspNet` prefix from Identity tables ✅ Done
+
+Completed in Phase 2 (commit on `claude/credo-cms-phase-1-06gIY`).
+Migration `RenameIdentityTables` uses `RenameTable` operations
+(data-preserving) plus FK + PK renames. All 7 Identity tables now use
+the un-prefixed names: `Users`, `Roles`, `UserRoles`, `UserClaims`,
+`UserLogins`, `UserTokens`, `RoleClaims`. Original entry kept below
+for historical reference.
 
 ASP.NET Core Identity defaults to prefixing every table with `AspNet`
 (`AspNetUsers`, `AspNetRoles`, `AspNetUserRoles`, `AspNetUserClaims`,

@@ -9,6 +9,7 @@ using CredoCms.Domain.Pages;
 using CredoCms.Domain.Search;
 using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,9 +43,15 @@ public class ApplicationDbContext
 
         builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-        // Identity table renames — keep the AspNet* defaults but make our extra tables
-        // use the same naming style.
-        builder.Entity<ApplicationUser>().ToTable("AspNetUsers");
-        builder.Entity<ApplicationRole>().ToTable("AspNetRoles");
+        // Drop the "AspNet" prefix from every Identity table so the schema reads
+        // cleanly alongside our domain tables. Migration RenameIdentityTables
+        // emits RenameTable operations preserving data + FKs.
+        builder.Entity<ApplicationUser>().ToTable("Users");
+        builder.Entity<ApplicationRole>().ToTable("Roles");
+        builder.Entity<IdentityUserRole<Guid>>().ToTable("UserRoles");
+        builder.Entity<IdentityUserClaim<Guid>>().ToTable("UserClaims");
+        builder.Entity<IdentityUserLogin<Guid>>().ToTable("UserLogins");
+        builder.Entity<IdentityUserToken<Guid>>().ToTable("UserTokens");
+        builder.Entity<IdentityRoleClaim<Guid>>().ToTable("RoleClaims");
     }
 }
