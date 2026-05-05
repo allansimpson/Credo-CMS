@@ -555,3 +555,97 @@ WHERE Id = '11111111-1111-1111-1111-111111111111';
 Phase 1 + Phase 2 features still intact. The Q9+ stages are mostly
 admin/public UI plus calendar/iCal glue with no further schema
 changes (only `CalendarFeedToken` in Q14).
+
+---
+
+## Phase 3 wrap-up (Q9 – Q18)
+
+**Stages shipped:**
+
+- **Q9** Event admin UI — recurrence builder (none / daily / weekly+BYDAY /
+  monthly+BYMONTHDAY) with end-condition (none / until / count),
+  skip-occurrence affordance, hero upload, TipTap description,
+  visibility radio with no default, registration mode + capacity +
+  waitlist + open/close + external URL + TipTap confirmation message,
+  publish toggle.
+- **Q10** Event registration (server) — domain entities, `RegistrationTokenSigner`
+  (HMAC-SHA256 with `FixedTimeEquals`; 4 tests), service with capacity
+  check + waitlist promotion + honeypot + 5-second time-to-submit,
+  controllers, migration.
+- **Q11** Event registration UI — public form (9 dynamic field types,
+  honeypot, time-to-submit, signed cancel link), cancellation page,
+  admin Registrations page (manage fields + list/cancel/export-CSV
+  registrations).
+- **Q12** Public events surface — list (paged, ordered by next-occurrence,
+  hero, recurring badge), detail (hero, recurrence preview, register CTA,
+  TipTap description, JSON-LD `Event`, add-to-calendar dropdown:
+  `.ics` / Google / Outlook). Single-event ICS endpoint backed by a new
+  `IIcalFeedBuilder` (Application interface, Ical.Net implementation in
+  Infrastructure).
+- **Q13** Calendar — `GET /api/public/calendar?start=&end=` aggregating
+  expanded event occurrences (exception/override-aware) plus News with
+  `CalendarDate`. Public `/calendar` and admin `/admin/events/calendar`
+  pages using `@fullcalendar/react` (lazy-loaded). Public nav now exposes
+  Events + Calendar.
+- **Q14** iCal feeds — anonymous public feed at `/calendar/feed.ics`;
+  per-member opaque token feed at `/calendar/feed/{token}.ics`. Token
+  storage is SHA-256-hashed (a leaked DB row cannot itself subscribe).
+  Profile page at `/profile/calendar-feed` issues / displays-once /
+  revokes. Migration: `AddCalendarFeedTokens`.
+- **Q15** Cross-cutting wiring (scope-trimmed) — new `OutputCacheTags` for
+  SermonSeries / Sermons / Events / Calendar; `[OutputCache]`
+  (MembersAuthVary) on the new Phase 3 public endpoints; `EventService`
+  invalidates Events + Calendar + Sitemap on every state-changing
+  operation. Search index rebuild now covers SermonSeries / Sermon /
+  Event entities. Sermon-side cache invalidation deferred to Phase 4.
+- **Q16** Profile registrations — `/profile/registrations` lists the
+  current user's registrations with status badges and a confirm-then-
+  cancel flow that re-uses the waitlist-promotion path on the server.
+- **Q17** Seed data — 2 series, 4 sermons (placeholder YouTube IDs), 5
+  events covering single / weekly / monthly / members-only /
+  external-URL shapes. Idempotent.
+
+**Decisions captured during Phase 3:**
+
+- *Recurrence engine*: hand-rolled expander (`EventOccurrenceExpander`)
+  for FREQ=DAILY / WEEKLY+BYDAY / MONTHLY+BYMONTHDAY with UNTIL or
+  COUNT. Predictable + tested. Ical.Net is reserved for iCal *emission*
+  only, where round-trip fidelity matters. Polymorphism for
+  "skip vs edit occurrence" goes through two side tables
+  (`EventRecurrenceException`, `EventOccurrenceOverride`) rather than a
+  single discriminated table.
+- *Visibility nullable*: `Event.Visibility` is `EventVisibility?`. Drafts
+  may exist without one; FluentValidation enforces non-null at publish
+  time. Same pattern would carry to Pages/News if we revisit them.
+- *Cancel-link tokens*: HMAC-SHA256 over `{registrationId:N}|{expUnix}`
+  with the secret in `EventRegistration:TokenSigningSecret`. `>=` exp
+  comparison (not `>`) closes the unix-second granularity flake. Token
+  validation uses `CryptographicOperations.FixedTimeEquals`.
+- *Calendar feed tokens*: stored as SHA-256 hashes; the plaintext is
+  shown once at issue, then never again. Re-issuing always revokes the
+  prior token (one URL per member).
+- *Registration field schema*: free-form `OptionsJson` (nvarchar(max))
+  rather than a separate options table — simpler save semantics, and
+  options are only relevant to two field types.
+- *No transcript caching policy*: YouTube transcript fetch is best-
+  effort. We capture whatever comes back at sync time; failure is
+  silent. There's no scheduled re-fetch.
+- *Polymorphic `ScriptureReference` parent FK*: still no real DB FK to
+  the parent row. Service-layer cascade-on-hard-delete continues to be
+  the source of truth via `IScriptureReferenceService.DeleteAllForParentAsync`.
+
+**Operator notes:**
+
+- *YouTube setup*: still SQL-only (the admin Integrations tab is
+  Phase 4) — see snippet above.
+- *Calendar feed URLs*: anonymous `/calendar/feed.ics`; member feeds are
+  generated from `/profile/calendar-feed` and look like
+  `/calendar/feed/{token}.ics`.
+
+**Verification at end of Phase 3:**
+
+- `dotnet build` clean across 8 projects.
+- `dotnet test` — **114 passing** (Domain 15, Application 76,
+  Infrastructure 13, Api 10).
+- `npm run build` clean.
+- `npm test` — 21 passing.
