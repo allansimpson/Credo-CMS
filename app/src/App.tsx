@@ -94,6 +94,18 @@ const SermonsListPage = lazy(() =>
 const SermonEditorPage = lazy(() =>
   import("@/pages/admin/SermonEditorPage").then((m) => ({ default: m.SermonEditorPage }))
 );
+const SermonsArchivePage = lazy(() =>
+  import("@/pages/public/SermonsArchivePage").then((m) => ({ default: m.SermonsArchivePage }))
+);
+const SermonsByBookIndexPage = lazy(() =>
+  import("@/pages/public/SermonsByBookIndexPage").then((m) => ({ default: m.SermonsByBookIndexPage }))
+);
+const SermonsByBookPage = lazy(() =>
+  import("@/pages/public/SermonsByBookPage").then((m) => ({ default: m.SermonsByBookPage }))
+);
+const SermonDetailPage = lazy(() =>
+  import("@/pages/public/SermonDetailPage").then((m) => ({ default: m.SermonDetailPage }))
+);
 
 export default function App() {
   return (
@@ -170,7 +182,15 @@ export default function App() {
               }
             />
 
-            {/* Sermon series (public) */}
+            {/* Sermons (public) */}
+            <Route
+              path="sermons"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-6xl p-8 text-muted-foreground">Loading…</p>}>
+                  <SermonsArchivePage />
+                </Suspense>
+              }
+            />
             <Route
               path="sermons/series"
               element={
@@ -184,6 +204,30 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
                   <SermonSeriesPublicDetailPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="sermons/by-book"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                  <SermonsByBookIndexPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="sermons/by-book/:bookSlug"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                  <SermonsByBookPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="sermons/:slug"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted-foreground">Loading…</p>}>
+                  <SermonDetailPage />
                 </Suspense>
               }
             />
