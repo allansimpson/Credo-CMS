@@ -10,6 +10,8 @@ const NAV_ITEMS: { to: string; label: string }[] = [
   { to: "/about", label: "About" },
   { to: "/service-times", label: "Service Times" },
   { to: "/news", label: "News" },
+  { to: "/events", label: "Events" },
+  { to: "/calendar", label: "Calendar" },
 ];
 
 export function PublicNavBar() {

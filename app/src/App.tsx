@@ -127,6 +127,12 @@ const EventRegisterPage = lazy(() =>
 const EventCancelRegistrationPage = lazy(() =>
   import("@/pages/public/EventCancelRegistrationPage").then((m) => ({ default: m.EventCancelRegistrationPage }))
 );
+const CalendarPage = lazy(() =>
+  import("@/pages/public/CalendarPage").then((m) => ({ default: m.CalendarPage }))
+);
+const EventsCalendarOverviewPage = lazy(() =>
+  import("@/pages/admin/EventsCalendarOverviewPage").then((m) => ({ default: m.EventsCalendarOverviewPage }))
+);
 
 export default function App() {
   return (
@@ -275,6 +281,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted-foreground">Loading…</p>}>
                   <EventRegisterPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="calendar"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-6xl p-8 text-muted-foreground">Loading…</p>}>
+                  <CalendarPage />
                 </Suspense>
               }
             />
@@ -438,6 +452,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <EventsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events/calendar"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <EventsCalendarOverviewPage />
                 </Suspense>
               }
             />

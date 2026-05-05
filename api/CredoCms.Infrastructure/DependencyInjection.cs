@@ -1,5 +1,6 @@
 using CredoCms.Application.Announcements;
 using CredoCms.Application.Auditing;
+using CredoCms.Application.Calendar;
 using CredoCms.Application.Auth;
 using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
@@ -27,6 +28,7 @@ using CredoCms.Infrastructure.Email;
 using CredoCms.Infrastructure.Identity;
 using CredoCms.Infrastructure.Announcements;
 using CredoCms.Infrastructure.Caching;
+using CredoCms.Infrastructure.Calendar;
 using CredoCms.Infrastructure.Documents;
 using CredoCms.Infrastructure.Events;
 using CredoCms.Infrastructure.Leaders;
@@ -123,6 +125,7 @@ public static class DependencyInjection
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventRegistrationRepository, EventRegistrationRepository>();
         services.AddSingleton<IIcalFeedBuilder, IcalFeedBuilder>();
+        services.AddScoped<ICalendarQueryService, CalendarQueryService>();
 
         // Registration token signer — secret bound from EventRegistration:* section.
         var tokenOptions = new CredoCms.Application.Events.RegistrationTokenSignerOptions();
