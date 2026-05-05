@@ -6,6 +6,7 @@ using CredoCms.Application.Leaders;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
 using CredoCms.Application.Scripture;
+using CredoCms.Application.Sermons;
 using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.Tags;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IHomepageService, HomepageService>();
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<IScriptureReferenceService, ScriptureReferenceService>();
+        services.AddScoped<ISermonSeriesService, SermonSeriesService>();
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 

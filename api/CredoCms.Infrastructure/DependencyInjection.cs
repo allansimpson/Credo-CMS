@@ -9,6 +9,7 @@ using CredoCms.Application.News;
 using CredoCms.Application.Pages;
 using CredoCms.Application.Scripture;
 using CredoCms.Application.Search;
+using CredoCms.Application.Sermons;
 using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.Storage;
@@ -30,6 +31,7 @@ using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
 using CredoCms.Infrastructure.Scripture;
 using CredoCms.Infrastructure.Search;
+using CredoCms.Infrastructure.Sermons;
 using CredoCms.Infrastructure.Tags;
 using CredoCms.Infrastructure.Versioning;
 using CredoCms.Infrastructure.Services;
@@ -112,6 +114,7 @@ public static class DependencyInjection
         services.AddScoped<IAnnouncementBannerRepository, AnnouncementBannerRepository>();
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IScriptureReferenceRepository, ScriptureReferenceRepository>();
+        services.AddScoped<ISermonSeriesRepository, SermonSeriesRepository>();
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();

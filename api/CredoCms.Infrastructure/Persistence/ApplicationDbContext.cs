@@ -8,6 +8,7 @@ using CredoCms.Domain.News;
 using CredoCms.Domain.Pages;
 using CredoCms.Domain.Scripture;
 using CredoCms.Domain.Search;
+using CredoCms.Domain.Sermons;
 using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using CredoCms.Domain.Tags;
@@ -40,6 +41,7 @@ public class ApplicationDbContext
     public DbSet<SearchIndexEntry> SearchIndex => Set<SearchIndexEntry>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<ScriptureReference> ScriptureReferences => Set<ScriptureReference>();
+    public DbSet<SermonSeries> SermonSeries => Set<SermonSeries>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
