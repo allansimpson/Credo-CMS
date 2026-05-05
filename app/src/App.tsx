@@ -19,10 +19,20 @@ import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { UsersPage } from "@/pages/admin/UsersPage";
 import { AuditLogPage } from "@/pages/admin/AuditLogPage";
 
-// SettingsPage pulls in TipTap (~340 KB unzipped). It's admin-only, so
-// lazy-load to keep the public bundle small.
+// Pages that pull in TipTap (~340 KB unzipped) are lazy-loaded so the
+// public bundle stays small. DynamicPagePage uses TipTap read-only,
+// so it's also code-split.
 const SettingsPage = lazy(() =>
   import("@/pages/admin/SettingsPage").then((m) => ({ default: m.SettingsPage }))
+);
+const PagesListPage = lazy(() =>
+  import("@/pages/admin/PagesListPage").then((m) => ({ default: m.PagesListPage }))
+);
+const PageEditorPage = lazy(() =>
+  import("@/pages/admin/PageEditorPage").then((m) => ({ default: m.PageEditorPage }))
+);
+const DynamicPagePage = lazy(() =>
+  import("@/pages/public/DynamicPagePage").then((m) => ({ default: m.DynamicPagePage }))
 );
 
 export default function App() {
@@ -38,6 +48,17 @@ export default function App() {
             <Route path="services" element={<PlaceholderPage title="Service Times" />} />
             <Route path="privacy" element={<PlaceholderPage title="Privacy Policy" />} />
             <Route path="terms" element={<PlaceholderPage title="Terms of Service" />} />
+            {/* Dynamic content pages — must come after the static ones above so
+                /privacy, /terms, etc. keep their placeholder rendering for now.
+                The slug param matches a single non-slash segment. */}
+            <Route
+              path=":slug"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <DynamicPagePage />
+                </Suspense>
+              }
+            />
           </Route>
 
           {/* Auth flows (church-themed standalone) */}
@@ -66,6 +87,22 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
+            <Route
+              path="pages"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <PagesListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="pages/:id"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <PageEditorPage />
+                </Suspense>
+              }
+            />
             <Route
               path="users"
               element={

@@ -1,6 +1,7 @@
 using CredoCms.Application.Common;
 using CredoCms.Domain.Auditing;
 using CredoCms.Domain.Identity;
+using CredoCms.Domain.Pages;
 using CredoCms.Domain.Settings;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,7 @@ public class ApplicationDbContext
 
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<AuditLogEntry> AuditLog => Set<AuditLogEntry>();
+    public DbSet<Page> Pages => Set<Page>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

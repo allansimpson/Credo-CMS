@@ -138,6 +138,68 @@ export interface HardDeleteUserRequest {
   confirmDisplayName: string;
 }
 
+export interface PageListItem {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+  isSystemPage: boolean;
+  modifiedAt: string;
+  modifiedByUserId: string | null;
+}
+
+export interface PageDetail {
+  id: string;
+  slug: string;
+  title: string;
+  bodyJson: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  metaDescription: string | null;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+  isDeleted: boolean;
+  isSystemPage: boolean;
+  createdAt: string;
+  modifiedAt: string;
+  modifiedByUserId: string | null;
+  publishedAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface PublicPage {
+  id: string;
+  slug: string;
+  title: string;
+  bodyJson: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  metaDescription: string | null;
+  isMembersOnly: boolean;
+  publishedAt: string;
+}
+
+export interface CreatePageRequest {
+  slug: string;
+  title: string;
+  bodyJson: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  metaDescription: string | null;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+}
+
+export type UpdatePageRequest = CreatePageRequest;
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;

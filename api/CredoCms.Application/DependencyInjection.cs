@@ -1,4 +1,5 @@
 using CredoCms.Application.Auditing;
+using CredoCms.Application.Pages;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.UserManagement;
 using FluentValidation;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<ISiteSettingsService, SiteSettingsService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IUserAdminService, UserAdminService>();
+        services.AddScoped<IPageService, PageService>();
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 
