@@ -137,7 +137,16 @@ try
 
     // -- MVC + Validation -----------------------------------------------------
     builder.Services
-        .AddControllers()
+        .AddControllers(mvc =>
+        {
+            // Preserve the "Async" suffix in resolved action names so that
+            // nameof(GetAsync) (used by every admin controller's CreatedAtAction
+            // for its 201 Location header) actually matches the registered route.
+            // ASP.NET Core strips the suffix by default, which makes the URL
+            // helper throw "No route matches the supplied values" when computing
+            // the Location header on Create endpoints.
+            mvc.SuppressAsyncSuffixInActionNames = false;
+        })
         .AddJsonOptions(opts =>
         {
             opts.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
