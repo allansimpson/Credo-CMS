@@ -1,9 +1,11 @@
 using System.Text;
+using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
 using CredoCms.Application.Events;
 using CredoCms.Domain.Common;
 using CredoCms.Domain.Events;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace CredoCms.Api.Controllers;
 
@@ -29,6 +31,8 @@ public sealed class PublicEventsController : ControllerBase
     }
 
     [HttpGet]
+    [OutputCache(PolicyName = "MembersAuthVary", Duration = 120,
+        Tags = new[] { OutputCacheTags.Events })]
     public Task<PagedResult<PublicEventListItemDto>> ListAsync(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 12,
@@ -36,6 +40,8 @@ public sealed class PublicEventsController : ControllerBase
         => _events.ListPublicAsync(page, pageSize, IsAuthenticatedMember(), ct);
 
     [HttpGet("{slug}")]
+    [OutputCache(PolicyName = "MembersAuthVary", Duration = 120,
+        Tags = new[] { OutputCacheTags.Events })]
     public async Task<ActionResult<PublicEventDto>> GetAsync(string slug, CancellationToken ct)
     {
         var evt = await _events.GetPublicBySlugAsync(slug, IsAuthenticatedMember(), ct);

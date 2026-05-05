@@ -30,4 +30,8 @@ public static class OutputCacheTags
     public const string Homepage = "homepage";
     public const string Sitemap = "sitemap";
     public const string Search = "search";
+    public const string SermonSeries = "sermon-series";
+    public const string Sermons = "sermons";
+    public const string Events = "events";
+    public const string Calendar = "calendar";
 }

@@ -1,3 +1,4 @@
+using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
 using CredoCms.Application.Pages;
 using CredoCms.Domain.Events;
@@ -171,10 +172,13 @@ public sealed class UpdateEventRequestValidator : AbstractValidator<UpdateEventR
 public sealed class EventService : IEventService
 {
     public const string EntityType = nameof(Event);
+    private static readonly string[] InvalidationTags =
+        { OutputCacheTags.Events, OutputCacheTags.Calendar, OutputCacheTags.Sitemap };
 
     private readonly IEventRepository _repo;
     private readonly IEventOccurrenceExpander _expander;
     private readonly IAuditLogger _audit;
+    private readonly IOutputCacheInvalidator _cache;
     private readonly IValidator<CreateEventRequest> _createValidator;
     private readonly IValidator<UpdateEventRequest> _updateValidator;
 
@@ -182,12 +186,14 @@ public sealed class EventService : IEventService
         IEventRepository repo,
         IEventOccurrenceExpander expander,
         IAuditLogger audit,
+        IOutputCacheInvalidator cache,
         IValidator<CreateEventRequest> createValidator,
         IValidator<UpdateEventRequest> updateValidator)
     {
         _repo = repo;
         _expander = expander;
         _audit = audit;
+        _cache = cache;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -300,6 +306,7 @@ public sealed class EventService : IEventService
         await _repo.AddAsync(evt, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.Created", EntityType, evt.Id.ToString(),
             details: new { evt.Slug, evt.Title }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDetail(evt));
     }
 
@@ -337,6 +344,7 @@ public sealed class EventService : IEventService
         await _repo.UpdateAsync(evt, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.Updated", EntityType, id.ToString(),
             details: new { evt.Slug, evt.Title, evt.IsPublished }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDetail(evt));
     }
 
@@ -351,6 +359,7 @@ public sealed class EventService : IEventService
         await _repo.UpdateAsync(evt, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.SoftDeleted", EntityType, id.ToString(),
             details: new { evt.Slug, evt.Title }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDetail(evt));
     }
 
@@ -363,6 +372,7 @@ public sealed class EventService : IEventService
         await _repo.UpdateAsync(evt, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.Restored", EntityType, id.ToString(),
             details: new { evt.Slug, evt.Title }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), ToDetail(evt));
     }
 
@@ -375,6 +385,7 @@ public sealed class EventService : IEventService
         await _repo.HardDeleteAsync(id, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.HardDeleted", EntityType, id.ToString(),
             details: new { evt.Slug, evt.Title }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
         return new(true, Array.Empty<string>(), null);
     }
 
@@ -389,6 +400,7 @@ public sealed class EventService : IEventService
         }, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.OccurrenceCanceled", EntityType, eventId.ToString(),
             details: new { occurrenceDate, reason }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
     }
 
     public async Task SaveOccurrenceOverrideAsync(EventOccurrenceOverride ov, CancellationToken ct = default)
@@ -396,6 +408,7 @@ public sealed class EventService : IEventService
         await _repo.UpsertOverrideAsync(ov, ct).ConfigureAwait(false);
         await _audit.WriteAsync("Event.OccurrenceOverridden", EntityType, ov.EventId.ToString(),
             details: new { ov.OriginalOccurrenceDate, ov.IsCanceled }, cancellationToken: ct).ConfigureAwait(false);
+        await _cache.InvalidateAsync(InvalidationTags, ct).ConfigureAwait(false);
     }
 
     private static EventDetailDto ToDetail(Event e) => new(

@@ -159,9 +159,58 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             });
         }
 
+        // Sermon series
+        var series = await db.SermonSeries.IgnoreQueryFilters().Where(s => !s.IsDeleted).ToListAsync(ct).ConfigureAwait(false);
+        foreach (var s in series)
+        {
+            db.SearchIndex.Add(new SearchIndexEntry
+            {
+                Id = Guid.NewGuid(),
+                EntityType = "SermonSeries", EntityId = s.Id,
+                Title = s.Title,
+                BodyText = ExtractText(s.DescriptionJson),
+                Url = "/sermons/series/" + s.Slug,
+                IsPublished = true, IsMembersOnly = false,
+                IndexedAt = now,
+            });
+        }
+
+        // Sermons
+        var sermons = await db.Sermons.IgnoreQueryFilters().Where(s => !s.IsDeleted).ToListAsync(ct).ConfigureAwait(false);
+        foreach (var sm in sermons)
+        {
+            db.SearchIndex.Add(new SearchIndexEntry
+            {
+                Id = Guid.NewGuid(),
+                EntityType = "Sermon", EntityId = sm.Id,
+                Title = sm.Title,
+                BodyText = $"{sm.SpeakerNameFreeText} {ExtractText(sm.DescriptionJson)} {sm.Transcript}",
+                Url = "/sermons/" + sm.Slug,
+                IsPublished = sm.IsPublished, IsMembersOnly = sm.IsMembersOnly,
+                IndexedAt = now,
+            });
+        }
+
+        // Events
+        var events = await db.Events.IgnoreQueryFilters().Where(e => !e.IsDeleted && e.IsPublished).ToListAsync(ct).ConfigureAwait(false);
+        foreach (var ev in events)
+        {
+            db.SearchIndex.Add(new SearchIndexEntry
+            {
+                Id = Guid.NewGuid(),
+                EntityType = "Event", EntityId = ev.Id,
+                Title = ev.Title,
+                BodyText = $"{ev.Location} {ExtractText(ev.DescriptionJson)}",
+                Url = "/events/" + ev.Slug,
+                IsPublished = ev.IsPublished,
+                IsMembersOnly = ev.Visibility == CredoCms.Domain.Events.EventVisibility.MembersOnly,
+                IndexedAt = now,
+            });
+        }
+
         await db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Search index rebuilt: pages={P}, news={N}, leaders={L}, documents={D}",
-            pages.Count, news.Count, leaders.Count, documents.Count);
+        _logger.LogInformation("Search index rebuilt: pages={P}, news={N}, leaders={L}, documents={D}, series={Sr}, sermons={Sm}, events={E}",
+            pages.Count, news.Count, leaders.Count, documents.Count, series.Count, sermons.Count, events.Count);
     }
 
     public async Task<SearchResults> SearchAsync(string query, bool includeMembersOnly, int page, int pageSize, CancellationToken ct = default)

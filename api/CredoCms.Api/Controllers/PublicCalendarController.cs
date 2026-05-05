@@ -1,6 +1,8 @@
+using CredoCms.Application.Caching;
 using CredoCms.Application.Calendar;
 using CredoCms.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace CredoCms.Api.Controllers;
 
@@ -13,6 +15,8 @@ public sealed class PublicCalendarController : ControllerBase
     public PublicCalendarController(ICalendarQueryService calendar) => _calendar = calendar;
 
     [HttpGet]
+    [OutputCache(PolicyName = "MembersAuthVary", Duration = 120,
+        Tags = new[] { OutputCacheTags.Calendar, OutputCacheTags.Events, OutputCacheTags.News })]
     public Task<IReadOnlyList<CalendarItem>> ListAsync(
         [FromQuery] DateTimeOffset start,
         [FromQuery] DateTimeOffset end,
