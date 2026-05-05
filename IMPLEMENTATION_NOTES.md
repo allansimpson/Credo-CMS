@@ -298,9 +298,90 @@ Removed `spa/` entirely in this commit so `git ls-files spa/` is empty
 
 ---
 
-## Deviations from the Prompt
+## Deviations from the Prompt (Phase 1)
 
 _None — every section of the Phase 1 prompt is addressed. Out-of-scope items
 (Phases 2–6) are explicitly deferred and noted in `ROADMAP.md`. Phase 2
 work is tracked in `BUILD_PLAN.md` (sections P-0 through P-7) and
 `PHASE_2_BACKLOG.md`._
+
+---
+
+## Phase 2 Decisions Log
+
+### 2026-05-05 — Stages P2 through P15
+
+Phase 2 lands the content surface (Pages, News, ServiceTimes, Leaders,
+Documents, Announcement banner), the search infrastructure, the
+homepage composition, SEO basics (sitemap + robots + JSON-LD), output
+caching foundation, version-history server-side handler registry,
+SignalR notifier foundation, and seed data.
+
+**Decisions worth recording:**
+
+- **Pattern of optional cross-cutting deps in services.** `ISearchIndexer`,
+  `IOutputCacheInvalidator`, and `IRealtimeNotifier` are wired into
+  content services as **optional constructor parameters** with default
+  `null`. Reasons: keeps existing unit tests passing without churn; lets
+  a service still construct cleanly in environments where those
+  cross-cutting concerns aren't registered (e.g. integration test
+  fixtures); avoids the ambient-service-locator pattern. Production DI
+  registers all three so they fire at runtime.
+
+- **Search FTS with LIKE fallback.** `SearchIndexer` probes
+  `SERVERPROPERTY('IsFullTextInstalled')` on first use, caches the
+  result, and routes queries either through `EF.Functions.Contains`
+  (FTS) or whitespace-split `LIKE '%term%'` (universal). Same
+  `SearchIndex` table backs both modes. LocalDB and lower-tier Azure SQL
+  fall through to LIKE without operator action.
+
+- **Search index lifecycle.** A startup `BackgroundService`
+  (`SearchIndexBootstrapService`) runs a full rebuild only if the table
+  is empty — so a fresh deploy doesn't need a manual click. Per-write
+  `Upsert/Remove/SetPublished` keeps the index live thereafter. Admin
+  Site-Settings → Advanced → "Rebuild search index" triggers a manual
+  rebuild via `/api/admin/search/rebuild`.
+
+- **Documents: metadata versioned, blob replaced.** Per
+  `VERSIONING.md` §10. `DocumentService.ReplaceBlobAsync` swaps the
+  blob URL and queues the old blob for cleanup via
+  `IBlobCleanupService` (logging-only stub).
+
+- **Leaders not versioned.** Per `VERSIONING.md` §2 ("Leaders are
+  presented as a curated public list, not a historical record"). Hard-
+  delete only; admin-only delete role.
+
+- **AspNet prefix removed.** `ApplicationDbContext.OnModelCreating`
+  declares `ToTable` overrides for the 7 Identity entities.
+  `RenameIdentityTables` migration uses `RenameTable` operations
+  (data-preserving) plus the FK + PK renames EF generates automatically.
+  Existing populated databases upgrade in place.
+
+- **Output cache split: foundation now, full wiring at P17.** The
+  `IOutputCacheInvalidator` + `MemberAuthVaryPolicy` foundation is
+  in place and `PageService` calls the invalidator on every write.
+  `News`/`ServiceTime`/`Leader`/`Document`/`Banner`/`SiteSettings`
+  follow the same pattern but the per-service wiring is queued for
+  P17 polish. Bounded staleness today is the cache duration on the
+  homepage endpoint (300s).
+
+- **Version history: server-side now, diff renderers later.** The
+  generic `IVersionedEntityHandler` registry + admin controller +
+  `PageVersionHandler` ship in P13. The other handlers
+  (News/ServiceTime/Document/Banner) follow the same pattern and
+  register against the existing controller without changes. The three
+  diff renderers (`<ProseMirrorDiffRenderer>`, `<TextDiffRenderer>`,
+  `<ImageDiffRenderer>`) are L-effort each and the existing
+  Phase 1 `<VersionHistoryPanel>` stub is still serviceable; queued
+  for a follow-up.
+
+- **SignalR Phase 2 minimum.** `JoinAdminGroup` hub method +
+  `IRealtimeNotifier` + SignalR impl are in place. Per-content-service
+  `NotifyContentChangedAsync` calls and the SPA admin-shell toast
+  subscription follow the cache pattern and are queued for P17.
+
+- **Seed data: metadata only.** No binary seed assets ship in P15 —
+  operators upload their own logos/photos/PDFs. `DataSeeder` seeds
+  2 system pages (Privacy, Terms), 3 sample pages (About, Plan Your
+  Visit, What We Believe), 3 service times, 4 leaders across
+  categories, 2 news items (one members-only).
