@@ -1244,3 +1244,436 @@ ambiguities via `// TODO:` comments rather than guessing silently.
 Phase 1 and Phase 2 deliverables stay intact throughout; the Phase 2
 carry-overs documented in `IMPLEMENTATION_NOTES.md` get cleaned up
 alongside the Phase 3 entities in **Stage Q15**.
+
+---
+
+# Phase 4 Build Plan — Members and Community
+
+**Status:** Plan drafted; awaiting review. No Phase 4 implementation has started.
+
+---
+
+## Q-0. Confirmation of Understanding
+
+I have read all 16 sections of the Phase 4 prompt plus the Out-of-Scope and Final
+Checklist sections. My understanding of Phase 4's scope and constraints:
+
+- **Privacy/access-control rigor is the highest-priority constraint.** Every
+  member-data endpoint must carry explicit `WHERE UserId = currentUserId` guards.
+  Integration tests must prove cross-user access is rejected, not just that happy-path
+  works. This requirement supersedes any "move fast" impulse.
+- **Six domain slabs:** Member Profile (extensions + directory), Groups, Classes,
+  Prayer Requests, Connect Card, and Blog. Facebook linking is a separate auth concern.
+- **ApplicationUser already inherits `PhoneNumber` from `IdentityUser<Guid>`.** Phase 4
+  must not add a duplicate column; the address / photo / bio / directory / notification
+  fields are all net-new additions.
+- **SearchIndexEntry already has `IsMembersOnly` (added in Phase 3 or earlier).** New
+  entity types slot into the existing indexing infrastructure.
+- **Tag entity (Phase 3) is shared.** `BlogPost` creates a `BlogPostTag` join table
+  against the existing `Tags` table; no Tag schema changes required.
+- **`IsMembersOnly` on search results:** already in place; Phase 4 populates it for
+  Groups (MembersOnly visibility), PrayerRequests, and members-only BlogPosts.
+- **Phase 1-3 deliverables stay intact.** Phase 4 layers on top; no rebuilding.
+
+---
+
+## Q-1. Clarifications to Surface Before Starting
+
+These are genuine decision points where I have a default but want explicit approval
+before committing code. Where I list a default, that is exactly what I'll do unless
+overridden.
+
+1. **`ProfanityFilter` NuGet package.** The prompt specifies "ProfanityFilter NuGet
+   package (configurable wordlist with allowlist support)" without naming a specific
+   package. The most-used .NET option is `ProfanityFilter` by Ben Harris (Stephen
+   Haunts on older attribution); it ships a hardcoded US-English wordlist and exposes
+   `ContainsProfanity(string)` but no out-of-box custom wordlist or allowlist. **Default:**
+   install that package, wrap it in a custom `IProfanityCheckService` that merges the
+   built-in wordlist with the admin-configured `ProfanityWordlist` from SiteSettings
+   and suppresses any matches appearing in the admin-configured `ProfanityAllowlist`
+   before returning a result. The "Test phrase" tool in Site Settings calls this service
+   directly. If you prefer a different package (e.g., `ProfanityFilter.AspNetCore`),
+   say so.
+
+2. **`ApplicationUser.PhoneNumber` is inherited from `IdentityUser<Guid>`.** Identity's
+   `PhoneNumber` property already maps to the `PhoneNumber` column in `AspNetUsers`.
+   Phase 4 does NOT add a second phone column. **Default:** the personal-info profile
+   API reads/writes `ApplicationUser.PhoneNumber` via the inherited property.
+   `MaxLength(50)` is enforced via FluentValidation on the profile API input model, not
+   via `[MaxLength]` on the entity (which would conflict with Identity's own column
+   definition). Note this in `IMPLEMENTATION_NOTES.md`.
+
+3. **Rate limiting on Connect Card.** The prompt specifies "5 submissions per IP per
+   hour." ASP.NET Core 7+ ships `Microsoft.AspNetCore.RateLimiting` (in-box; no extra
+   NuGet). **Default:** configure a sliding-window rate-limit policy keyed on the
+   hashed IP (`IpAddressHash`) using the built-in middleware. The raw IP is hashed with
+   SHA-256 before use in the limiter key and again before storage in
+   `IpAddressHash`. No extra NuGet required.
+
+4. **Mobile profile-tab pattern.** Prompt says "tabs convert to a vertical accordion or
+   horizontally-scrollable tab bar — choose pattern and document." **Default:**
+   horizontally-scrollable tab bar (same pattern as admin shell), consistent with the
+   existing component library. Tab labels truncate gracefully at narrow widths. Document
+   in `IMPLEMENTATION_NOTES.md`.
+
+5. **User-targeted SignalR group for group membership notifications.** `GroupMembership
+   Approved` and `GroupMembershipDeclined` need to reach the specific requester.
+   **Default:** each authenticated client joins a SignalR group named `"user-{userId}"`
+   on `OnConnectedAsync`. The group-request approval/decline handler sends to that group.
+   `NotificationHub` already has the JoinAdminsGroup/JoinMembersGroup pattern from Phase 1;
+   this adds `JoinUserGroup()` (called automatically on connect for authenticated users,
+   not a client-callable method). Document decision.
+
+6. **`GroupMembership.Status` when an admin adds a member directly.**  The entity spec
+   says "default Pending unless added directly by admin/leader." **Default:** admin/leader
+   direct-add sets `Status=Active`, `JoinedAt=now`, `ProcessedByUserId=currentUserId`,
+   no join-request message. Pending flow is only triggered by member self-request.
+
+7. **Group Leader permission to promote members to Leader.** The prompt states
+   "Mark/unmark as Leader (Administrator only for security; Editors and Group Leaders
+   cannot promote)." **Default:** enforce this at the service layer: only users with
+   the `Administrator` role can call `SetLeaderAsync`. Editors and Group Leaders get
+   `403 Forbidden` if they attempt it. Tests verify this.
+
+8. **Cloudflare Turnstile widget in SPA.** No official Anthropic/Cloudflare React package
+   is commonly used. **Default:** load the Turnstile JS (`https://challenges.cloudflare.com/
+   turnstile/v0/api.js`) via a `<script>` tag injected into the public-form page, use
+   the `window.turnstile.render()` API inside a `useEffect`, and capture the token in a
+   hidden field. Server-side validation calls Turnstile's `siteverify` endpoint via
+   `HttpClient`. When `CloudflareTurnstileSiteKey` is null/empty in SiteSettings, the
+   widget is skipped entirely (dev mode or unconfigured). Tests mock the `HttpClient`.
+
+9. **`ScheduledPublishAt` for Blog Posts.** The prompt captures the field in Phase 4 but
+   defers the scheduling implementation to Phase 5. **Default:** the field is stored and
+   returned in the API; the admin UI shows a date-time picker for it; but no background
+   job or any publish-on-schedule logic runs in Phase 4. The editor sees an informational
+   note: "Scheduled publishing activates in a future release." No `// TODO:` needed in
+   code — just a ROADMAP entry.
+
+10. **Author archive (`/blog/by/{userId}`) — public or members-only?** The prompt says
+    "members and anonymous viewers both see this." **Default:** author archive is fully
+    public. It only shows the author's `PublicAuthorBio` and published, non-members-only
+    posts. Members-only blog posts are excluded from the public author archive.
+
+11. **`BlogPost.ReadingTimeMinutes` calculation race.** If body is empty on create, ceil
+    of 0 words = 0 min, but the formula is `max(1, ceil(wordCount / 250))`. **Default:**
+    `max(1, ceil(wordCount / 250))` always; even a blank body gets ReadingTimeMinutes=1.
+
+12. **Turnstile in Connect Card vs Phase 4 scope.** Phase 3 deferred Turnstile to Phase 4
+    (documented). **Default:** Connect Card gets full Turnstile integration in Phase 4.
+    Event registration (Phase 3) does NOT get Turnstile retroactively added in Phase 4
+    (that would be a Phase 3 backlog item; flag in IMPLEMENTATION_NOTES if desired).
+
+If any of these defaults are wrong, redirect before I write code.
+
+---
+
+## Q-2. Ordered Implementation Steps
+
+Effort key: **S** = small (<2h), **M** = medium (2-4h), **L** = large (4-6h), **XL** = extra large (6h+).
+
+### Stage Q0 — Domain Entities
+
+| # | Step | Effort |
+|---|---|---|
+| Q0.1 | `ApplicationUser` extension: add `AddressLine1`, `AddressLine2`, `City`, `StateOrRegion`, `PostalCode`, `Country`, `PhotoBlobUrl`, `PhotoWebpBlobUrl`, `PhotoAltText`, `PublicAuthorBio`, directory opt-in fields (`IsListedInDirectory`, `ShowEmailInDirectory`, `ShowPhoneInDirectory`, `ShowAddressInDirectory`, `ShowPhotoInDirectory`), and notification preference fields (`ReceiveNewsEmails`, `ReceiveBroadcastEmails`, `ReceiveBlogEmails`, `ReceiveGroupEmailsGlobal`). | S |
+| Q0.2 | `Group` + `GroupMembership` entities in `CredoCms.Domain.Groups`. Enums: `GroupVisibility`, `GroupJoinability`, `MessageOnJoinRequest`, `RosterVisibility`, `GroupMembershipStatus`. | M |
+| Q0.3 | `ClassSlot` + `ClassOffering` entities in `CredoCms.Domain.Classes`. | S |
+| Q0.4 | `PrayerRequest`, `PrayerRequestUpdate`, `PrayerRequestPrayedFor` entities in `CredoCms.Domain.Prayer`. Enums: `PrayerRequestStatus`. | S |
+| Q0.5 | `ConnectCardSubmission` entity in `CredoCms.Domain.ConnectCard`. Enum: `ConnectCardStatus`. | S |
+| Q0.6 | `BlogPost` entity + `BlogPostTag` join entity in `CredoCms.Domain.Blog`. | S |
+| Q0.7 | Repository interfaces in `CredoCms.Application`: `IGroupRepository`, `IGroupMembershipRepository`, `IClassSlotRepository`, `IClassOfferingRepository`, `IPrayerRequestRepository`, `IConnectCardRepository`, `IBlogPostRepository`. Extend `IApplicationUserRepository` with directory-query methods. | M |
+
+### Stage Q1 — EF Core Configuration + Migration
+
+| # | Step | Effort |
+|---|---|---|
+| Q1.1 | EF configurations for all new entities. Temporal tables on: `Groups`, `ClassSlots`, `ClassOfferings`, `PrayerRequests`, `PrayerRequestUpdates`, `BlogPosts`, `ConnectCardSubmissions`. (GroupMembership, PrayerRequestPrayedFor: no temporal.) | M |
+| Q1.2 | Indexes: `Groups.Slug` (unique), `BlogPosts.Slug` (unique), `BlogPosts.AuthorUserId`, `BlogPosts.PublishedAt`, `BlogPosts.Category`, `BlogPosts.IsPublished`, `PrayerRequests.SubmittedByUserId`, `PrayerRequestPrayedFor` unique `(PrayerRequestId, UserId)`, `ConnectCardSubmissions.SubmittedAt`, `GroupMembership.(GroupId, UserId)` unique-active index, `ClassSlots.Slug` (unique), `ClassOfferings.ClassSlotId`. | S |
+| Q1.3 | `BlogPostTag` join table configuration (FK to `Tags.Id`, FK to `BlogPosts.Id`, composite PK). | S |
+| Q1.4 | EF migration: `Phase4_MembersAndCommunity`. Verify migration generates correctly; apply to dev DB. | M |
+| Q1.5 | Extend `SiteSettings` domain record with all Phase 4 keys: `GetInvolvedPageLabel`, `ClassesPageLabel`, `ClassAudienceAgeGroups`, `ShowRecentPastOnPublicClasses`, `RecentPastClassesLookbackDays`, `BlogCategories`, `BlogPageLabel`, `ProfanityWordlist`, `ProfanityAllowlist`, `PrayerRequestArchiveDays`, `PrayerRequestRequireApproval`, `ConnectCardInterests`, `ConnectCardAcknowledgmentMessage`, `ConnectCardPageLabel`, `CloudflareTurnstileSiteKey`, `CloudflareTurnstileSecretKey`, `FacebookOAuthAppId`, `FacebookOAuthAppSecret`, `FacebookLoginEnabled`. Update `SiteSettingsService` defaults. | M |
+
+### Stage Q2 — Profile API + Admin User Management Extension
+
+| # | Step | Effort |
+|---|---|---|
+| Q2.1 | `ProfileService` in Application layer: `GetProfileAsync`, `UpdatePersonalInfoAsync`, `UpdateDirectoryAsync`, `UpdateNotificationsAsync`. All guard `UserId == currentUserId` at the service layer before touching any data. | M |
+| Q2.2 | `ProfileController` (`/api/profile`): `GET /api/profile`, `PUT /api/profile/personal`, `PUT /api/profile/directory`, `PUT /api/profile/notifications`. All `[Authorize]`. FluentValidation input models. | M |
+| Q2.3 | Extend admin `UsersController` with profile field editing (admin can update any user's profile fields, not just role/status). Add `AdminNotesDto` aggregate: group memberships, prayer request count, registration history counts. | M |
+| Q2.4 | `PUT /api/admin/users/{id}/reset-notifications` — resets notification fields to defaults. Administrator only. | S |
+| Q2.5 | Integration tests: verify `PUT /api/profile/personal` with `userId A` cannot modify `userId B`'s data (401 or 403). Verify admin can modify any user's profile. | M |
+
+### Stage Q3 — Profile SPA Page (4 tabs)
+
+| # | Step | Effort |
+|---|---|---|
+| Q3.1 | `/profile` redesign as a 4-tab shell (horizontally-scrollable on mobile): Personal Info, Directory, Notifications, Account. Shared header with user name + avatar preview. | M |
+| Q3.2 | Personal Info tab: name (read-only), email (read-only), phone (editable), address fields (editable), photo upload (reusing `<ImageUpload>` from Phase 2), alt text (required if photo present), Public Author Bio (TipTap, optional). Save button. | L |
+| Q3.3 | Directory tab: "Include me in directory" toggle (default off), sub-toggles for Email/Phone/Address/Photo (visible when listed=true), preview card showing what other members see. Save button. | M |
+| Q3.4 | Notifications tab: per-category checkboxes. Below global Group toggle: per-group override toggles (list each membership; only visible when global group toggle is on). Save button. | M |
+| Q3.5 | Account tab: Connected Accounts (Facebook link/unlink — stubbed until Q15 lands), Calendar Feed section (Phase 3 feed manager inline), Change Password link, My Event Registrations link, My Groups link. | M |
+| Q3.6 | 375px mobile audit: tab bar scrolls horizontally; all form fields usable on small screen. | S |
+
+### Stage Q4 — Members Directory
+
+| # | Step | Effort |
+|---|---|---|
+| Q4.1 | `MembersDirectoryService` in Application layer: `ListAsync(search, page, pageSize, ct)` returns only `IsListedInDirectory && IsActive` users; `GetByIdAsync(userId, ct)` with same gate plus field-level privacy filtering. Throws 404 if user not listed. | M |
+| Q4.2 | `MembersController` (`/api/members`): `GET /api/members` and `GET /api/members/{userId}` — both `[Authorize(Roles="Member,Editor,Administrator")]`. Server strips unlisted members and non-opted-in fields before serialization. | M |
+| Q4.3 | `/members` SPA list page: `<ResponsiveTable>` (table on desktop, cards on mobile), name search box, pagination, click-through to detail. | M |
+| Q4.4 | `/members/{userId}` SPA detail page: photo, name, opted-in fields, group memberships (public/members-only groups only), `mailto:` button. | M |
+| Q4.5 | Integration tests proving: (a) unauthenticated requests to `/api/members` get 401; (b) requesting a non-listed member's ID returns 404; (c) a listed member's non-opted-in fields are absent from the response body. | M |
+
+### Stage Q5 — Groups — Backend
+
+| # | Step | Effort |
+|---|---|---|
+| Q5.1 | `GroupRepository` + `GroupMembershipRepository` in Infrastructure layer. Key queries: `ListPublicAsync(visibility, ct)`, `GetBySlugAsync(slug, ct)`, `ListMembershipsForGroupAsync(groupId, status?, ct)`, `GetMembershipAsync(groupId, userId, ct)`. | M |
+| Q5.2 | `GroupService` in Application layer: create/edit/delete (Administrator only), roster management, join request submit (member-callable), approval/decline (Leader/Editor/Admin), leave. All permission checks at the service layer with explicit role/membership-leader lookups. | L |
+| Q5.3 | `AdminGroupsController` (`/api/admin/groups`): CRUD, roster CRUD, pending requests list, approve, decline, promote-to-leader (Administrator only route). | L |
+| Q5.4 | `PublicGroupsController` (`/api/public/groups`): `GET /api/public/groups` (visibility-filtered), `GET /api/public/groups/{slug}` (visibility-gated, roster conditional on RosterVisibility + membership), `POST /api/public/groups/{slug}/request-join` (auth required). | M |
+| Q5.5 | `ProfileGroupsController` (`/api/profile/groups`): `GET` (list own memberships), `POST /leave/{groupId}`. | S |
+| Q5.6 | SignalR: emit `GroupJoinRequestSubmitted` to "admins" group + "user-{leaderId}" for each leader of the group; emit `GroupMembershipApproved` / `GroupMembershipDeclined` to "user-{requesterId}". | M |
+| Q5.7 | Output caching on public groups list (1 min, tag `groups`). Cache invalidation on group create/edit/delete. | S |
+| Q5.8 | Integration tests: join-request flow end-to-end; editor cannot promote to leader; leader can approve but not promote; cross-group membership leak test (member can't see Hidden group roster via API). | L |
+
+### Stage Q6 — Groups — SPA
+
+| # | Step | Effort |
+|---|---|---|
+| Q6.1 | `/get-involved` public page: visibility-filtered group cards (image, name, excerpt, meeting info, badge), "Request to Join" or "Sign in to join" CTA. Sort alphabetical. | M |
+| Q6.2 | `/groups/{slug}` public group detail: image, full description, meeting info, contact email, join request modal (with conditional message field per `RequiresMessageOnJoinRequest`), roster section (conditional on `RosterVisibility` + viewer membership). | L |
+| Q6.3 | `/admin/groups` list with filters. `/admin/groups/new` create form. `/admin/groups/{id}` edit form with tabbed sub-sections: Roster, Pending Requests, History. | XL |
+| Q6.4 | Roster tab: member list, direct-add search, promote-to-leader (admin-only action guarded in UI), remove with confirmation. | M |
+| Q6.5 | Pending Requests tab: pending list with request message, Approve / Decline buttons. | M |
+| Q6.6 | `/profile/groups` page: own memberships list with [Leave] button. | S |
+| Q6.7 | `useAdminNotifications()` hook extension: subscribe to `GroupJoinRequestSubmitted` SignalR event, toast in admin shell with link to requests page. | S |
+| Q6.8 | 375px mobile audit on all group pages. | S |
+
+### Stage Q7 — Classes — Backend
+
+| # | Step | Effort |
+|---|---|---|
+| Q7.1 | `ClassSlotRepository` + `ClassOfferingRepository` in Infrastructure. Key queries: `ListPublicAsync(ct)` (IsActive slots + current offering per slot), `GetBySlugAsync(slug, ct)`, `ListOfferingsForSlotAsync(slotId, ct)`. | M |
+| Q7.2 | `ClassService` in Application layer: slot CRUD (Admin only), offering CRUD (Admin only), public-facing query helpers (current/upcoming/recent-past per slot). Member-only fields stripped from public DTOs at service layer. | M |
+| Q7.3 | `AdminClassSlotsController` (`/api/admin/class-slots`): CRUD + soft-delete. | M |
+| Q7.4 | `AdminClassOfferingsController` (`/api/admin/class-offerings`): CRUD + soft-delete, filter by slot/date range/status. | M |
+| Q7.5 | `PublicClassesController` (`/api/public/classes`): `GET /api/public/classes` (slot list with current/upcoming offering per slot; member-only fields present only when authenticated Member+), `GET /api/public/classes/{slug}`. | M |
+| Q7.6 | SiteSettings keys for classes (`ClassAudienceAgeGroups`, `ShowRecentPastOnPublicClasses`, etc.) read in controller to drive public behavior. | S |
+| Q7.7 | Integration tests: verify `TeacherLeaderId`, `DetailedSchedule`, `MaterialsNeeded`, `DefaultRoom` are absent from anonymous-caller responses. | M |
+
+### Stage Q8 — Classes — SPA
+
+| # | Step | Effort |
+|---|---|---|
+| Q8.1 | `/classes` public page: slots grouped by audience age group, per-slot card showing current/upcoming offering. Members see additional fields (teacher, room, schedule). Age-group filter chips at top. | L |
+| Q8.2 | `/classes/{slug}` detail page (slot-level view with current + upcoming offering detail). | M |
+| Q8.3 | `/admin/class-slots` list + create/edit form (with offerings sub-tab listing all offerings for the slot). | M |
+| Q8.4 | `/admin/class-offerings` list + create/edit form (slot picker, date range, teacher leader vs. free-text toggle). | M |
+| Q8.5 | 375px mobile audit. | S |
+
+### Stage Q9 — Prayer Requests — Backend
+
+| # | Step | Effort |
+|---|---|---|
+| Q9.1 | `ProfanityFilter` NuGet install. `IProfanityCheckService` / `ProfanityCheckService` in Infrastructure: merges built-in wordlist + SiteSettings `ProfanityWordlist`, strips `ProfanityAllowlist` matches, exposes `ContainsProfanity(string)`. Registered as scoped; wordlist loaded from SiteSettings on each check (reads current in-memory setting). | M |
+| Q9.2 | `PrayerRequestRepository` in Infrastructure: queries for active/answered lists, member-visible filter, prayed-for count, per-user prayed status. | M |
+| Q9.3 | `PrayerRequestService` in Application layer: submit (with ProfanityFilter check), edit-own or editor-edit, status change, `MarkPrayedForAsync` / `UnmarkPrayedForAsync` (idempotent toggle), add update (Editor+ only), delete (submitter own or Editor+). Anonymous requests hide submitter name in DTOs when `IsAnonymous=true`. | L |
+| Q9.4 | `MemberPrayerRequestsController` (`/api/prayer-requests`, `[Authorize]`): submit, list (active + answered within archive window), detail, mark/unmark prayed, edit/delete own. | M |
+| Q9.5 | `AdminPrayerRequestsController` (`/api/admin/prayer-requests`, `[Authorize(Roles=...)]`): full list with filters, detail, post update, change status, bulk archive, delete. | M |
+| Q9.6 | SignalR: emit `PrayerRequestCreated`, `PrayerRequestUpdated`, `PrayerRequestStatusChanged`, `PrayerRequestPrayedForCountChanged`, `PrayerRequestUpdateAdded` to "members" group (Editors/Admins are in "members" group too). | M |
+| Q9.7 | Integration tests: cross-user edit denied; anonymous-display privacy (submitter name hidden); ProfanityFilter blocks on submit; Editor can post update but Member cannot; PrayedFor unique constraint honored. | L |
+
+### Stage Q10 — Prayer Requests — SPA
+
+| # | Step | Effort |
+|---|---|---|
+| Q10.1 | `usePrayerRequestUpdates(prayerRequestId?)` SignalR hook: subscribes to all Prayer-related events; updates list/detail state in real-time (new requests at top, prayed-for counts, new updates). | M |
+| Q10.2 | `/prayer-requests` member list page: active + answered cards, prayed-for toggle button, real-time new-request highlight (subtle fade-in). | M |
+| Q10.3 | `/prayer-requests/new` submit form: title, TipTap body, anonymous checkbox. Error display for profanity rejection. | M |
+| Q10.4 | `/prayer-requests/{id}` detail page: full content, prayed-for button + count, updates list. Editor/Admin sections: "Post Update" (TipTap) + "Change Status" + action buttons. Submitter own-request section: Edit / Mark Answered / Archive. | L |
+| Q10.5 | `/admin/prayer-requests` moderation view: full list with filters, bulk actions. | M |
+| Q10.6 | 375px mobile audit on prayer request pages. | S |
+
+### Stage Q11 — Connect Card — Backend
+
+| # | Step | Effort |
+|---|---|---|
+| Q11.1 | `ITurnstileValidationService` / `TurnstileValidationService` in Infrastructure: POSTs to Cloudflare's `siteverify` endpoint, returns `isSuccess`. Skips validation when `CloudflareTurnstileSiteKey` is not configured (dev mode). Registered as transient (stateless HTTP call). | M |
+| Q11.2 | `ConnectCardRepository` in Infrastructure. `ConnectCardService` in Application: submit (runs Turnstile validation, honeypot check, 5s time-to-submit check; persists submission; sends ack email via `IEmailService`; emits SignalR event), status update, notes update, resend ack. | M |
+| Q11.3 | Rate-limiting middleware (ASP.NET Core built-in): sliding-window policy `5 per hour`, key = SHA-256 of remote IP, applied only to `POST /api/public/connect-card`. Reject with `429 Too Many Requests`. | M |
+| Q11.4 | `PublicConnectCardController` (`/api/public/connect-card`, anonymous): `POST` for submission. FluentValidation: Name required, at least one of Email or Phone required, HowDidYouHear required, max-length checks. | M |
+| Q11.5 | `AdminConnectCardsController` (`/api/admin/connect-cards`, Editor+): list with filters, detail, status update, notes update, resend, bulk actions. | M |
+| Q11.6 | SignalR: emit `ConnectCardSubmitted` to "admins" group with summary DTO (name, email, phone, submitted time). | S |
+| Q11.7 | Integration tests: Turnstile validation mocked (pass/fail paths); honeypot rejection; time-to-submit rejection; rate-limit integration (mock clock). | M |
+
+### Stage Q12 — Connect Card — SPA
+
+| # | Step | Effort |
+|---|---|---|
+| Q12.1 | `/connect` public form: all fields per spec. Cloudflare Turnstile widget (JS injected; widget rendered; token captured in hidden field). Honeypot hidden field. 5s elapsed-time check via `Date.now()` at load vs. submit. | L |
+| Q12.2 | `/connect/thank-you` confirmation page: thank-you message (from SiteSettings). Navigation back to home. | S |
+| Q12.3 | `/admin/connect-cards` list page: filterable by status, searchable by name/email, sortable by date. | M |
+| Q12.4 | `/admin/connect-cards/{id}` detail page: full submission, status controls (dropdown + save), internal notes textarea, Resend Acknowledgment button, hard-delete (Admin only with confirmation). | M |
+| Q12.5 | `useAdminNotifications()` hook extension: subscribe to `ConnectCardSubmitted` event, toast in admin shell with link to queue. | S |
+| Q12.6 | 375px mobile audit on public connect card form. | S |
+
+### Stage Q13 — Blog — Backend
+
+| # | Step | Effort |
+|---|---|---|
+| Q13.1 | `BlogPostRepository` in Infrastructure: list (paginated, published, non-future-dated, category filter, author filter, pinned-first), get by slug, get by author, full admin list with draft/status/date filters. | M |
+| Q13.2 | `BlogService` in Application layer: create/edit/publish/unpublish (Editor+ only, can author on behalf of another user), delete (submitter own or Admin), reading-time calc `max(1, ceil(wordCount/250))` from ProseMirror JSON plain-text extraction, tag upsert (reuse TagService normalize pattern), `RelatedSermonId` FK validation. | L |
+| Q13.3 | `PublicBlogController` (`/api/public/blog`): list, by-slug, by-category, by-author. Members-only posts excluded for anonymous callers. Output caching: list = 5 min (`blog-list` tag), slug = 5 min (`blog-{slug}`), category = 5 min (`blog-category-{cat}`), by-author = 5 min (`blog-by-{userId}`). | M |
+| Q13.4 | `AdminBlogController` (`/api/admin/blog`): full CRUD + publish/unpublish. Cache invalidation on write: evict `blog-{slug}`, `blog-list`, `blog-category-{cat}`, `blog-by-{authorId}`, `homepage`, `sitemap`, `search`. | M |
+| Q13.5 | OG + JSON-LD `Article` schema generation in public blog detail endpoint: `og:title`, `og:description`, `og:image`, `og:type=article`, `article:author`, JSON-LD with `@type: Article`, `author.name`, `datePublished`. Return as part of the detail DTO (same pattern as news items). | M |
+| Q13.6 | Search index: bootstrap for BlogPost on first run; invalidate `search` on blog write. | S |
+| Q13.7 | Integration tests: reading-time calc (0, 250, 251, 500 words); members-only post excluded from anonymous list; related sermon FK validation (non-existent sermon rejected). | M |
+
+### Stage Q14 — Blog — SPA
+
+| # | Step | Effort |
+|---|---|---|
+| Q14.1 | `/blog` public index: pinned posts always first, category filter chips, paginated list with "Load More", post cards (hero image, title, excerpt, author, date, category, reading time, tags). | L |
+| Q14.2 | `/blog/category/{category}` page: category-filtered list, reuses card component. | S |
+| Q14.3 | `/blog/by/{userId}` author archive: author photo + name + bio (`PublicAuthorBio`), post list below. Public page (no auth required). | M |
+| Q14.4 | `/blog/{slug}` detail page: hero, title (H1), author byline (photo + name, linked to author archive), date, category, reading time, TipTap body render, tags, Related Posts (same category, 3), Companion Sermon callout (if `RelatedSermonId`), social share buttons (Facebook, X, copy link), OG + JSON-LD tags injected into `<head>` (using existing SPA meta-tag pattern). | XL |
+| Q14.5 | `/admin/blog` list: draft/published/all filter, category filter, author filter, date range. Create/Edit form: TipTap body, title + slug, author dropdown (Editor+ can pick any author), category, tags chip input (autocomplete from TagService), hero image upload, excerpt with manual override, related sermon picker, members-only toggle, pinned toggle, draft/publish, scheduled publish date (captured, no automation), version history tab. | XL |
+| Q14.6 | 375px mobile audit: post list cards stack, reading view comfortable. | S |
+
+### Stage Q15 — Facebook OAuth Account Linking
+
+| # | Step | Effort |
+|---|---|---|
+| Q15.1 | Install `Microsoft.AspNetCore.Authentication.Facebook` NuGet. Configure the handler in `Program.cs` conditional on `FacebookLoginEnabled` SiteSettings key (injected from appsettings/environment; see note below). | M |
+| Q15.2 | Facebook OAuth callback handler: look up `AspNetUserLogins` by provider + providerKey. If found → sign in and redirect. If NOT found → **reject** with error message "No member account is linked to this Facebook profile. Please log in with your password first, then link Facebook from your profile." Absolutely no account creation path. | M |
+| Q15.3 | `FacebookLinkController` (`/api/auth/facebook`): `GET /challenge` (initiate OAuth for an already-authenticated user), `GET /callback` (complete link for authenticated user → store in `AspNetUserLogins`), `POST /unlink` (remove from `AspNetUserLogins`). All require `[Authorize]` except the OAuth redirect itself. | M |
+| Q15.4 | `/login` page update: "Continue with Facebook" button shown when `FacebookLoginEnabled=true` (from SiteSettings API). | S |
+| Q15.5 | Profile Account tab: Facebook section renders link/unlink based on `GET /api/profile/facebook-status`. | S |
+| Q15.6 | **Configuration note:** `FacebookOAuthAppId` and `FacebookOAuthAppSecret` are stored in SiteSettings (DB). Because ASP.NET Core authentication middleware is configured at startup, and SiteSettings are in DB, the Facebook handler is configured dynamically via `IOptionsMonitor<FacebookOptions>` backed by a custom `IConfigureNamedOptions` that reads the DB at configuration time. If either key is null, the handler is a no-op. Document this pattern in IMPLEMENTATION_NOTES. | M |
+| Q15.7 | Integration tests: unlinked Facebook ID does not create account; link requires authenticated session; unlink succeeds; post-unlink login requires password. | M |
+
+### Stage Q16 — Site Settings UI Wiring
+
+| # | Step | Effort |
+|---|---|---|
+| Q16.1 | Privacy & Security tab (Administrator only): Profanity Filter section (wordlist + allowlist textareas, "Test phrase" input that calls a new `POST /api/admin/profanity/test` endpoint and shows result inline). | M |
+| Q16.2 | Privacy & Security tab: Connect Card section (interests as chip input, acknowledgment message TipTap editor, Turnstile keys). Prayer Requests section (archive days, require-approval flag). | M |
+| Q16.3 | Content tab additions: Blog categories (chip input), Class audience age groups (chip input), class display settings (show recent past toggle, lookback days number input). | M |
+| Q16.4 | Integrations tab additions: Facebook OAuth app ID + app secret (masked/reveal-on-click, same pattern as YouTube secret from Phase 3), Facebook Login enabled toggle. | S |
+| Q16.5 | `GET /api/admin/profanity/test` endpoint (Administrator only): accepts `{ phrase: string }`, returns `{ containsProfanity: bool }`. | S |
+
+### Stage Q17 — Search Index Integration for Phase 4 Entities
+
+| # | Step | Effort |
+|---|---|---|
+| Q17.1 | `SearchIndexer.BootstrapAsync` additions: Groups (Public and MembersOnly with flag), ClassSlots + active ClassOfferings (public fields only), BlogPosts (published; members-only with flag), PrayerRequests (Active + Answered, always `IsMembersOnly=true`). | M |
+| Q17.2 | Content-write invalidation: all new entity write-paths call `_cache.InvalidateAsync(["search"])` and schedule reindex of affected entries. | S |
+| Q17.3 | Search results page: add entity-type icons for Group (Lucide `Users`), Class (`BookOpen` already used for sermons — use `GraduationCap` or `Library`), Blog (`FileText`), PrayerRequest (`Heart`). | S |
+| Q17.4 | Permission filtering in search: anonymous users see results where `IsMembersOnly=false` only. Members see all. | S |
+
+### Stage Q18 — Seed Data
+
+| # | Step | Effort |
+|---|---|---|
+| Q18.1 | 4-6 sample Member-role users (realistic names, varied directory opt-in settings). Idempotent (skip if any seeded member users exist). | M |
+| Q18.2 | 3-4 sample Groups across visibility levels ("Men's Bible Study" Public/Open, "Worship Team" MembersOnly/InviteOnly, "Senior Citizens Outing" MembersOnly/Open, "Pastoral Care Recipients" Hidden/InviteOnly). Group memberships assigning seeded members + designating at least one Leader per group. | M |
+| Q18.3 | 2-3 ClassSlots + current + upcoming ClassOffering per slot (Adult Class, Youth Class, Children's Class). | S |
+| Q18.4 | 2-3 PrayerRequests (mix of anonymous and named), one with a PrayerRequestUpdate from an admin. | S |
+| Q18.5 | 2 BlogPosts (one Devotional, one Sermon Notes; Sermon Notes post linked to a seeded Phase 3 sermon; both published). | S |
+| Q18.6 | 1-2 ConnectCardSubmissions in different statuses (New, FollowedUp). | S |
+
+### Stage Q19 — Tests
+
+| # | Step | Effort |
+|---|---|---|
+| Q19.1 | **Application tests:** Group permission rules (leader cannot promote, editor can approve, admin can do all); ProfanityFilter integration (blocked word returns true; allowlist word suppresses); Member directory privacy filter (unlisted user not returned); PrayerRequest anonymity DTO (IsAnonymous=true → submitter name null in DTO); Blog reading-time calc (edge cases). | L |
+| Q19.2 | **Infrastructure tests:** ProfanityFilter wordlist load from SiteSettings; Turnstile validation mock (success + failure); `GroupMembershipRepository` queries for leader/pending/active status. | M |
+| Q19.3 | **Api integration tests:** Cross-user access denied on profile endpoints; Members directory non-listed user 404; Group join-request end-to-end; PrayerRequest Editor-only update post (Member gets 403); Connect Card submission with Turnstile mock; Blog members-only post excluded from anonymous API response; Facebook callback for unlinked ID rejected. | XL |
+| Q19.4 | **SPA tests:** Profile tab save interactions; Members directory renders with privacy; Group join modal; Prayer request live-update via SignalR mock; Connect Card form field validation; Blog category filter. | L |
+
+### Stage Q20 — Documentation, Mobile Audit, Final Verification
+
+| # | Step | Effort |
+|---|---|---|
+| Q20.1 | `IMPLEMENTATION_NOTES.md` additions: privacy enforcement pattern (server-side field filtering); ProfanityFilter integration and wordlist/allowlist merge strategy; SignalR "user-{userId}" group pattern; Facebook linking flow and no-account-creation enforcement; Profile tab mobile pattern decision (horizontal scroll); `PhoneNumber` Identity-inherited field decision; `FacebookOptions` dynamic configuration via `IConfigureNamedOptions`; `ScheduledPublishAt` captured-but-inert decision. | M |
+| Q20.2 | `README.md` additions: Facebook OAuth setup (App ID + Secret in SiteSettings, `FacebookLoginEnabled` flag), ProfanityFilter management (wordlist + allowlist in Site Settings → Privacy & Security), Cloudflare Turnstile setup, group leader management guide, connect card workflow. | M |
+| Q20.3 | `ROADMAP.md` deferred items: member-to-member messaging, class signup/RSVP, class series cross-linking to Sermons/Blog, bulk group membership operations, Prayer Request comments by members, Blog comments, group categories/tagging. | S |
+| Q20.4 | 375px mobile pass on every new Phase 4 page not already audited inline. | M |
+| Q20.5 | Final smoke: `dotnet build` clean (no warnings), `dotnet test` green, `npm run build` clean, `npm test` green, API boots, spot-check public endpoints, spot-check admin endpoints, spot-check member-only endpoints. | M |
+| Q20.6 | `IMPLEMENTATION_NOTES.md` closing entry: end-of-Phase-4 state (test counts, new entity count, migration name, bundle delta). | S |
+
+---
+
+## Q-3. Dependencies & Critical-Path Notes
+
+- **Q0 → Q1** Domain entities must exist before EF configuration and migration.
+- **Q0, Q1 → Q2–Q19** All subsequent stages depend on the migration having run.
+- **Q1.5 → Q16** SiteSettings keys must be defined before the Settings UI wires them.
+- **Q2 → Q3** Profile API before profile SPA.
+- **Q2 → Q4** `IApplicationUserRepository` directory-query methods before Directory API.
+- **Q5 → Q6** Groups backend before groups SPA; Q5.6 (SignalR) also feeds Q6.7.
+- **Q7 → Q8** Classes backend before classes SPA.
+- **Q9 → Q10** Prayer Requests backend (including SignalR events) before SPA.
+- **Q9.1 (ProfanityFilter NuGet)** before Q9.3 (service that uses it) and Q16.1 (test-phrase UI).
+- **Q11 → Q12** Connect Card backend before SPA.
+- **Q13 → Q14** Blog backend before SPA.
+- **Q15.1 (NuGet)** can be done any time after Q1; Q15.2-Q15.7 depend on it.
+- **Q17** after all entity backends exist (Q5, Q7, Q9, Q13).
+- **Q18** after all entity backends and seedable repositories exist.
+- **Q19** after all backends complete (Q2–Q18); SPA tests (Q19.4) after all SPA stages.
+- **Q20** final; depends on everything else.
+
+Critical path: **Q0 → Q1 → Q2 → Q5 → Q9 → Q13** (the deepest data-layer chain),
+with **Q3, Q4, Q6, Q7, Q8, Q10, Q11, Q12, Q14** layering on their respective backends.
+**Q15** (Facebook) and **Q16** (Settings UI) are independent once Q1 is done.
+**Q17 → Q18 → Q19 → Q20** close the phase.
+
+---
+
+## Q-4. Risks
+
+| Risk | Mitigation |
+|---|---|
+| `IdentityUser<Guid>.PhoneNumber` conflict with spec's PhoneNumber field. | Use the inherited property; enforce max-length via FluentValidation rather than `[MaxLength]` on entity. Document. |
+| `Microsoft.AspNetCore.Authentication.Facebook` configured at startup but secrets are in the DB (runtime). | `IConfigureNamedOptions<FacebookOptions>` backed by `IOptionsMonitor<SiteSettingsService>` so changes take effect on next request without restart. Document pattern. |
+| Cloudflare Turnstile widget loads from an external CDN — Connect Card fails in offline CI. | `TurnstileValidationService` is skipped (returns success) when `CloudflareTurnstileSiteKey` is null. Tests mock the HTTP call. SPA conditionally renders the widget only when key is configured. |
+| ProfanityFilter built-in wordlist too aggressive or too lenient for a church context. | Site Settings allows admin to add words (wordlist) and suppress false positives (allowlist). Test-phrase tool lets admin verify before deploying new words. |
+| Blog's TipTap word-count / reading-time extraction: ProseMirror JSON structure may nest text across complex node types. | Extract all `text` leaf nodes recursively from the JSON tree (same utility already used for iCal DESCRIPTION plain-text in Phase 3 — reuse `StripHtml`-equivalent). |
+| SignalR "user-{userId}" group flooding: every online member gets individual group entry. | Negligible at church scale; SignalR in-memory transport handles thousands of groups. Document. |
+| Cross-member access bugs — the highest-risk category for privacy. | Service-layer guard (`throw ForbiddenException if UserId != currentUserId`) is the primary defense. Integration tests that authenticate as User A and attempt to read/write User B's data are mandatory, not optional, for profile, directory, and prayer-request endpoints. |
+| EF temporal table on `ConnectCardSubmission` storing PII indefinitely. | The temporal table retains PII in history. Document that GDPR data-removal requests require manual history purge (note in IMPLEMENTATION_NOTES + ROADMAP as an operator task). |
+
+---
+
+## Q-5. What I Will NOT Do in Phase 4
+
+- No email broadcasts (SendGrid) — Phase 5.
+- No scheduled-publishing background job — Phase 5 (field captured, no logic runs).
+- No email-on-publish for News or Blog — Phase 5.
+- No Volunteer Signups — Phase 5.
+- No SMS service stub — Phase 5.
+- No Astro docs site — Phase 6.
+- No GA4 + cookie banner — Phase 6.
+- No RSS feeds — Phase 6.
+- No member-to-member messaging — ROADMAP.
+- No class signup/RSVP — ROADMAP.
+- No cross-linking of Class series to Sermons/Blog — ROADMAP.
+- No Prayer Request comments by members — ROADMAP.
+- No Blog comments — ROADMAP.
+- No group categories/tagging — ROADMAP.
+- No "Duplicate for next term" button on ClassOfferings — per prompt.
+- No Turnstile retroactively on event registration — Phase 3 backlog; not Phase 4 scope.
+
+If during implementation I find myself drawn into any of the above, I will stop and ask.
+
+---
+
+## Q-6. Awaiting Review
+
+This Phase 4 plan is the only deliverable until you approve it.  Once approved
+(with or without adjustments), I'll execute Q0 through Q20 in order, updating
+`IMPLEMENTATION_NOTES.md` as I go and surfacing genuine ambiguities via `// TODO:`
+comments rather than guessing silently. Phases 1, 2, and 3 deliverables stay intact
+throughout.
