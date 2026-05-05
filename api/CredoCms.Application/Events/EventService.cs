@@ -32,6 +32,16 @@ public sealed record EventDetailDto(
     DateTimeOffset CreatedAt, DateTimeOffset ModifiedAt, Guid? ModifiedByUserId,
     DateTimeOffset? DeletedAt);
 
+public sealed record PublicEventListItemDto(
+    Guid Id, string Slug, string Title,
+    DateTimeOffset StartsAt, DateTimeOffset? EndsAt, bool AllDay,
+    string? Location,
+    string? HeroImageUrl, string? HeroImageWebpUrl, string? HeroImageAlt,
+    EventVisibility? Visibility,
+    EventRegistrationMode RegistrationMode,
+    string? RecurrenceRule,
+    DateTimeOffset NextOccurrenceAt);
+
 public sealed record PublicEventDto(
     Guid Id, string Slug, string Title, string? DescriptionJson,
     DateTimeOffset StartsAt, DateTimeOffset? EndsAt, bool AllDay,
@@ -108,6 +118,7 @@ public interface IEventService
     Task<PagedResult<EventListItemDto>> ListAsync(EventListQuery query, CancellationToken ct = default);
     Task<EventDetailDto?> GetAsync(Guid id, bool includeDeleted = false, CancellationToken ct = default);
     Task<PublicEventDto?> GetPublicBySlugAsync(string slug, bool includeMembersOnly, CancellationToken ct = default);
+    Task<PagedResult<PublicEventListItemDto>> ListPublicAsync(int page, int pageSize, bool includeMembersOnly, CancellationToken ct = default);
 
     Task<EventOperationResult> CreateAsync(CreateEventRequest request, CancellationToken ct = default);
     Task<EventOperationResult> UpdateAsync(Guid id, UpdateEventRequest request, CancellationToken ct = default);
@@ -183,6 +194,47 @@ public sealed class EventService : IEventService
 
     public Task<PagedResult<EventListItemDto>> ListAsync(EventListQuery query, CancellationToken ct = default)
         => _repo.ListAsync(query, ct);
+
+    public async Task<PagedResult<PublicEventListItemDto>> ListPublicAsync(
+        int page, int pageSize, bool includeMembersOnly, CancellationToken ct = default)
+    {
+        var pageNum = Math.Max(1, page);
+        var size = Math.Clamp(pageSize, 1, 100);
+
+        var all = await _repo.ListPublicAsync(includeMembersOnly, ct).ConfigureAwait(false);
+
+        // Compute next-occurrence for each event so list ordering reflects the
+        // upcoming schedule rather than original StartsAt.
+        var horizon = DateTimeOffset.UtcNow.AddYears(2);
+        var now = DateTimeOffset.UtcNow;
+
+        var withNext = new List<(Event evt, DateTimeOffset nextAt)>(all.Count);
+        foreach (var evt in all)
+        {
+            var exceptions = await _repo.GetExceptionsAsync(evt.Id, ct).ConfigureAwait(false);
+            var overrides = await _repo.GetOverridesAsync(evt.Id, ct).ConfigureAwait(false);
+            var next = _expander.Expand(evt, exceptions, overrides, now, horizon)
+                .Select(o => (DateTimeOffset?)o.StartsAt).FirstOrDefault();
+            if (next is null) continue;
+            withNext.Add((evt, next.Value));
+        }
+
+        var ordered = withNext
+            .OrderBy(t => t.nextAt)
+            .ToList();
+        var total = ordered.Count;
+        var pageItems = ordered
+            .Skip((pageNum - 1) * size).Take(size)
+            .Select(t => new PublicEventListItemDto(
+                t.evt.Id, t.evt.Slug, t.evt.Title,
+                t.evt.StartsAt, t.evt.EndsAt, t.evt.AllDay,
+                t.evt.Location,
+                t.evt.HeroImageUrl, t.evt.HeroImageWebpUrl, t.evt.HeroImageAlt,
+                t.evt.Visibility, t.evt.RegistrationMode,
+                t.evt.RecurrenceRule, t.nextAt))
+            .ToList();
+        return new PagedResult<PublicEventListItemDto>(pageItems, total, pageNum, size);
+    }
 
     public async Task<EventDetailDto?> GetAsync(Guid id, bool includeDeleted = false, CancellationToken ct = default)
     {

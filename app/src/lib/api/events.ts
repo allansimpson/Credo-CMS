@@ -51,6 +51,23 @@ export interface EventDetail {
   deletedAt: string | null;
 }
 
+export interface PublicEventListItem {
+  id: string;
+  slug: string;
+  title: string;
+  startsAt: string;
+  endsAt: string | null;
+  allDay: boolean;
+  location: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  visibility: EventVisibility | null;
+  registrationMode: EventRegistrationMode;
+  recurrenceRule: string | null;
+  nextOccurrenceAt: string;
+}
+
 export interface PublicEvent {
   id: string;
   slug: string;
@@ -116,7 +133,7 @@ export const eventsApi = {
 
   // Public
   listPublic: (page = 1, pageSize = 12) =>
-    apiGet<PagedResult<PublicEvent>>(`/api/public/events?page=${page}&pageSize=${pageSize}`,
+    apiGet<PagedResult<PublicEventListItem>>(`/api/public/events?page=${page}&pageSize=${pageSize}`,
       { emitUnauthorized: false }),
   getPublic: (slug: string) =>
     apiGet<PublicEvent>(`/api/public/events/${encodeURIComponent(slug)}`,

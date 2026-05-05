@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { eventsApi, type EventDetail, type EventRequest, type EventVisibility, type EventRegistrationMode } from "@/lib/api/events";
 import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
@@ -356,6 +356,12 @@ export function EventEditorPage() {
 
       <fieldset className="space-y-3 border bg-card p-4">
         <legend className="px-2 text-sm font-semibold">Registration</legend>
+        {!isNew && (
+          <Link to={`/admin/events/${id}/registrations`}
+            className="inline-flex h-8 items-center justify-center border bg-card px-3 text-xs hover:bg-muted">
+            Manage registrations & fields →
+          </Link>
+        )}
         <Field label="Mode">
           <select value={form.registrationMode}
             onChange={(e) => setForm((f) => ({ ...f, registrationMode: parseInt(e.target.value, 10) as EventRegistrationMode }))}

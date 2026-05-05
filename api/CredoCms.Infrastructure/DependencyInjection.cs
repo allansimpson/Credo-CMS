@@ -122,6 +122,7 @@ public static class DependencyInjection
         services.AddScoped<ISermonRepository, SermonRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IEventRegistrationRepository, EventRegistrationRepository>();
+        services.AddSingleton<IIcalFeedBuilder, IcalFeedBuilder>();
 
         // Registration token signer — secret bound from EventRegistration:* section.
         var tokenOptions = new CredoCms.Application.Events.RegistrationTokenSignerOptions();

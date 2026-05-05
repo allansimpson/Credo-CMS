@@ -112,6 +112,21 @@ const EventsListPage = lazy(() =>
 const EventEditorPage = lazy(() =>
   import("@/pages/admin/EventEditorPage").then((m) => ({ default: m.EventEditorPage }))
 );
+const EventRegistrationsAdminPage = lazy(() =>
+  import("@/pages/admin/EventRegistrationsAdminPage").then((m) => ({ default: m.EventRegistrationsAdminPage }))
+);
+const PublicEventsListPage = lazy(() =>
+  import("@/pages/public/EventsListPage").then((m) => ({ default: m.PublicEventsListPage }))
+);
+const PublicEventDetailPage = lazy(() =>
+  import("@/pages/public/EventDetailPage").then((m) => ({ default: m.EventDetailPage }))
+);
+const EventRegisterPage = lazy(() =>
+  import("@/pages/public/EventRegisterPage").then((m) => ({ default: m.EventRegisterPage }))
+);
+const EventCancelRegistrationPage = lazy(() =>
+  import("@/pages/public/EventCancelRegistrationPage").then((m) => ({ default: m.EventCancelRegistrationPage }))
+);
 
 export default function App() {
   return (
@@ -234,6 +249,40 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted-foreground">Loading…</p>}>
                   <SermonDetailPage />
+                </Suspense>
+              }
+            />
+
+            {/* Events (public) */}
+            <Route
+              path="events"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                  <PublicEventsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events/:slug"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <PublicEventDetailPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events/:slug/register"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted-foreground">Loading…</p>}>
+                  <EventRegisterPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events/:slug/register/cancel"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-xl p-8 text-muted-foreground">Loading…</p>}>
+                  <EventCancelRegistrationPage />
                 </Suspense>
               }
             />
@@ -397,6 +446,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <EventEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="events/:id/registrations"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <EventRegistrationsAdminPage />
                 </Suspense>
               }
             />
