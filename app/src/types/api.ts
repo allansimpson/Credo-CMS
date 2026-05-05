@@ -200,6 +200,76 @@ export interface CreatePageRequest {
 
 export type UpdatePageRequest = CreatePageRequest;
 
+export interface NewsListItem {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+  publishedAt: string | null;
+  expiresAt: string | null;
+  modifiedAt: string;
+}
+
+export interface NewsDetail {
+  id: string;
+  slug: string;
+  title: string;
+  bodyJson: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  metaDescription: string | null;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+  isDeleted: boolean;
+  expiresAt: string | null;
+  calendarDate: string | null;
+  createdAt: string;
+  modifiedAt: string;
+  modifiedByUserId: string | null;
+  publishedAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface PublicNewsItem {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  isMembersOnly: boolean;
+  publishedAt: string;
+  calendarDate: string | null;
+}
+
+export interface PublicNewsDetail extends Omit<PublicNewsItem, "excerpt"> {
+  bodyJson: string;
+  excerpt: string | null;
+  metaDescription: string | null;
+}
+
+export interface CreateNewsItemRequest {
+  slug: string;
+  title: string;
+  bodyJson: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  metaDescription: string | null;
+  isPublished: boolean;
+  isMembersOnly: boolean;
+  expiresAt: string | null;
+  calendarDate: string | null;
+}
+
+export type UpdateNewsItemRequest = CreateNewsItemRequest;
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;

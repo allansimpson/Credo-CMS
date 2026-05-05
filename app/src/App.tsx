@@ -34,6 +34,18 @@ const PageEditorPage = lazy(() =>
 const DynamicPagePage = lazy(() =>
   import("@/pages/public/DynamicPagePage").then((m) => ({ default: m.DynamicPagePage }))
 );
+const NewsListPage = lazy(() =>
+  import("@/pages/admin/NewsListPage").then((m) => ({ default: m.NewsListPage }))
+);
+const NewsEditorPage = lazy(() =>
+  import("@/pages/admin/NewsEditorPage").then((m) => ({ default: m.NewsEditorPage }))
+);
+const PublicNewsListPage = lazy(() =>
+  import("@/pages/public/NewsListPage").then((m) => ({ default: m.PublicNewsListPage }))
+);
+const NewsDetailPage = lazy(() =>
+  import("@/pages/public/NewsDetailPage").then((m) => ({ default: m.NewsDetailPage }))
+);
 
 export default function App() {
   return (
@@ -48,6 +60,25 @@ export default function App() {
             <Route path="services" element={<PlaceholderPage title="Service Times" />} />
             <Route path="privacy" element={<PlaceholderPage title="Privacy Policy" />} />
             <Route path="terms" element={<PlaceholderPage title="Terms of Service" />} />
+
+            {/* News (public) */}
+            <Route
+              path="news"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <PublicNewsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="news/:slug"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <NewsDetailPage />
+                </Suspense>
+              }
+            />
+
             {/* Dynamic content pages — must come after the static ones above so
                 /privacy, /terms, etc. keep their placeholder rendering for now.
                 The slug param matches a single non-slash segment. */}
@@ -100,6 +131,22 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <PageEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="news"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <NewsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="news/:id"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <NewsEditorPage />
                 </Suspense>
               }
             />
