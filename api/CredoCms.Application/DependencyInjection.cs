@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<ITagService, TagService>();
         services.AddScoped<IScriptureReferenceService, ScriptureReferenceService>();
         services.AddScoped<ISermonSeriesService, SermonSeriesService>();
+        services.AddScoped<ISermonService, SermonService>();
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 

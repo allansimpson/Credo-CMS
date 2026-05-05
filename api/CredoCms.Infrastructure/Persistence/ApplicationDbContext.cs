@@ -42,6 +42,9 @@ public class ApplicationDbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<ScriptureReference> ScriptureReferences => Set<ScriptureReference>();
     public DbSet<SermonSeries> SermonSeries => Set<SermonSeries>();
+    public DbSet<Sermon> Sermons => Set<Sermon>();
+    public DbSet<SermonTag> SermonTags => Set<SermonTag>();
+    public DbSet<SermonAttachment> SermonAttachments => Set<SermonAttachment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

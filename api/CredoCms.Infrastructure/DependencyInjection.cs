@@ -115,6 +115,7 @@ public static class DependencyInjection
         services.AddScoped<ITagRepository, TagRepository>();
         services.AddScoped<IScriptureReferenceRepository, ScriptureReferenceRepository>();
         services.AddScoped<ISermonSeriesRepository, SermonSeriesRepository>();
+        services.AddScoped<ISermonRepository, SermonRepository>();
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();
