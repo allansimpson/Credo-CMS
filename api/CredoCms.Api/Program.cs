@@ -170,6 +170,8 @@ try
     {
         signalRBuilder.AddAzureSignalR(azureSignalR);
     }
+    builder.Services.AddSingleton<CredoCms.Application.RealTime.IRealtimeNotifier,
+        CredoCms.Api.RealTime.SignalRRealtimeNotifier>();
 
     // -- CORS for dev SPA -----------------------------------------------------
     if (builder.Environment.IsDevelopment())
