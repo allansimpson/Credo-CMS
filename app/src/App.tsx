@@ -70,6 +70,9 @@ const PublicDocumentsListPage = lazy(() =>
 const DocumentDetailPage = lazy(() =>
   import("@/pages/public/DocumentDetailPage").then((m) => ({ default: m.DocumentDetailPage }))
 );
+const AnnouncementAdminPage = lazy(() =>
+  import("@/pages/admin/AnnouncementPage").then((m) => ({ default: m.AnnouncementPage }))
+);
 
 export default function App() {
   return (
@@ -238,6 +241,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <DocumentsAdminPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="announcement"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <AnnouncementAdminPage />
                 </Suspense>
               }
             />

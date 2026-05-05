@@ -1,3 +1,4 @@
+using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Common;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.Settings;
@@ -43,6 +44,7 @@ public sealed class DataSeeder
         await SeedSystemUserAsync(ct).ConfigureAwait(false);
         await SeedDefaultAdminAsync(ct).ConfigureAwait(false);
         await SeedSiteSettingsAsync(ct).ConfigureAwait(false);
+        await SeedAnnouncementBannerAsync(ct).ConfigureAwait(false);
     }
 
     private async Task SeedRolesAsync(CancellationToken ct)
@@ -161,5 +163,27 @@ public sealed class DataSeeder
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded SiteSettings row");
+    }
+
+    private async Task SeedAnnouncementBannerAsync(CancellationToken ct)
+    {
+        var exists = await _db.AnnouncementBanner.AnyAsync(
+            b => b.Id == SystemConstants.AnnouncementBannerId, ct).ConfigureAwait(false);
+        if (exists) return;
+
+        var now = DateTimeOffset.UtcNow;
+        _db.AnnouncementBanner.Add(new AnnouncementBanner
+        {
+            Id = SystemConstants.AnnouncementBannerId,
+            IsActive = false,
+            Severity = AnnouncementSeverity.Info,
+            Message = "",
+            CreatedAt = now,
+            ModifiedAt = now,
+            ModifiedByUserId = SystemConstants.SystemUserId,
+        });
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded inactive AnnouncementBanner singleton");
     }
 }

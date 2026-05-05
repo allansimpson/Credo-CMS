@@ -386,6 +386,38 @@ export interface UpdateDocumentMetadataRequest {
   isMembersOnly: boolean;
 }
 
+export type AnnouncementSeverity = 0 | 1 | 2; // Info | Warning | Critical
+
+export interface AnnouncementBanner {
+  isActive: boolean;
+  severity: AnnouncementSeverity;
+  message: string;
+  linkUrl: string | null;
+  linkLabel: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  modifiedAt: string;
+  modifiedByUserId: string | null;
+}
+
+export interface PublicAnnouncementBanner {
+  severity: AnnouncementSeverity;
+  message: string;
+  linkUrl: string | null;
+  linkLabel: string | null;
+}
+
+export interface UpdateAnnouncementBannerRequest {
+  isActive: boolean;
+  severity: AnnouncementSeverity;
+  message: string;
+  linkUrl: string | null;
+  linkLabel: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;

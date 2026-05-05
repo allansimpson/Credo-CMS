@@ -1,3 +1,4 @@
+using CredoCms.Application.Announcements;
 using CredoCms.Application.Auditing;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Leaders;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IServiceTimeService, ServiceTimeService>();
         services.AddScoped<ILeaderService, LeaderService>();
         services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IAnnouncementBannerService, AnnouncementBannerService>();
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 

@@ -13,6 +13,9 @@ public static class SystemConstants
     /// any system-generated audit-log entries).</summary>
     public static readonly Guid SystemUserId = new("22222222-2222-2222-2222-222222222222");
 
+    /// <summary>The single AnnouncementBanner row's primary key.</summary>
+    public static readonly Guid AnnouncementBannerId = new("33333333-3333-3333-3333-333333333333");
+
     public const string SystemUserEmail = "system@credocms.local";
     public const string SystemUserDisplayName = "System";
 
