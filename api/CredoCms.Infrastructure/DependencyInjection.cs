@@ -12,6 +12,7 @@ using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.Storage;
 using CredoCms.Application.UserManagement;
+using CredoCms.Application.Versioning;
 using CredoCms.Domain.Identity;
 using CredoCms.Infrastructure.Auditing;
 using CredoCms.Infrastructure.Auth;
@@ -26,6 +27,7 @@ using CredoCms.Infrastructure.Leaders;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
 using CredoCms.Infrastructure.Search;
+using CredoCms.Infrastructure.Versioning;
 using CredoCms.Infrastructure.Services;
 using CredoCms.Infrastructure.Persistence;
 using CredoCms.Infrastructure.Persistence.Interceptors;
@@ -139,6 +141,12 @@ public static class DependencyInjection
 
         services.AddSingleton<ISearchIndexer, SearchIndexer>();
         services.AddScoped<IOutputCacheInvalidator, OutputCacheInvalidator>();
+
+        // Version-history handlers (Phase 2: only Pages handler ships; News /
+        // ServiceTime / Document / AnnouncementBanner handlers follow the
+        // same pattern and can be added without touching the controller).
+        services.AddScoped<IVersionedEntityHandler, PageVersionHandler>();
+        services.AddScoped<IVersionedEntityHandlerRegistry, VersionedEntityHandlerRegistry>();
 
         services.AddHostedService<VersioningTrimBackgroundService>();
         services.AddHostedService<SearchIndexBootstrapService>();
