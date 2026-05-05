@@ -1,9 +1,11 @@
 using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Common;
+using CredoCms.Domain.Events;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
 using CredoCms.Domain.Pages;
+using CredoCms.Domain.Sermons;
 using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using CredoCms.Infrastructure.Configuration;
@@ -54,6 +56,8 @@ public sealed class DataSeeder
         await SeedSampleServiceTimesAsync(ct).ConfigureAwait(false);
         await SeedSampleLeadersAsync(ct).ConfigureAwait(false);
         await SeedSampleNewsAsync(ct).ConfigureAwait(false);
+        await SeedSampleSermonContentAsync(ct).ConfigureAwait(false);
+        await SeedSampleEventsAsync(ct).ConfigureAwait(false);
     }
 
     private async Task SeedRolesAsync(CancellationToken ct)
@@ -309,4 +313,166 @@ public sealed class DataSeeder
             CreatedAt = now, ModifiedAt = now, PublishedAt = now,
         };
     }
+
+    private async Task SeedSampleSermonContentAsync(CancellationToken ct)
+    {
+        if (await _db.SermonSeries.AnyAsync(ct).ConfigureAwait(false)) return;
+        if (await _db.Sermons.AnyAsync(ct).ConfigureAwait(false)) return;
+
+        var now = DateTimeOffset.UtcNow;
+
+        var seriesRomans = new SermonSeries
+        {
+            Id = Guid.NewGuid(),
+            Slug = "the-letter-to-the-romans",
+            Title = "The Letter to the Romans",
+            DescriptionJson = ParaJson("A walk through Paul's most theologically rich letter."),
+            StartDate = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-2),
+            CreatedAt = now, ModifiedAt = now,
+        };
+        var seriesPsalms = new SermonSeries
+        {
+            Id = Guid.NewGuid(),
+            Slug = "psalms-of-ascent",
+            Title = "Psalms of Ascent",
+            DescriptionJson = ParaJson("Songs sung on the road to Jerusalem — and to God."),
+            StartDate = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-1),
+            CreatedAt = now, ModifiedAt = now,
+        };
+        _db.SermonSeries.AddRange(seriesRomans, seriesPsalms);
+
+        // YouTube IDs are placeholders — Editors are expected to replace them.
+        _db.Sermons.AddRange(
+            SampleSermon("good-news-for-everyone", "Good News for Everyone (Romans 1)",
+                "dQw4w9WgXcQ", seriesRomans.Id, now.AddDays(-21), "Pastor Marcus"),
+            SampleSermon("the-righteousness-of-god", "The Righteousness of God (Romans 3)",
+                "9bZkp7q19f0", seriesRomans.Id, now.AddDays(-14), "Pastor Marcus"),
+            SampleSermon("by-faith-alone", "By Faith Alone (Romans 4)",
+                "kJQP7kiw5Fk", seriesRomans.Id, now.AddDays(-7), "Pastor Marcus"),
+            SampleSermon("i-lift-up-my-eyes", "I Lift Up My Eyes (Psalm 121)",
+                "fLexgOxsZu0", seriesPsalms.Id, now.AddDays(-3), "Elder Sarah"));
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample sermon series + sermons.");
+    }
+
+    private static Sermon SampleSermon(string slug, string title, string ytId,
+        Guid seriesId, DateTimeOffset publishedAt, string speaker)
+        => new()
+        {
+            Id = Guid.NewGuid(),
+            Slug = slug,
+            Title = title,
+            YouTubeVideoId = ytId,
+            DescriptionJson = ParaJson($"Notes for {title}."),
+            PublishedAt = publishedAt,
+            YouTubePublishedAt = publishedAt,
+            SpeakerNameFreeText = speaker,
+            SermonSeriesId = seriesId,
+            IsPublished = true,
+            CreatedAt = publishedAt,
+            ModifiedAt = publishedAt,
+        };
+
+    private async Task SeedSampleEventsAsync(CancellationToken ct)
+    {
+        if (await _db.Events.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+
+        // Single events
+        var picnic = new Event
+        {
+            Id = Guid.NewGuid(), Slug = "summer-picnic", Title = "Summer Picnic",
+            DescriptionJson = ParaJson("Bring a side dish and lawn chairs."),
+            StartsAt = now.Date.AddDays(14).AddHours(11),
+            EndsAt = now.Date.AddDays(14).AddHours(15),
+            Location = "Memorial Park, Pavilion 3",
+            Visibility = EventVisibility.Public,
+            RegistrationMode = EventRegistrationMode.RsvpOptional,
+            Capacity = 80, WaitlistEnabled = true,
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+        var workshop = new Event
+        {
+            Id = Guid.NewGuid(), Slug = "marriage-workshop", Title = "Marriage Workshop",
+            DescriptionJson = ParaJson("A Saturday workshop for couples — registration required."),
+            StartsAt = now.Date.AddDays(30).AddHours(9),
+            EndsAt = now.Date.AddDays(30).AddHours(15),
+            Location = "Fellowship Hall",
+            Visibility = EventVisibility.Public,
+            RegistrationMode = EventRegistrationMode.RegistrationRequired,
+            Capacity = 24, WaitlistEnabled = true,
+            RegistrationOpensAt = now,
+            RegistrationClosesAt = now.AddDays(28),
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        // Recurring weekly: Wednesday Bible study
+        var bibleStudy = new Event
+        {
+            Id = Guid.NewGuid(), Slug = "wednesday-bible-study", Title = "Wednesday Bible Study",
+            DescriptionJson = ParaJson("Weekly verse-by-verse study. Childcare provided."),
+            StartsAt = NextDayOfWeek(now, DayOfWeek.Wednesday).AddHours(19),
+            EndsAt = NextDayOfWeek(now, DayOfWeek.Wednesday).AddHours(20).AddMinutes(30),
+            Location = "Room 204",
+            Visibility = EventVisibility.Public,
+            RecurrenceRule = "FREQ=WEEKLY;BYDAY=WE",
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        // Recurring monthly: members' prayer breakfast (members-only)
+        var prayerBreakfast = new Event
+        {
+            Id = Guid.NewGuid(), Slug = "members-prayer-breakfast", Title = "Members' Prayer Breakfast",
+            DescriptionJson = ParaJson("First Saturday of each month."),
+            StartsAt = FirstSaturdayOfNextMonth(now).AddHours(8),
+            EndsAt = FirstSaturdayOfNextMonth(now).AddHours(9).AddMinutes(30),
+            Location = "Fellowship Hall",
+            Visibility = EventVisibility.MembersOnly,
+            RecurrenceRule = "FREQ=MONTHLY;BYMONTHDAY=1",
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        // Single members-only with external URL
+        var retreat = new Event
+        {
+            Id = Guid.NewGuid(), Slug = "annual-retreat", Title = "Annual Members' Retreat",
+            DescriptionJson = ParaJson("A weekend away — registration via the camp's site."),
+            StartsAt = now.Date.AddDays(60).AddHours(17),
+            EndsAt = now.Date.AddDays(62).AddHours(15),
+            Location = "Camp Cedarwood",
+            Visibility = EventVisibility.MembersOnly,
+            ExternalRegistrationUrl = "https://example.org/retreat",
+            RegistrationMode = EventRegistrationMode.RegistrationRequired,
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        _db.Events.AddRange(picnic, workshop, bibleStudy, prayerBreakfast, retreat);
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample events (single, weekly, monthly, members-only).");
+    }
+
+    private static DateTimeOffset NextDayOfWeek(DateTimeOffset from, DayOfWeek target)
+    {
+        var diff = ((int)target - (int)from.DayOfWeek + 7) % 7;
+        if (diff == 0) diff = 7;
+        return from.Date.AddDays(diff);
+    }
+
+    private static DateTimeOffset FirstSaturdayOfNextMonth(DateTimeOffset from)
+    {
+        var firstOfNext = new DateTime(from.Year, from.Month, 1).AddMonths(1);
+        var dow = firstOfNext.DayOfWeek;
+        var diff = ((int)DayOfWeek.Saturday - (int)dow + 7) % 7;
+        return new DateTimeOffset(firstOfNext.AddDays(diff), TimeSpan.Zero);
+    }
+
+    private static string ParaJson(string text)
+        => "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
+           + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"}]}]}";
 }
