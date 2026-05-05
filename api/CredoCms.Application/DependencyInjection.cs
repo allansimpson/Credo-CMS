@@ -1,6 +1,7 @@
 using CredoCms.Application.Auditing;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
+using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.UserManagement;
 using FluentValidation;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IUserAdminService, UserAdminService>();
         services.AddScoped<IPageService, PageService>();
         services.AddScoped<INewsService, NewsService>();
+        services.AddScoped<IServiceTimeService, ServiceTimeService>();
 
         services.AddValidatorsFromAssemblyContaining<UpdateSiteSettingsRequestValidator>(includeInternalTypes: true);
 

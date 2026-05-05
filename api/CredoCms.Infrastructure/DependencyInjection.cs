@@ -3,6 +3,7 @@ using CredoCms.Application.Auth;
 using CredoCms.Application.Common;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
+using CredoCms.Application.Services;
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Application.Storage;
 using CredoCms.Application.UserManagement;
@@ -15,6 +16,7 @@ using CredoCms.Infrastructure.Email;
 using CredoCms.Infrastructure.Identity;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
+using CredoCms.Infrastructure.Services;
 using CredoCms.Infrastructure.Persistence;
 using CredoCms.Infrastructure.Persistence.Interceptors;
 using CredoCms.Infrastructure.Seeding;
@@ -87,6 +89,7 @@ public static class DependencyInjection
         services.AddScoped<IUserAdminQueries, UserAdminQueries>();
         services.AddScoped<IPageRepository, PageRepository>();
         services.AddScoped<INewsRepository, NewsRepository>();
+        services.AddScoped<IServiceTimeRepository, ServiceTimeRepository>();
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();

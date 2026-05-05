@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS: { to: string; label: string }[] = [
   { to: "/", label: "Home" },
   { to: "/about", label: "About" },
-  { to: "/services", label: "Services" },
+  { to: "/service-times", label: "Service Times" },
+  { to: "/news", label: "News" },
 ];
 
 export function PublicNavBar() {

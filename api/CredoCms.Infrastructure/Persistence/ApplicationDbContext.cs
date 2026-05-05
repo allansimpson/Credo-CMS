@@ -3,6 +3,7 @@ using CredoCms.Domain.Auditing;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.News;
 using CredoCms.Domain.Pages;
+using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ public class ApplicationDbContext
     public DbSet<AuditLogEntry> AuditLog => Set<AuditLogEntry>();
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<NewsItem> News => Set<NewsItem>();
+    public DbSet<ServiceTime> ServiceTimes => Set<ServiceTime>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

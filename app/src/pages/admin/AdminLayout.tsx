@@ -12,6 +12,7 @@ import {
   HelpCircle,
   FileText,
   Newspaper,
+  Clock,
 } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,6 +33,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/admin/pages", label: "Pages", icon: FileText },
   { to: "/admin/news", label: "News", icon: Newspaper },
+  { to: "/admin/service-times", label: "Service Times", icon: Clock },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },

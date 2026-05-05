@@ -46,6 +46,12 @@ const PublicNewsListPage = lazy(() =>
 const NewsDetailPage = lazy(() =>
   import("@/pages/public/NewsDetailPage").then((m) => ({ default: m.NewsDetailPage }))
 );
+const ServiceTimesAdminPage = lazy(() =>
+  import("@/pages/admin/ServiceTimesPage").then((m) => ({ default: m.ServiceTimesPage }))
+);
+const PublicServiceTimesPage = lazy(() =>
+  import("@/pages/public/ServiceTimesPage").then((m) => ({ default: m.PublicServiceTimesPage }))
+);
 
 export default function App() {
   return (
@@ -57,7 +63,14 @@ export default function App() {
           <Route element={<PublicLayout />}>
             <Route index element={<HomePage />} />
             <Route path="about" element={<PlaceholderPage title="About" />} />
-            <Route path="services" element={<PlaceholderPage title="Service Times" />} />
+            <Route
+              path="service-times"
+              element={
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                  <PublicServiceTimesPage />
+                </Suspense>
+              }
+            />
             <Route path="privacy" element={<PlaceholderPage title="Privacy Policy" />} />
             <Route path="terms" element={<PlaceholderPage title="Terms of Service" />} />
 
@@ -147,6 +160,14 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
                   <NewsEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="service-times"
+              element={
+                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <ServiceTimesAdminPage />
                 </Suspense>
               }
             />

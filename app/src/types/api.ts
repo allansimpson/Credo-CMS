@@ -270,6 +270,47 @@ export interface CreateNewsItemRequest {
 
 export type UpdateNewsItemRequest = CreateNewsItemRequest;
 
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface ServiceTime {
+  id: string;
+  name: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string; // "HH:mm:ss"
+  endTime: string | null;
+  location: string | null;
+  notes: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  modifiedAt: string;
+  modifiedByUserId: string | null;
+}
+
+export interface PublicServiceTime {
+  name: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string | null;
+  location: string | null;
+  notes: string | null;
+  displayOrder: number;
+}
+
+export interface CreateServiceTimeRequest {
+  name: string;
+  dayOfWeek: DayOfWeek;
+  startTime: string;
+  endTime: string | null;
+  location: string | null;
+  notes: string | null;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export type UpdateServiceTimeRequest = CreateServiceTimeRequest;
+
 export interface AuditLogEntry {
   id: string;
   timestamp: string;
