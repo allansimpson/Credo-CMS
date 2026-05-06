@@ -290,7 +290,14 @@ export interface CreateNewsItemRequest {
 
 export type UpdateNewsItemRequest = CreateNewsItemRequest;
 
-export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type DayOfWeek =
+  | "Sunday"
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday";
 
 export interface ServiceTime {
   id: string;

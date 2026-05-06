@@ -9,8 +9,6 @@ const TipTapReadOnly = lazy(() =>
   import("@/components/shared/TipTapReadOnly").then((m) => ({ default: m.TipTapReadOnly }))
 );
 
-const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 export function HomePage() {
   const { settings } = useSiteSettings();
   const [data, setData] = useState<HomepageDto | null>(null);
@@ -62,7 +60,7 @@ export function HomePage() {
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {data.serviceTimes.map((s, i) => (
               <li key={`${s.dayOfWeek}-${i}`} className="rounded-lg border bg-card p-4">
-                <p className="text-sm font-semibold">{DAY_LABELS[s.dayOfWeek]} · {s.startTime.slice(0, 5)}</p>
+                <p className="text-sm font-semibold">{s.dayOfWeek} · {s.startTime.slice(0, 5)}</p>
                 <p className="mt-1 font-semibold">{s.name}</p>
                 {s.location && <p className="text-sm text-muted">{s.location}</p>}
               </li>

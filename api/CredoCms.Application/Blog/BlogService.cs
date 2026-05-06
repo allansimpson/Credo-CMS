@@ -75,7 +75,7 @@ public sealed class BlogService : IBlogService
         var safePage = Math.Max(1, page);
         var safeSize = Math.Clamp(pageSize, 1, 50);
         var rows = await _repo.ListPublicAsync(category, IsAuthenticated, safePage, safeSize, ct).ConfigureAwait(false);
-        var items = await Task.WhenAll(rows.Items.Select(p => ToListItemAsync(p, ct))).ConfigureAwait(false);
+        var items = await ToListItemsAsync(rows.Items, ct).ConfigureAwait(false);
         return new PagedResult<BlogPostListItemDto>(items, rows.TotalCount, safePage, safeSize);
     }
 
@@ -103,8 +103,7 @@ public sealed class BlogService : IBlogService
             var now = DateTimeOffset.UtcNow;
             rows = rows.Where(p => p.IsPublished && p.PublishedAt is { } at && at <= now).ToList();
         }
-        var items = await Task.WhenAll(rows.Select(p => ToListItemAsync(p, ct))).ConfigureAwait(false);
-        return items.ToList();
+        return await ToListItemsAsync(rows, ct).ConfigureAwait(false);
     }
 
     // ---- admin reads -----------------------------------------------------
@@ -118,7 +117,7 @@ public sealed class BlogService : IBlogService
             PageSize = Math.Clamp(query.PageSize, 1, 100),
         };
         var rows = await _repo.ListAdminAsync(safe, ct).ConfigureAwait(false);
-        var items = await Task.WhenAll(rows.Items.Select(p => ToListItemAsync(p, ct))).ConfigureAwait(false);
+        var items = await ToListItemsAsync(rows.Items, ct).ConfigureAwait(false);
         return new PagedResult<BlogPostListItemDto>(items, rows.TotalCount, safe.Page, safe.PageSize);
     }
 
@@ -271,6 +270,19 @@ public sealed class BlogService : IBlogService
             ids.Add(tag.Id);
         }
         return ids;
+    }
+
+    // Sequential rather than Task.WhenAll: UserManager shares the
+    // request-scoped DbContext, and concurrent FindByIdAsync calls trip EF's
+    // "second operation on the same DbContext" guard.
+    private async Task<List<BlogPostListItemDto>> ToListItemsAsync(IReadOnlyCollection<BlogPost> posts, CancellationToken ct)
+    {
+        var result = new List<BlogPostListItemDto>(posts.Count);
+        foreach (var p in posts)
+        {
+            result.Add(await ToListItemAsync(p, ct).ConfigureAwait(false));
+        }
+        return result;
     }
 
     private async Task<BlogPostListItemDto> ToListItemAsync(BlogPost p, CancellationToken ct)

@@ -27,13 +27,23 @@ export class ApiError extends Error {
 
   /** Returns user-facing error messages from a typical API error envelope. */
   getMessages(): string[] {
-    if (
-      this.body &&
-      typeof this.body === "object" &&
-      "errors" in this.body &&
-      Array.isArray((this.body as ApiErrorResponse).errors)
-    ) {
-      return (this.body as ApiErrorResponse).errors;
+    if (this.body && typeof this.body === "object" && "errors" in this.body) {
+      const errors = (this.body as { errors: unknown }).errors;
+      // Service-layer shape: { errors: string[] }
+      if (Array.isArray(errors)) return errors as string[];
+      // ASP.NET ProblemDetails / FluentValidation auto-validation shape:
+      // { errors: { fieldName: ["message", ...] } }
+      if (errors && typeof errors === "object") {
+        const flat: string[] = [];
+        for (const messages of Object.values(errors as Record<string, unknown>)) {
+          if (Array.isArray(messages)) {
+            for (const m of messages) if (typeof m === "string") flat.push(m);
+          } else if (typeof messages === "string") {
+            flat.push(messages);
+          }
+        }
+        if (flat.length > 0) return flat;
+      }
     }
     return [this.message];
   }
@@ -84,7 +94,9 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 
   let parsed: unknown = null;
   const contentType = response.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
+  // Match application/json *and* RFC 6838 structured-suffix JSON types like
+  // application/problem+json (ASP.NET ProblemDetails) or application/ld+json.
+  if (contentType.includes("application/json") || contentType.includes("+json")) {
     parsed = await response.json().catch(() => null);
   } else if (response.body) {
     parsed = await response.text().catch(() => null);
@@ -132,7 +144,9 @@ export async function apiUpload<T>(path: string, formData: FormData): Promise<T>
 
   let parsed: unknown = null;
   const contentType = response.headers.get("content-type") ?? "";
-  if (contentType.includes("application/json")) {
+  // Match application/json *and* RFC 6838 structured-suffix JSON types like
+  // application/problem+json (ASP.NET ProblemDetails) or application/ld+json.
+  if (contentType.includes("application/json") || contentType.includes("+json")) {
     parsed = await response.json().catch(() => null);
   } else if (response.body) {
     parsed = await response.text().catch(() => null);

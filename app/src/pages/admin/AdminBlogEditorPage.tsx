@@ -269,8 +269,9 @@ export function AdminBlogEditorPage() {
             <section className="space-y-4">
               <SectionHead number="05" title="Tags" />
               <TagAutocomplete
-                values={form.tags}
-                onChange={(next) => setForm({ ...form, tags: next })}
+                ariaLabel="Blog tags"
+                value={form.tags.map((name) => ({ id: null, name }))}
+                onChange={(next) => setForm({ ...form, tags: next.map((t) => t.name) })}
               />
             </section>
           </div>

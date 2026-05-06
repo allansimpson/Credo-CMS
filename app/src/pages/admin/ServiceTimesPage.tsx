@@ -7,11 +7,16 @@ import type {
 } from "@/types/api";
 
 const DAYS: { value: DayOfWeek; label: string }[] = [
-  { value: 0, label: "Sunday" }, { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" }, { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" }, { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
+  { value: "Sunday", label: "Sunday" }, { value: "Monday", label: "Monday" },
+  { value: "Tuesday", label: "Tuesday" }, { value: "Wednesday", label: "Wednesday" },
+  { value: "Thursday", label: "Thursday" }, { value: "Friday", label: "Friday" },
+  { value: "Saturday", label: "Saturday" },
 ];
+
+const DAY_ORDER: Record<DayOfWeek, number> = {
+  Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+  Thursday: 4, Friday: 5, Saturday: 6,
+};
 
 interface FormState {
   name: string;
@@ -25,7 +30,7 @@ interface FormState {
 }
 
 const emptyForm: FormState = {
-  name: "", dayOfWeek: 0, startTime: "09:00", endTime: "", location: "", notes: "",
+  name: "", dayOfWeek: "Sunday", startTime: "09:00", endTime: "", location: "", notes: "",
   displayOrder: 0, isActive: true,
 };
 
@@ -76,7 +81,7 @@ export function ServiceTimesPage() {
       setItems((items) => {
         const without = items.filter((x) => x.id !== saved.id);
         return [...without, saved].sort((a, b) =>
-          a.dayOfWeek - b.dayOfWeek || a.displayOrder - b.displayOrder
+          DAY_ORDER[a.dayOfWeek] - DAY_ORDER[b.dayOfWeek] || a.displayOrder - b.displayOrder
         );
       });
       startNew();
@@ -181,7 +186,7 @@ export function ServiceTimesPage() {
           <div className="grid grid-cols-2 gap-2">
             <Field label="Day">
               <select value={form.dayOfWeek}
-                onChange={(e) => setForm({ ...form, dayOfWeek: Number(e.target.value) as DayOfWeek })}
+                onChange={(e) => setForm({ ...form, dayOfWeek: e.target.value as DayOfWeek })}
                 className="input">
                 {DAYS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
               </select>
