@@ -145,6 +145,73 @@ public class SiteSettings
 
     public int? YouTubeLastSyncImportedCount { get; set; }
 
+    // ---- Phase 4: Members + Community -------------------------------------
+
+    [Required]
+    [MaxLength(100)]
+    public string GetInvolvedPageLabel { get; set; } = "Get Involved";
+
+    [Required]
+    [MaxLength(100)]
+    public string ClassesPageLabel { get; set; } = "Classes";
+
+    /// <summary>JSON list of audience age groups for ClassSlots.</summary>
+    [Required]
+    public string ClassAudienceAgeGroupsJson { get; set; } =
+        "[\"Nursery (0-2)\",\"Preschool (3-5)\",\"Elementary (K-5)\",\"Middle School\",\"High School\",\"Young Adults\",\"Adults\",\"Seniors\",\"All Ages\"]";
+
+    public bool ShowRecentPastOnPublicClasses { get; set; }
+
+    public int RecentPastClassesLookbackDays { get; set; } = 30;
+
+    /// <summary>JSON list of Blog category names.</summary>
+    [Required]
+    public string BlogCategoriesJson { get; set; } =
+        "[\"Devotional\",\"Sermon Notes\",\"Missions\",\"Pastor's Reflections\",\"Announcements\"]";
+
+    [Required]
+    [MaxLength(100)]
+    public string BlogPageLabel { get; set; } = "Blog";
+
+    /// <summary>Newline-delimited custom profanity wordlist merged on top of the
+    /// built-in <c>ProfanityFilter</c> wordlist.</summary>
+    public string? ProfanityWordlist { get; set; }
+
+    /// <summary>Newline-delimited allowlist that suppresses matches in the merged
+    /// wordlist (false-positive recovery).</summary>
+    public string? ProfanityAllowlist { get; set; }
+
+    public int PrayerRequestArchiveDays { get; set; } = 30;
+
+    /// <summary>Captured for future use; Phase 4 keeps direct posting.</summary>
+    public bool PrayerRequestRequireApproval { get; set; }
+
+    /// <summary>JSON list of interest checkbox labels for the Connect Card form.</summary>
+    [Required]
+    public string ConnectCardInterestsJson { get; set; } =
+        "[\"Becoming a member\",\"Children's programs\",\"Youth programs\",\"Bible studies / classes\",\"Volunteering\",\"Prayer\",\"Speaking with a pastor\"]";
+
+    /// <summary>ProseMirror JSON for the connect-card acknowledgment email body.</summary>
+    public string? ConnectCardAcknowledgmentMessageJson { get; set; }
+
+    [Required]
+    [MaxLength(100)]
+    public string ConnectCardPageLabel { get; set; } = "Connect with us";
+
+    [MaxLength(200)]
+    public string? CloudflareTurnstileSiteKey { get; set; }
+
+    [MaxLength(200)]
+    public string? CloudflareTurnstileSecretKey { get; set; }
+
+    [MaxLength(200)]
+    public string? FacebookOAuthAppId { get; set; }
+
+    [MaxLength(200)]
+    public string? FacebookOAuthAppSecret { get; set; }
+
+    public bool FacebookLoginEnabled { get; set; }
+
     // -----------------------------------------------------------------------
 
     public DateTimeOffset CreatedAt { get; set; }

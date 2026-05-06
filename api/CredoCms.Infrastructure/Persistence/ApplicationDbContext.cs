@@ -1,12 +1,17 @@
 using CredoCms.Application.Common;
 using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Auditing;
+using CredoCms.Domain.Blog;
+using CredoCms.Domain.Classes;
+using CredoCms.Domain.ConnectCard;
 using CredoCms.Domain.Documents;
 using CredoCms.Domain.Events;
+using CredoCms.Domain.Groups;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
 using CredoCms.Domain.Pages;
+using CredoCms.Domain.Prayer;
 using CredoCms.Domain.Scripture;
 using CredoCms.Domain.Search;
 using CredoCms.Domain.Sermons;
@@ -52,6 +57,18 @@ public class ApplicationDbContext
     public DbSet<EventRegistrationField> EventRegistrationFields => Set<EventRegistrationField>();
     public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
     public DbSet<CalendarFeedToken> CalendarFeedTokens => Set<CalendarFeedToken>();
+
+    // Phase 4
+    public DbSet<Group> Groups => Set<Group>();
+    public DbSet<GroupMembership> GroupMemberships => Set<GroupMembership>();
+    public DbSet<ClassSlot> ClassSlots => Set<ClassSlot>();
+    public DbSet<ClassOffering> ClassOfferings => Set<ClassOffering>();
+    public DbSet<PrayerRequest> PrayerRequests => Set<PrayerRequest>();
+    public DbSet<PrayerRequestUpdate> PrayerRequestUpdates => Set<PrayerRequestUpdate>();
+    public DbSet<PrayerRequestPrayedFor> PrayerRequestPrayedFor => Set<PrayerRequestPrayedFor>();
+    public DbSet<ConnectCardSubmission> ConnectCardSubmissions => Set<ConnectCardSubmission>();
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
+    public DbSet<BlogPostTag> BlogPostTags => Set<BlogPostTag>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
