@@ -135,7 +135,7 @@ public sealed class AuthService : IAuthService
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user).ConfigureAwait(false);
         var msg = await _emailComposer.ComposePasswordResetAsync(user, token, ct).ConfigureAwait(false);
-        await _emailService.SendAsync(msg, ct).ConfigureAwait(false);
+        await _emailService.SendTransactionalAsync(msg, ct).ConfigureAwait(false);
 
         await _audit.WriteAsync("Auth.ForgotPasswordRequested", "ApplicationUser", user.Id.ToString(),
             details: new { Found = true }, cancellationToken: ct).ConfigureAwait(false);

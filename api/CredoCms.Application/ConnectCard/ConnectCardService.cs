@@ -226,12 +226,14 @@ public sealed class ConnectCardService : IConnectCardService
 
         try
         {
-            await _email.SendAsync(new EmailMessage(
-                To: entity.Email!,
+            await _email.SendTransactionalAsync(new EmailMessage(
+                ToAddress: entity.Email!,
+                ToName: entity.Name,
                 Subject: subject,
                 HtmlBody: html,
                 PlainTextBody: text,
-                Tags: new Dictionary<string, string> { ["category"] = "connect-card" }),
+                UserId: null,
+                Category: Domain.Email.EmailCategory.Transactional),
                 ct).ConfigureAwait(false);
 
             entity.AcknowledgmentEmailSentAt = DateTimeOffset.UtcNow;

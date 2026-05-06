@@ -8,6 +8,7 @@ using CredoCms.Application.Classes;
 using CredoCms.Application.Common;
 using CredoCms.Application.ConnectCard;
 using CredoCms.Application.Documents;
+using CredoCms.Application.Email;
 using CredoCms.Application.Events;
 using CredoCms.Application.Groups;
 using CredoCms.Application.Leaders;
@@ -176,6 +177,11 @@ public static class DependencyInjection
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
         services.AddScoped<IEmailService, LoggingEmailService>();
         services.AddScoped<IAuthService, AuthService>();
+
+        // Phase 5 — email suppression service. SendGrid/SMTP impls of
+        // IEmailService land in R2/R3; this list grows then.
+        services.AddScoped<IEmailSuppressionRepository, EmailSuppressionRepository>();
+        services.AddScoped<IEmailSuppressionService, EmailSuppressionService>();
 
         services.AddScoped<DataSeeder>();
 

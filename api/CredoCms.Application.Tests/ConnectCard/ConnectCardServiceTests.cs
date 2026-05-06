@@ -130,7 +130,7 @@ public sealed class ConnectCardServiceTests
                 && s.Status == ConnectCardStatus.New
                 && s.IpAddressHash != null),
             It.IsAny<CancellationToken>()), Times.Once);
-        email.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Once);
+        email.Verify(x => x.SendTransactionalAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Once);
         notifier.Verify(x => x.NotifyConnectCardSubmittedAsync(
             It.Is<ConnectCardSummaryMessage>(m => m.Name == "Alice Adams"),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -146,7 +146,7 @@ public sealed class ConnectCardServiceTests
             remoteIp: "127.0.0.1");
 
         result.Succeeded.Should().BeTrue();
-        email.Verify(x => x.SendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
+        email.Verify(x => x.SendTransactionalAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

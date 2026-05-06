@@ -2,6 +2,7 @@ using System.Net;
 using System.Web;
 using CredoCms.Application.Common;
 using CredoCms.Application.UserManagement;
+using CredoCms.Domain.Email;
 using CredoCms.Domain.Identity;
 using CredoCms.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Identity;
@@ -48,11 +49,13 @@ public sealed class InvitationEmailComposer : IInvitationEmailComposer
                  + "If you weren't expecting this email, you can safely ignore it.";
 
         var msg = new EmailMessage(
-            To: user.Email!,
+            ToAddress: user.Email!,
+            ToName: $"{user.FirstName} {user.LastName}".Trim(),
             Subject: "You're invited to Credo CMS",
             HtmlBody: html,
             PlainTextBody: text,
-            Tags: new Dictionary<string, string> { ["category"] = "invitation" });
+            UserId: user.Id,
+            Category: EmailCategory.Transactional);
 
         return Task.FromResult(msg);
     }
@@ -79,11 +82,13 @@ public sealed class InvitationEmailComposer : IInvitationEmailComposer
                  + "If you didn't request this, no action is needed.";
 
         var msg = new EmailMessage(
-            To: user.Email!,
+            ToAddress: user.Email!,
+            ToName: $"{user.FirstName} {user.LastName}".Trim(),
             Subject: "Reset your Credo CMS password",
             HtmlBody: html,
             PlainTextBody: text,
-            Tags: new Dictionary<string, string> { ["category"] = "password-reset" });
+            UserId: user.Id,
+            Category: EmailCategory.Transactional);
 
         return Task.FromResult(msg);
     }

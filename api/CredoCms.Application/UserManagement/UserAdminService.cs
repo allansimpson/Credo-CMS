@@ -84,7 +84,7 @@ public sealed class UserAdminService : IUserAdminService
         {
             var invitationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var message = await _emailComposer.ComposeInvitationAsync(user, invitationToken, ct);
-            await _email.SendAsync(message, ct);
+            await _email.SendTransactionalAsync(message, ct);
         }
 
         await _audit.WriteAsync(
@@ -241,7 +241,7 @@ public sealed class UserAdminService : IUserAdminService
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
         var message = await _emailComposer.ComposePasswordResetAsync(user, token, ct);
-        await _email.SendAsync(message, ct);
+        await _email.SendTransactionalAsync(message, ct);
 
         await _audit.WriteAsync(
             "User.PasswordResetEmailSent",
