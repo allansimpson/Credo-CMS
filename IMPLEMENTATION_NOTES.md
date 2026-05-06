@@ -751,3 +751,117 @@ primitives in `app/src/components/shared/admin/EditorialPrimitives.tsx`.
 - `IConnectCardService.DeleteAsync` performs a soft-erase (status →
   NotLegit) rather than a hard DELETE; flip later if a true GDPR
   erasure path is needed.
+
+---
+
+## Phase 5 — Communications
+
+Migration: `20260506173837_Phase5_Communications` adds 8 new tables
+(EmailSuppressions, EmailBroadcasts + EmailBroadcastsHistory,
+EmailBroadcastRecipients, EmailTemplates + EmailTemplatesHistory,
+WebhookEventLog, AdminNotificationLastSent, EventVolunteerRoles +
+EventVolunteerRolesHistory, EventVolunteerSignups), 24 new SiteSettings
+columns, and 4 new fields on existing entities
+(NewsItem.ScheduledPublishAt + SendEmailOnPublish,
+BlogPost.SendEmailOnPublish, EventRegistration.ReminderEmailSentAt).
+
+### Architectural decisions
+
+- **`IEmailService` redesign**: Phase 1's `SendAsync(EmailMessage)` was
+  split into `SendTransactionalAsync` (single-recipient) +
+  `SendBroadcastAsync` (returns `BroadcastSendResult` with per-recipient
+  outcomes) + `IsConfiguredAsync`. Three concrete impls — Logging /
+  SendGrid / SMTP — registered alongside an `EmailServiceRouter` that
+  picks the active impl per call from `SiteSettings.EmailProvider`.
+  Falls back to Logging when configured-but-unconfigured. Per-call
+  resolution (not wired-once-at-startup) is the project convention for
+  SiteSettings-driven choices.
+- **Suppression policy**: Transactional sends bypass the suppression
+  list (CAN-SPAM exemption). Broadcast/News/Blog/GroupCommunication
+  sends honor it via `IRecipientResolver`'s bulk lookup
+  (`WHERE EmailAddress IN (...)` once per send). SendGrid webhook
+  bounces/spam/unsubscribe events upsert into the list automatically.
+- **Webhook signature**: Verified via SendGrid SDK's `RequestValidator`
+  ECDSA helper (no hand-rolled crypto). 5-minute timestamp skew window
+  bounds replay risk. Per-event `sg_event_id` deduplicates via
+  `WebhookEventLog`. Aggregate broadcast stats applied once per
+  broadcast at the end of each batch (single `IncrementStatsAsync` per
+  broadcastId), then `BroadcastStatsUpdated` SignalR fires.
+- **X-Message-Id correlation**: SendGrid returns one X-Message-Id per
+  HTTP batch; per-recipient `sg_message_id` events are
+  `<batch>.<suffix>`. Recipient rows store the batch prefix; webhook
+  handler matches by `WHERE Id = exact OR Id = prefix`.
+- **Recipient resolution precedence**: suppression > preferences >
+  membership. Resolved fresh at send time so group-membership changes
+  between compose and send are picked up.
+- **Scheduled publishing concurrency**: `ScheduledPublishingService`
+  ticks every 60s; reads-then-flips inside a single SaveChanges. Safe
+  under single-instance v1; documented `// TODO:` for multi-instance
+  scale-out (RowVersion-guarded update).
+- **Notification batching**: `AdminNotificationDigestService` ticks
+  every 5 min, gates per-user per-category by
+  `AdminNotificationLastSent.LastSentAt` against the configured
+  frequency window. Digests sent as `EmailCategory.Transactional` so
+  they bypass suppression — admins explicitly opted into duties.
+- **One-click unsubscribe**: HMAC-SHA256 signed token
+  (`base64url(userId|category|ts|hmac)`), 30-day expiry,
+  `CryptographicOperations.FixedTimeEquals` for signature comparison.
+  Key auto-generates on first read if blank. Per-recipient HTTPS URL
+  injected as `{{unsubscribeUrl}}` merge field; mailto fallback in
+  `List-Unsubscribe` header at broadcast level. Per-recipient
+  `List-Unsubscribe-URL` header (via SendGrid `Personalization.Headers`)
+  deferred — body footer carries the actual one-click link.
+- **Volunteer signups**: capacity check + filtered-unique index on
+  `(roleId, occurrenceDate, userId) WHERE CanceledAt IS NULL` so a
+  member can re-sign-up after canceling. v1 limitations (no substitute
+  requests, no skill tracking, no automated scheduling) tracked in
+  ROADMAP.
+- **SMS service stub**: `NoOpSmsService` is the active `ISmsService`
+  in v1. `TwilioSmsService` exists with throwing constructor — v1.5
+  swap-in is a one-line DI change.
+- **Email-on-publish duplicate prevention**: `SendEmailOnPublish` flag
+  flipped to false in the same `UpdateAsync` call that records the
+  auto-broadcast row, so re-publishing an already-published post does
+  not re-fire unless the editor explicitly re-enables.
+
+### Verification
+
+- `dotnet build` — 0 warnings, 0 errors.
+- `dotnet test` — 302/302 passing (Domain 15, Application 166,
+  Infrastructure 75, Api 46). +93 tests added across Phase 5
+  (suppression, LoggingEmail gate, SendGrid mock, SMTP mock,
+  EmailServiceRouter, TestEmail, webhook event processor, template
+  renderer, broadcast service, email-on-publish, unsubscribe token,
+  volunteer service).
+- `npm run build` — clean (vendor 700kb chunk warning is pre-existing).
+- `npm test` — 21/21 passing.
+- Migration applies cleanly on a fresh dev DB; idempotent seeds
+  populate 16 system templates + 1 sample broadcast + 2 volunteer roles.
+
+### Known carry-forwards
+
+- **Existing transactional caller refactor to templates** —
+  `InvitationEmailComposer` still ships inline strings. The
+  `IEmailTemplateRenderer` is wired but the migration would touch
+  invitation, password reset, connect-card ack, group-join decision,
+  and event-registration paths simultaneously. Templates are seeded;
+  the cutover is a non-blocking cleanup task.
+- **Per-recipient `List-Unsubscribe-URL` header** — v1 ships RFC 2369
+  compliance via the broadcast-level mailto fallback + body-footer
+  per-recipient link. Per-recipient header (via SendGrid
+  `Personalization.Headers` / SMTP per-message MimeMessage) is a
+  follow-up.
+- **Site Settings dedicated "Email & Notifications" tab** — Phase 4's
+  Members & Community / Integrations tabs already cover all Phase 5
+  SiteSettings fields. A purpose-built tab with a Test Send button +
+  inline suppression-list view is cosmetic.
+- **Broadcast composer RTE** — current SPA composer uses a textarea so
+  Phase 5 ships without TipTap-merge-field plumbing risk. Operators
+  paste HTML; merge fields work via string substitution.
+- **CSV export of recipients** — endpoint placeholder; the SPA
+  download path is a follow-up.
+- **BackgroundService unit tests** — workers themselves
+  (BroadcastSendWorker, ScheduledPublishingService,
+  AdminNotificationDigestService, EventVolunteerReminderService) are
+  glue around tested services; no per-service unit test was added.
+  Integration tests will land in Phase 6's accessibility/perf pass.

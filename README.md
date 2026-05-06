@@ -130,3 +130,68 @@ default Phase 1 deployment shape) or as an Azure Static Web App (alternative; se
 
 For issues with Phase 1 itself, open an issue on the GitHub repository. For features
 on the deferred list, see `ROADMAP.md`.
+
+---
+
+## Phase 5 — Email & Communications setup
+
+### Picking a provider
+
+Site Settings → `EmailProvider`:
+
+- **None** (default) — no outbound mail. `LoggingEmailService` writes
+  every send attempt to Serilog. Use this until provider config is
+  verified.
+- **SendGrid** — free tier covers 100/day. Set `SendGridApiKey`
+  (full-access key with Mail Send + Inbound Parse permissions) and
+  `SendGridWebhookSecret` (the ECDSA public key from SendGrid's
+  Mail Settings → Event Webhook screen).
+- **SMTP** — generic SMTP relay (Postmark, Mailgun, your ISP). Set
+  `SmtpHost`, `SmtpPort` (587 for STARTTLS, 465 for SslOnConnect),
+  `SmtpUsername`, `SmtpPassword`, `SmtpUseSsl`.
+
+After picking + saving, flip `EmailEnabled` to `true`. Until that
+flag is on, every send is a no-op (logs only) — production-safe
+default.
+
+### SendGrid webhook configuration
+
+1. SendGrid console → Settings → Mail Settings → **Event Webhook**.
+2. HTTP Post URL: `https://<your-host>/api/webhooks/sendgrid`.
+3. Enable **Signed Event Webhook**; copy the public key into
+   Site Settings → `SendGridWebhookSecret`.
+4. Subscribe to: delivered, open, click, bounce, dropped,
+   spam_report, unsubscribe, group_unsubscribe.
+
+### Test send + suppression list
+
+`POST /api/admin/site-settings/test-email` (Administrator) accepts the
+in-flight provider config and dispatches a one-shot message — verify
+delivery before flipping `EmailEnabled` on. Hard bounces + spam reports
++ one-click unsubscribes auto-write to the suppression list; manual
+remove warns about CAN-SPAM compliance.
+
+### Broadcasts
+
+`/admin/broadcasts/new` — compose, target (All Members / specific
+groups), schedule or send now. Use `{{firstName}}`, `{{lastName}}`,
+`{{unsubscribeUrl}}` as merge fields. Recipients resolved at send
+time so membership changes between compose and dispatch are picked
+up. Each recipient gets a per-user HMAC-signed unsubscribe URL.
+
+### Volunteer signups
+
+`/admin/events/{id}/volunteer-roles` — define roles with slot counts.
+Members sign up via the event detail page; 24-48h reminders fire
+automatically.
+
+### Background workers
+
+API hosts four Phase 5 BackgroundServices:
+
+- `BroadcastSendWorker` — 15s tick.
+- `ScheduledPublishingService` — 60s tick (News + Blog auto-publish).
+- `AdminNotificationDigestService` — 5min tick.
+- `EventVolunteerReminderService` — 1h tick.
+
+Single-instance App Service is the v1 deployment target.

@@ -84,6 +84,33 @@ This list is taken directly from the Phase 1 prompt and is the authoritative
   Multi-instance deployments need Redis-backed cache invalidation broadcast
   across instances.
 
+## Phase 5 deferred items (Communications)
+
+- **SMS via Twilio** — interface + structural placeholder ship in v1
+  (`TwilioSmsService` constructor throws). v1.5 implements + wires DI.
+- **Volunteer substitute requests** — v1 ships lightweight signup /
+  cancel; future iteration adds "request a substitute" flow.
+- **Volunteer skill tracking + availability** — first-class skill tags
+  on volunteers, availability windows, drag-and-drop scheduling.
+- **Automated volunteer scheduling** — algorithmic match of skills +
+  availability to upcoming roles.
+- **Bulk recipient targeting beyond Groups** — segments like
+  "members who haven't attended in N months" feeding the broadcast
+  composer's target picker.
+- **Branded newsletter-style templates** — visually-designed HTML
+  templates with hero, multi-column layouts, click tracking. v1's
+  template renderer ships simple inline-styled HTML.
+- **Broadcast composer RTE** — current composer is textarea-based for
+  v1; TipTap-based RTE with merge-field picker is a follow-up.
+- **Per-recipient List-Unsubscribe-URL header** — v1 ships RFC 2369
+  via broadcast-level mailto + body-footer per-recipient link;
+  per-recipient HTTPS header via SendGrid Personalization.Headers is
+  a follow-up.
+- **Existing transactional caller refactor to use IEmailTemplateRenderer**
+  — invitation / password reset / connect-card ack / group-join
+  decision currently use inline strings; templates seeded but cutover
+  deferred.
+
 ---
 
 If a feature appears here that you (the church operator) urgently need, it can be
