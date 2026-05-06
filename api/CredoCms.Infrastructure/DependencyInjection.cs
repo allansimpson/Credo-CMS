@@ -196,6 +196,9 @@ public static class DependencyInjection
         services.AddScoped<IEmailBroadcastRecipientRepository, EmailBroadcastRecipientRepository>();
         services.AddSingleton<ISendGridWebhookVerifier, SendGridWebhookVerifier>();
         services.AddScoped<ISendGridWebhookEventProcessor, SendGridWebhookEventProcessor>();
+        services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
+        services.AddScoped<IEmailTemplateService, EmailTemplateService>();
+        services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
 
         services.AddScoped<DataSeeder>();
 
