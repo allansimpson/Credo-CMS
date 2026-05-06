@@ -191,6 +191,11 @@ public static class DependencyInjection
         services.AddScoped<IEmailSuppressionRepository, EmailSuppressionRepository>();
         services.AddScoped<IEmailSuppressionService, EmailSuppressionService>();
         services.AddScoped<ITestEmailService, TestEmailService>();
+        services.AddScoped<IWebhookEventLogRepository, WebhookEventLogRepository>();
+        services.AddScoped<IEmailBroadcastRepository, EmailBroadcastRepository>();
+        services.AddScoped<IEmailBroadcastRecipientRepository, EmailBroadcastRecipientRepository>();
+        services.AddSingleton<ISendGridWebhookVerifier, SendGridWebhookVerifier>();
+        services.AddScoped<ISendGridWebhookEventProcessor, SendGridWebhookEventProcessor>();
 
         services.AddScoped<DataSeeder>();
 

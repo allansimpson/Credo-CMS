@@ -26,6 +26,29 @@ public sealed record ConnectCardSummaryMessage(
     string? Phone,
     DateTimeOffset SubmittedAt);
 
+/// <summary>Phase 5 broadcast send lifecycle / aggregate-stats events.
+/// Sent to <c>admins</c> so admin shells watching the broadcast detail
+/// page get live updates as webhook events roll in.</summary>
+public sealed record BroadcastLifecycleMessage(
+    string Kind,
+    Guid BroadcastId,
+    int? RecipientCount = null,
+    int? DeliveredCount = null,
+    int? BouncedCount = null,
+    int? ComplaintCount = null,
+    int? OpenCount = null);
+
+/// <summary>Phase 5 volunteer slot lifecycle events.
+/// Sent to <c>admins</c> so event organizers see slots fill in real time.</summary>
+public sealed record VolunteerSlotMessage(
+    string Kind,
+    Guid EventId,
+    Guid RoleId,
+    DateOnly OccurrenceDate,
+    string RoleName,
+    int FilledSlots,
+    int SlotsNeeded);
+
 public interface IRealtimeNotifier
 {
     Task NotifyContentChangedAsync(ContentChangedMessage message, CancellationToken ct = default);
@@ -50,4 +73,10 @@ public interface IRealtimeNotifier
 
     /// <summary>Notify the admin shell of a new connect-card submission.</summary>
     Task NotifyConnectCardSubmittedAsync(ConnectCardSummaryMessage message, CancellationToken ct = default);
+
+    /// <summary>Phase 5: broadcast-send and stats-update events.</summary>
+    Task NotifyBroadcastLifecycleAsync(BroadcastLifecycleMessage message, CancellationToken ct = default);
+
+    /// <summary>Phase 5: volunteer slot filled / opened.</summary>
+    Task NotifyVolunteerSlotAsync(VolunteerSlotMessage message, CancellationToken ct = default);
 }

@@ -45,4 +45,12 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
     public Task NotifyConnectCardSubmittedAsync(ConnectCardSummaryMessage message, CancellationToken ct = default)
         => _hub.Clients.Group(NotificationHub.AdminGroup)
             .SendAsync("ConnectCardSubmitted", message, ct);
+
+    public Task NotifyBroadcastLifecycleAsync(BroadcastLifecycleMessage message, CancellationToken ct = default)
+        => _hub.Clients.Group(NotificationHub.AdminGroup)
+            .SendAsync(message.Kind, message, ct);
+
+    public Task NotifyVolunteerSlotAsync(VolunteerSlotMessage message, CancellationToken ct = default)
+        => _hub.Clients.Group(NotificationHub.AdminGroup)
+            .SendAsync(message.Kind, message, ct);
 }
