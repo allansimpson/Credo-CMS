@@ -68,8 +68,21 @@ export function AdminNotificationsProvider({ children }: { children: ReactNode }
         href: `/admin/groups`,
       });
     };
+    const onConnectCard = (...args: unknown[]) => {
+      const payload = args[0] as { id: string; name: string } | undefined;
+      if (!payload) return;
+      push({
+        kind: "Connect card",
+        message: `${payload.name} sent a connect card`,
+        href: `/admin/connect-cards/${payload.id}`,
+      });
+    };
     on("GroupJoinRequestSubmitted", onJoinRequest);
-    return () => off("GroupJoinRequestSubmitted", onJoinRequest);
+    on("ConnectCardSubmitted", onConnectCard);
+    return () => {
+      off("GroupJoinRequestSubmitted", onJoinRequest);
+      off("ConnectCardSubmitted", onConnectCard);
+    };
   }, [isAuthenticated, on, off, push]);
 
   const dismiss = useCallback((id: string) => {

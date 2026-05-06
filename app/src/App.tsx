@@ -194,6 +194,18 @@ const PrayerRequestEditPage = lazy(() =>
 const AdminPrayerRequestsPage = lazy(() =>
   import("@/pages/admin/AdminPrayerRequestsPage").then((m) => ({ default: m.AdminPrayerRequestsPage }))
 );
+const ConnectCardPage = lazy(() =>
+  import("@/pages/public/ConnectCardPage").then((m) => ({ default: m.ConnectCardPage }))
+);
+const ConnectThankYouPage = lazy(() =>
+  import("@/pages/public/ConnectThankYouPage").then((m) => ({ default: m.ConnectThankYouPage }))
+);
+const AdminConnectCardsPage = lazy(() =>
+  import("@/pages/admin/AdminConnectCardsPage").then((m) => ({ default: m.AdminConnectCardsPage }))
+);
+const AdminConnectCardDetailPage = lazy(() =>
+  import("@/pages/admin/AdminConnectCardDetailPage").then((m) => ({ default: m.AdminConnectCardDetailPage }))
+);
 
 export default function App() {
   return (
@@ -524,6 +536,22 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="connect"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>}>
+                <ConnectCardPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="connect/thank-you"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>}>
+                <ConnectThankYouPage />
+              </Suspense>
+            }
+          />
 
           {/* Admin shell (system-themed). Wrapped in admin-mode covert-404 gate. */}
           <Route
@@ -724,6 +752,22 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <AdminPrayerRequestsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="connect-cards"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminConnectCardsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="connect-cards/:id"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminConnectCardDetailPage />
                 </Suspense>
               }
             />
