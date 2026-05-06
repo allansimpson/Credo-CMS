@@ -1,5 +1,6 @@
 using CredoCms.Application.Announcements;
 using CredoCms.Application.Auditing;
+using CredoCms.Application.Blog;
 using CredoCms.Application.Classes;
 using CredoCms.Application.ConnectCard;
 using CredoCms.Application.Homepage;
@@ -54,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IClassService, ClassService>();
         services.AddScoped<IPrayerRequestService, PrayerRequestService>();
         services.AddScoped<IConnectCardService, ConnectCardService>();
+        services.AddScoped<IBlogService, BlogService>();
         // RegistrationTokenSigner + options bound from configuration in
         // CredoCms.Infrastructure.DependencyInjection (IConfiguration lives there).
 

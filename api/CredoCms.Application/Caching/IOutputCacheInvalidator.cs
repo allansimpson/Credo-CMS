@@ -36,4 +36,5 @@ public static class OutputCacheTags
     public const string Calendar = "calendar";
     public const string Groups = "groups";
     public const string Classes = "classes";
+    public const string Blog = "blog";
 }
