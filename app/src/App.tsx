@@ -206,6 +206,18 @@ const AdminConnectCardsPage = lazy(() =>
 const AdminConnectCardDetailPage = lazy(() =>
   import("@/pages/admin/AdminConnectCardDetailPage").then((m) => ({ default: m.AdminConnectCardDetailPage }))
 );
+const BlogListPage = lazy(() =>
+  import("@/pages/public/BlogListPage").then((m) => ({ default: m.BlogListPage }))
+);
+const BlogDetailPage = lazy(() =>
+  import("@/pages/public/BlogDetailPage").then((m) => ({ default: m.BlogDetailPage }))
+);
+const AdminBlogListPage = lazy(() =>
+  import("@/pages/admin/AdminBlogListPage").then((m) => ({ default: m.AdminBlogListPage }))
+);
+const AdminBlogEditorPage = lazy(() =>
+  import("@/pages/admin/AdminBlogEditorPage").then((m) => ({ default: m.AdminBlogEditorPage }))
+);
 
 export default function App() {
   return (
@@ -552,6 +564,22 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route
+            path="blog"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
+                <BlogListPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="blog/:slug"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                <BlogDetailPage />
+              </Suspense>
+            }
+          />
 
           {/* Admin shell (system-themed). Wrapped in admin-mode covert-404 gate. */}
           <Route
@@ -768,6 +796,22 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <AdminConnectCardDetailPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="blog"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminBlogListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="blog/:id"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminBlogEditorPage />
                 </Suspense>
               }
             />

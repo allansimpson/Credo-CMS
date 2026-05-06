@@ -22,6 +22,7 @@ import {
   GraduationCap,
   HandHelping,
   Mail as MailIcon,
+  Pencil,
 } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -53,6 +54,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/class-slots", label: "Classes", icon: GraduationCap, requiredRoles: ["Administrator"] },
   { to: "/admin/prayer-requests", label: "Prayer", icon: HandHelping },
   { to: "/admin/connect-cards", label: "Connect cards", icon: MailIcon },
+  { to: "/admin/blog", label: "Blog", icon: Pencil },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },
