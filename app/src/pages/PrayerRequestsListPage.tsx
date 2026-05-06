@@ -179,7 +179,7 @@ function PrayerCard({
       </header>
 
       <div className="prose prose-sm mt-3 max-w-none text-fg-soft">
-        <TipTapReadOnly valueJson={request.bodyJson} />
+        <TipTapReadOnly json={request.bodyJson} />
       </div>
 
       <footer className="mt-4 flex flex-wrap items-center gap-3 border-t pt-3 text-sm">

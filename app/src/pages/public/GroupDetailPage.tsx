@@ -8,7 +8,6 @@ import { TipTapReadOnly } from "@/components/shared/TipTapReadOnly";
 import { useAuth } from "@/hooks/useAuth";
 import {
   GroupJoinability,
-  GroupVisibility,
   MessageOnJoinRequest,
   publicGroupsApi,
   type PublicGroupDetail,
@@ -102,7 +101,7 @@ export function GroupDetailPage() {
               {group.descriptionJson && (
                 <section>
                   <div className="prose prose-sm max-w-none">
-                    <TipTapReadOnly valueJson={group.descriptionJson} />
+                    <TipTapReadOnly json={group.descriptionJson} />
                   </div>
                 </section>
               )}

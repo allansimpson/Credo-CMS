@@ -78,7 +78,7 @@ export function BlogDetailPage() {
                 </p>
               </header>
               <section className="prose prose-sm max-w-none">
-                <TipTapReadOnly valueJson={post.bodyJson} />
+                <TipTapReadOnly json={post.bodyJson} />
               </section>
               {post.tags.length > 0 && (
                 <footer className="flex flex-wrap items-center gap-2 border-t pt-4">

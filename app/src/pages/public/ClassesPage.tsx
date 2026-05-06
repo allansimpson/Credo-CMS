@@ -166,9 +166,9 @@ function SlotCard({ slot }: { slot: ClassSlotResponse }) {
                 <Calendar className="h-3 w-3" />
                 {formatRange(offering.startDate, offering.endDate)}
               </p>
-              {memberView && "teacherLeaderName" in offering && (offering.teacherLeaderName || offering.teacherFreeText) && (
+              {memberView && "teacherLeaderName" in offering && offering.teacherLeaderName != null && (
                 <p className="text-xs text-muted">
-                  Teacher: {offering.teacherLeaderName ?? offering.teacherFreeText}
+                  Teacher: {String(offering.teacherLeaderName)}
                 </p>
               )}
             </div>

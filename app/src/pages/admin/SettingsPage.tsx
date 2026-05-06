@@ -5,7 +5,6 @@ import type { SiteSettings, UpdateSiteSettingsRequest } from "@/types/api";
 import { TipTapEditor } from "@/components/shared/TipTapEditor";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import {
-  Btn,
   MetaLabel,
   PageHeader,
   SectionHead,

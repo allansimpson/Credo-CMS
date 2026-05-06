@@ -133,7 +133,7 @@ function Detail({
       </header>
 
       <section className="prose prose-sm max-w-none">
-        <TipTapReadOnly valueJson={request.bodyJson} />
+        <TipTapReadOnly json={request.bodyJson} />
       </section>
 
       <footer className="flex flex-wrap items-center gap-3 border-y py-4">
@@ -182,7 +182,7 @@ function Detail({
                   {u.postedByLabel} · {new Date(u.createdAt).toLocaleString()}
                 </p>
                 <div className="prose prose-sm mt-2 max-w-none">
-                  <TipTapReadOnly valueJson={u.bodyJson} />
+                  <TipTapReadOnly json={u.bodyJson} />
                 </div>
               </li>
             ))}

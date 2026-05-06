@@ -121,7 +121,7 @@ export function MemberDetailPage() {
                     About
                   </h2>
                   <div className="prose prose-sm mt-3 max-w-none">
-                    <TipTapReadOnly valueJson={member.publicAuthorBio} />
+                    <TipTapReadOnly json={member.publicAuthorBio} />
                   </div>
                 </section>
               )}

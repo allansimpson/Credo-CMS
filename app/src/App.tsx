@@ -218,6 +218,15 @@ const AdminBlogListPage = lazy(() =>
 const AdminBlogEditorPage = lazy(() =>
   import("@/pages/admin/AdminBlogEditorPage").then((m) => ({ default: m.AdminBlogEditorPage }))
 );
+const AdminBroadcastsListPage = lazy(() =>
+  import("@/pages/admin/AdminBroadcastsListPage").then((m) => ({ default: m.AdminBroadcastsListPage }))
+);
+const AdminBroadcastEditorPage = lazy(() =>
+  import("@/pages/admin/AdminBroadcastEditorPage").then((m) => ({ default: m.AdminBroadcastEditorPage }))
+);
+const AdminBroadcastDetailPage = lazy(() =>
+  import("@/pages/admin/AdminBroadcastDetailPage").then((m) => ({ default: m.AdminBroadcastDetailPage }))
+);
 
 export default function App() {
   return (
@@ -812,6 +821,38 @@ export default function App() {
               element={
                 <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <AdminBlogEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="broadcasts"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminBroadcastsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="broadcasts/new"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminBroadcastEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="broadcasts/:id/edit"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminBroadcastEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="broadcasts/:id"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminBroadcastDetailPage />
                 </Suspense>
               }
             />

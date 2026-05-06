@@ -55,6 +55,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/prayer-requests", label: "Prayer", icon: HandHelping },
   { to: "/admin/connect-cards", label: "Connect cards", icon: MailIcon },
   { to: "/admin/blog", label: "Blog", icon: Pencil },
+  { to: "/admin/broadcasts", label: "Broadcasts", icon: MailIcon },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },

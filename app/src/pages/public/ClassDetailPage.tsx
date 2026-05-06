@@ -94,7 +94,7 @@ function SlotDetail({ slot }: { slot: ClassSlotResponse }) {
 
       {slot.descriptionJson && (
         <section className="prose prose-sm max-w-none">
-          <TipTapReadOnly valueJson={slot.descriptionJson} />
+          <TipTapReadOnly json={slot.descriptionJson} />
         </section>
       )}
 
@@ -153,7 +153,7 @@ function OfferingSection({
       </p>
       {offering.descriptionJson && (
         <div className="prose prose-sm max-w-none pt-2">
-          <TipTapReadOnly valueJson={offering.descriptionJson} />
+          <TipTapReadOnly json={offering.descriptionJson} />
         </div>
       )}
       {member && (member.teacherLeaderName || member.teacherFreeText || member.materialsNeeded || member.detailedScheduleJson) && (
@@ -176,7 +176,7 @@ function OfferingSection({
             <details className="text-sm">
               <summary className="cursor-pointer text-primary">Weekly schedule</summary>
               <div className="prose prose-sm mt-2 max-w-none">
-                <TipTapReadOnly valueJson={member.detailedScheduleJson} />
+                <TipTapReadOnly json={member.detailedScheduleJson} />
               </div>
             </details>
           )}
