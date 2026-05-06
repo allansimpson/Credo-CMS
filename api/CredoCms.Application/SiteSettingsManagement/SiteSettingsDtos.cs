@@ -22,7 +22,10 @@ public sealed record PublicSiteSettingsDto(
     string? FooterText,
     string LeadersPageLabel,
     string HomepageHeroCtaLabel,
-    string HomepageHeroCtaLink);
+    string HomepageHeroCtaLink,
+    /// <summary>Drives whether the SPA shows the "Continue with Facebook"
+    /// button on /login. Phase 4 Q15 introduced the toggle.</summary>
+    bool FacebookLoginEnabled);
 
 /// <summary>Full settings DTO returned to admins.</summary>
 public sealed record SiteSettingsDto(

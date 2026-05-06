@@ -29,7 +29,8 @@ public sealed class SiteSettingsService : ISiteSettingsService
             s.ContactEmail, s.ContactPhone, s.ContactAddress,
             s.FacebookUrl, s.InstagramUrl, s.YouTubeUrl, s.XUrl, s.TikTokUrl,
             s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText,
-            s.LeadersPageLabel, s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink);
+            s.LeadersPageLabel, s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink,
+            s.FacebookLoginEnabled);
     }
 
     public async Task<SiteSettingsDto> GetAsync(CancellationToken ct = default)

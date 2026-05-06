@@ -88,6 +88,29 @@ try
             request.Path.StartsWithSegments("/hubs", StringComparison.OrdinalIgnoreCase);
     });
 
+    // -- Facebook OAuth (Q15) --------------------------------------------------
+    // App id and secret are bound from configuration so a real instance can
+    // run end-to-end while leaving credentials out of source. The handler is
+    // always added so the auth scheme exists; whether the SPA shows the
+    // "Continue with Facebook" button is governed at runtime by
+    // SiteSettings.FacebookLoginEnabled (read by the SPA bootstrap call).
+    var facebookAppId = builder.Configuration["Authentication:Facebook:AppId"];
+    var facebookAppSecret = builder.Configuration["Authentication:Facebook:AppSecret"];
+    if (!string.IsNullOrWhiteSpace(facebookAppId) && !string.IsNullOrWhiteSpace(facebookAppSecret))
+    {
+        builder.Services
+            .AddAuthentication()
+            .AddFacebook(options =>
+            {
+                options.AppId = facebookAppId;
+                options.AppSecret = facebookAppSecret;
+                options.SaveTokens = true;
+                // Account-creation path is not allowed: the callback handler
+                // explicitly rejects unknown facebook user-ids. See
+                // FacebookLinkController for the linking flow.
+            });
+    }
+
     // -- Authorization policies -----------------------------------------------
     builder.Services.AddAuthorization(options =>
     {

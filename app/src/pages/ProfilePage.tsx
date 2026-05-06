@@ -534,20 +534,8 @@ function AccountTab() {
 
   return (
     <div className="space-y-6">
-      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
-        <legend className="px-2 text-sm font-semibold">Connected accounts</legend>
-        <p className="text-xs text-muted">
-          Sign in with Facebook is configured in Phase 4 alongside Connect Cards. Until
-          then, this section is a placeholder.
-        </p>
-        <button
-          type="button"
-          disabled
-          className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm text-muted"
-        >
-          Link Facebook account (coming soon)
-        </button>
-      </fieldset>
+      <FacebookConnectedAccount />
+
 
       <fieldset className="space-y-3 rounded-lg border bg-card p-4">
         <legend className="px-2 text-sm font-semibold">Calendar feed</legend>
@@ -634,6 +622,69 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       {children}
       {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
+  );
+}
+
+// ---- Facebook account linking (Q15) -----------------------------------
+
+function FacebookConnectedAccount() {
+  const [isLinked, setIsLinked] = useState<boolean | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/profile/facebook-status", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setIsLinked(d?.isLinked ?? false))
+      .catch(() => setIsLinked(false));
+  }, []);
+
+  const unlink = async () => {
+    if (!window.confirm("Unlink Facebook from your account?")) return;
+    setSubmitting(true);
+    try {
+      await fetch("/api/auth/facebook/unlink", {
+        method: "POST",
+        credentials: "include",
+      });
+      setIsLinked(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <fieldset className="space-y-3 rounded-lg border bg-card p-4">
+      <legend className="px-2 text-sm font-semibold">Connected accounts</legend>
+      <p className="text-xs text-muted">
+        Linking Facebook lets you sign in with the "Continue with Facebook" button
+        on the login page. We never create new accounts from Facebook — only the
+        link is stored.
+      </p>
+      {isLinked === null ? (
+        <p className="text-xs text-muted">Checking…</p>
+      ) : isLinked ? (
+        <div className="flex items-center gap-3">
+          <span className="rounded bg-success/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-success">
+            Linked
+          </span>
+          <button
+            type="button"
+            onClick={unlink}
+            disabled={submitting}
+            className="inline-flex h-9 items-center justify-center rounded-md border border-danger/30 bg-card px-3 text-sm text-danger hover:bg-danger/10 disabled:opacity-50"
+          >
+            Unlink Facebook
+          </button>
+        </div>
+      ) : (
+        <a
+          href="/api/auth/facebook/link-challenge?returnUrl=/profile"
+          className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-panel-alt"
+        >
+          Link Facebook account
+        </a>
+      )}
+    </fieldset>
   );
 }
 

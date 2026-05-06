@@ -68,6 +68,7 @@ export interface PublicSiteSettings {
   leadersPageLabel: string;
   homepageHeroCtaLabel: string;
   homepageHeroCtaLink: string;
+  facebookLoginEnabled: boolean;
 }
 
 export interface SiteSettings extends PublicSiteSettings {

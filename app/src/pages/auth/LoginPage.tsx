@@ -166,6 +166,20 @@ export function LoginPage() {
               </Btn>
             </form>
 
+            {settings?.facebookLoginEnabled && (
+              <div className="mt-5 border-t border-border-soft pt-5">
+                <a
+                  href="/api/auth/facebook/sign-in-challenge"
+                  className="flex h-10 w-full items-center justify-center border border-border bg-card px-4 text-sm font-medium hover:bg-panel-alt"
+                >
+                  Continue with Facebook
+                </a>
+                <p className="mt-2 text-[11px] text-muted">
+                  Only works for accounts already linked to Facebook from your profile.
+                </p>
+              </div>
+            )}
+
             <p className="mt-8 border-t border-border-soft pt-5 text-xs text-muted">
               Need an account? Administrators invite you by email.
             </p>
