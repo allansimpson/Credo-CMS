@@ -161,6 +161,24 @@ const GroupsListPage = lazy(() =>
 const GroupEditorPage = lazy(() =>
   import("@/pages/admin/GroupEditorPage").then((m) => ({ default: m.GroupEditorPage }))
 );
+const ClassesPage = lazy(() =>
+  import("@/pages/public/ClassesPage").then((m) => ({ default: m.ClassesPage }))
+);
+const ClassDetailPage = lazy(() =>
+  import("@/pages/public/ClassDetailPage").then((m) => ({ default: m.ClassDetailPage }))
+);
+const ClassSlotsListPage = lazy(() =>
+  import("@/pages/admin/ClassSlotsListPage").then((m) => ({ default: m.ClassSlotsListPage }))
+);
+const ClassSlotEditorPage = lazy(() =>
+  import("@/pages/admin/ClassSlotEditorPage").then((m) => ({ default: m.ClassSlotEditorPage }))
+);
+const ClassOfferingsListPage = lazy(() =>
+  import("@/pages/admin/ClassOfferingsListPage").then((m) => ({ default: m.ClassOfferingsListPage }))
+);
+const ClassOfferingEditorPage = lazy(() =>
+  import("@/pages/admin/ClassOfferingEditorPage").then((m) => ({ default: m.ClassOfferingEditorPage }))
+);
 
 export default function App() {
   return (
@@ -435,6 +453,22 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="classes"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
+                <ClassesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="classes/:slug"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                <ClassDetailPage />
+              </Suspense>
+            }
+          />
 
           {/* Admin shell (system-themed). Wrapped in admin-mode covert-404 gate. */}
           <Route
@@ -588,6 +622,46 @@ export default function App() {
                 <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <GroupEditorPage />
                 </Suspense>
+              }
+            />
+            <Route
+              path="class-slots"
+              element={
+                <ProtectedRoute mode="admin" roles={["Administrator"]}>
+                  <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                    <ClassSlotsListPage />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="class-slots/:id"
+              element={
+                <ProtectedRoute mode="admin" roles={["Administrator"]}>
+                  <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                    <ClassSlotEditorPage />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="class-offerings"
+              element={
+                <ProtectedRoute mode="admin" roles={["Administrator"]}>
+                  <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                    <ClassOfferingsListPage />
+                  </Suspense>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="class-offerings/:id"
+              element={
+                <ProtectedRoute mode="admin" roles={["Administrator"]}>
+                  <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                    <ClassOfferingEditorPage />
+                  </Suspense>
+                </ProtectedRoute>
               }
             />
             <Route
