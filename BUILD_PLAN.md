@@ -1677,3 +1677,435 @@ This Phase 4 plan is the only deliverable until you approve it.  Once approved
 `IMPLEMENTATION_NOTES.md` as I go and surfacing genuine ambiguities via `// TODO:`
 comments rather than guessing silently. Phases 1, 2, and 3 deliverables stay intact
 throughout.
+
+---
+
+# Phase 5 Build Plan — Communications
+
+**Status:** Plan drafted; awaiting review. No Phase 5 implementation has started.
+
+---
+
+## R-0. Confirmation of Understanding
+
+I have read all 17 sections of the Phase 5 prompt plus Out-of-Scope and Final
+Checklist. My understanding:
+
+- **Email deliverability rigor is the highest-priority constraint.** Every
+  non-transactional send must check the suppression list, every broadcast email
+  must carry RFC 2369 + RFC 8058 unsubscribe headers, one-click unsubscribe must
+  resolve immediately (not within 24h), and transactional vs. broadcast must be
+  cleanly separated. Failure = real domain reputation damage.
+- **Phase 5 introduces eleven feature slabs:** real email delivery (SendGrid /
+  SMTP / no-op), suppression list, SendGrid webhooks, broadcast composer, email
+  templates, email-on-publish, scheduled publishing, notification batching,
+  one-click unsubscribe, SMS stub, volunteer signups.
+- **`IEmailService` is being redesigned (breaking change).** Phase 1's
+  `SendAsync(EmailMessage)` becomes `SendTransactionalAsync` +
+  `SendBroadcastAsync` + `IsConfiguredAsync`. The `EmailMessage` record gains
+  `Category`, `UserId`, `ToName`, `Attachments`. ~6 existing callers
+  (`ConnectCardService`, `UserAdminService`, password reset, group membership
+  notifications, etc.) must be updated in lockstep with the interface change.
+- **`NotificationHub`'s `admins` / `members` / `user-{userId:N}` groups already
+  exist** (Phase 4) and are auto-joined on connect. Phase 5 adds new event
+  payloads but no new group plumbing.
+- **`BlogPost.ScheduledPublishAt` was captured but inert in Phase 4.** Phase 5
+  acts on it AND adds the matching field to `NewsItem` (retroactive Phase 4
+  schema extension, called out in the prompt).
+- **`ApplicationUser` notification preferences already exist:**
+  `ReceiveNewsEmails`, `ReceiveBlogEmails`, `ReceiveBroadcastEmails`,
+  `ReceiveGroupEmailsGlobal`, plus per-membership `GroupMembership.ReceiveGroupEmails`.
+  Phase 5 wires them into the recipient resolver — no new preference fields.
+- **Phase 1–4 deliverables stay intact.** Phase 5 layers on top; no rebuilding.
+
+---
+
+## R-1. Phase 4 Inheritance — Things Phase 5 Touches
+
+| Touch point | Change |
+|---|---|
+| `IEmailService` (Phase 1) | Surface redesigned. Existing `SendAsync` removed; `SendTransactionalAsync` / `SendBroadcastAsync` / `IsConfiguredAsync` added. All callers refactored. |
+| `LoggingEmailService` (Phase 1) | Updated to satisfy new interface; kept as default when provider=None or unconfigured. |
+| `BlogPost.ScheduledPublishAt` (Phase 4) | Now actively published by `ScheduledPublishingService`. Field unchanged. |
+| `NewsItem` (Phase 2/4) | Add `ScheduledPublishAt` and `SendEmailOnPublish` fields + migration. |
+| `BlogPost` (Phase 4) | `SendEmailOnPublish` already on entity; verify default OFF; wire into publish flow. |
+| `ConnectCardService` (Phase 4) | Acknowledgment email refactored to use `EmailTemplate` / `IEmailTemplateService`. |
+| `UserAdminService` (Phase 1) | Invitation + reset flows refactored to use templates. |
+| `GroupMembershipService` (Phase 4) | Approve/decline emails refactored to use templates. |
+| `EventRegistrationService` (Phase 3) | Confirmation/cancellation/waitlist-promotion emails refactored to use templates; new reminder emails added (24-48h before event). Add `ReminderEmailSentAt` column on `EventRegistration`. |
+| User hard-delete flow (Phase 1/4) | Extended to NULL `EmailBroadcastRecipient.UserId` references while preserving snapshot fields. |
+| `SiteSettings` | Adds Phase 5 keys (provider config, From/Reply-To, SendGrid key+webhook secret, SMTP host/port/creds, EmailEnabled, TestEmailRecipient, News/Blog email target modes, admin-digest defaults, SMS provider stub fields). |
+| `Event` (Phase 3) | New `EventVolunteerRole` child collection (FK relationship). |
+
+---
+
+## R-2. Clarifications to Surface Before Starting
+
+Where I list a default, that's exactly what I'll do unless overridden.
+
+1. **`IEmailService` redesign is a breaking change.** I'll do it as one
+   coordinated migration in Stage R1: the interface, the `EmailMessage` /
+   `BroadcastEmailMessage` / `EmailCategory` types, and all ~6 callers update in
+   the same commit. No backward-compat shim. This avoids a half-migrated state
+   where some sends bypass the new category/suppression checks. **Default:
+   coordinated breaking refactor; document in IMPLEMENTATION_NOTES.**
+
+2. **SendGrid webhook signature verification.** SendGrid uses ECDSA-signed
+   payloads via `X-Twilio-Email-Event-Webhook-Signature` and
+   `-Timestamp` headers. **Default:** use SendGrid's official `EventWebhook`
+   helper from the `SendGrid` SDK to verify. Reject 401 on signature mismatch
+   or missing/expired timestamp (>5min skew). Tests cover signed and unsigned.
+
+3. **Suppression list — efficient lookup.** Per-recipient query would be N
+   round-trips. **Default:** bulk-load suppressions for the resolved recipient
+   batch via `WHERE EmailAddress IN (...)` once per send, then filter in memory.
+   For broadcasts of N≤500 (church scale), this is one query.
+
+4. **`SendGridEmailService` batching.** SendGrid's `mail/send` accepts up to
+   1,000 personalizations per request. **Default:** chunk recipients into
+   batches of 500 (conservative); each batch is one HTTP call with one
+   personalization per recipient (so per-recipient merge fields work).
+   Batch responses give per-message IDs for the recipient rows.
+
+5. **One-click unsubscribe token.** **Default:** HMAC-SHA256 over
+   `userId|category|timestamp` with a server-side `UnsubscribeSigningKey`
+   secret stored in `SiteSettings` (auto-generated on first run if blank).
+   Token format: `base64url(userId|category|timestamp|hmac)`. 30-day expiry.
+   Single-use is NOT enforced (per RFC 8058 — operator may click link multiple
+   times). Tokens expose userId — that's per-design, since the unsubscribe
+   page must identify the recipient.
+
+6. **`List-Unsubscribe-Post` header.** RFC 8058 requires the One-Click
+   variant. **Default:** every broadcast email gets BOTH:
+   `List-Unsubscribe: <https://...>, <mailto:unsubscribe@churchdomain>`
+   and `List-Unsubscribe-Post: List-Unsubscribe=One-Click`. The HTTPS endpoint
+   accepts POST with empty body and unsubscribes immediately (no confirmation
+   page when called via this method).
+
+7. **Broadcast worker concurrency.** **Default:** single-instance
+   App Service deployment, single hosted-service worker (mirrors
+   `VersioningTrimBackgroundService`). Status transitions guarded by
+   `RowVersion` so a future scale-out doesn't double-send.
+
+8. **Scheduled publishing tick interval.** Prompt says "every minute,
+   configurable; default 60 seconds." **Default:** 60s, exposed via
+   `Communications:ScheduledPublishingIntervalSeconds` in configuration (no
+   Site Settings UI — operator-level setting).
+
+9. **`TwilioSmsService` stub class.** Prompt: "constructor throws
+   `NotImplementedException`." **Default:** the class exists in
+   `CredoCms.Infrastructure.Sms` with the throwing ctor as documented; DI
+   registers `NoOpSmsService` as the active `ISmsService` always. Twilio SDK
+   NuGet IS added (per prompt) so v1.5 implementation is a one-file change.
+
+10. **Volunteer roles per-occurrence overrides.** Prompt: "Roles apply across
+    all occurrences of recurring events (no per-occurrence role definitions in
+    v1)." **Default:** `EventVolunteerRole.EventId` is the only association;
+    no per-occurrence row. Document as v1 limitation.
+
+11. **Event reminder emails — new in Phase 5.** Phase 3 didn't ship reminders.
+    Adding `ReminderEmailSentAt` to `EventRegistration` as part of Stage R0
+    schema work (alongside the volunteer-signup analog field). Daily worker
+    sends at the configurable time, idempotent via the new column.
+
+12. **Email-on-publish duplicate prevention.** Prompt says
+    `SendEmailOnPublish=false` is set after send. **Default:** flip the flag
+    inside the same transaction that creates the corresponding
+    `EmailBroadcast` row. Re-publishing a previously-sent post does not
+    re-fire unless the editor explicitly re-checks the box.
+
+13. **Test email send in Site Settings.** **Default:** `POST /api/admin/
+    site-settings/test-email` accepts the in-flight (possibly unsaved)
+    provider config in the request body, builds a transient
+    `IEmailService` instance, and attempts to send. Returns success/failure
+    detail. Avoids the chicken-and-egg of "save then test."
+
+14. **`EmailTemplate` system templates immutable identity.** Prompt:
+    "system templates cannot be deleted, only edited." **Default:**
+    `IsSystemTemplate=true` blocks delete; subject + body editable; the
+    `TemplateKey` is immutable (used as the lookup key by code paths).
+
+---
+
+## R-3. Ordered Implementation Stages
+
+Effort key: **S** = small (<2h), **M** = medium (2-4h), **L** = large (4-6h), **XL** = extra large (6h+).
+
+### Stage R0 — Domain Entities + EF Migration + SiteSettings Extensions
+
+| # | Step | Effort |
+|---|---|---|
+| R0.1 | Domain entities: `EmailSuppression`, `EmailBroadcast`, `EmailBroadcastRecipient`, `EmailTemplate`, `WebhookEventLog`, `AdminNotificationLastSent`, `EventVolunteerRole`, `EventVolunteerSignup`. Enums: `EmailCategory`, `SuppressionType`, `SuppressionSource`, `BroadcastTargetMode`, `BroadcastSendMode`, `BroadcastStatus`, `RecipientStatus`, `EmailProvider`, `SmsProvider`, `AdminNotificationCategory`. | M |
+| R0.2 | Field additions: `NewsItem.ScheduledPublishAt`, `NewsItem.SendEmailOnPublish`, `EventRegistration.ReminderEmailSentAt`. Verify `BlogPost.ScheduledPublishAt` + `SendEmailOnPublish` already present (Phase 4). | S |
+| R0.3 | Repository interfaces: `IEmailSuppressionRepository`, `IEmailBroadcastRepository`, `IEmailBroadcastRecipientRepository`, `IEmailTemplateRepository`, `IWebhookEventLogRepository`, `IAdminNotificationLastSentRepository`, `IEventVolunteerRoleRepository`, `IEventVolunteerSignupRepository`. | M |
+| R0.4 | EF configurations + temporal tables on `EmailBroadcast` and `EmailTemplate` (per spec). Indexes: `EmailSuppression.EmailAddress` (unique), `EmailBroadcast.Status`, `EmailBroadcast.ScheduledSendAt`, `EmailBroadcastRecipient.(BroadcastId, Status)`, `EmailTemplate.TemplateKey` (unique), `WebhookEventLog.EventId` (unique), `AdminNotificationLastSent.(UserId, Category)` unique, `EventVolunteerSignup.(EventVolunteerRoleId, OccurrenceDate, UserId)` filtered unique where `CanceledAt IS NULL`. | M |
+| R0.5 | Extend `SiteSettings` with Phase 5 keys: `EmailProvider`, `EmailFromAddress`, `EmailFromName`, `EmailReplyToAddress`, `SendGridApiKey`, `SendGridWebhookSecret`, `SmtpHost`, `SmtpPort`, `SmtpUsername`, `SmtpPassword`, `SmtpUseSsl`, `EmailEnabled`, `TestEmailRecipient`, `NewsEmailTargetMode`, `NewsEmailTargetGroupIds`, `BlogEmailTargetMode`, `BlogEmailTargetGroupIds`, `EmailSubjectPrefixNews`, `EmailSubjectPrefixBlog`, `AdminNotificationFrequency` (default), `UnsubscribeSigningKey` (auto-gen on first read if blank), `SmsProvider`, `TwilioAccountSid`, `TwilioAuthToken`, `TwilioFromNumber`. Update `SiteSettingsDto` + `UpdateSiteSettingsRequest` + validator + service. | L |
+| R0.6 | Migration: `Phase5_Communications`. Verify generation; apply to dev DB. | M |
+
+### Stage R1 — IEmailService Redesign + Suppression Infra + Existing Caller Refactor
+
+| # | Step | Effort |
+|---|---|---|
+| R1.1 | Refactor `IEmailService` per spec: `SendTransactionalAsync(EmailMessage, ct)`, `SendBroadcastAsync(BroadcastEmailMessage, ct)`, `IsConfiguredAsync(ct)`. New `EmailMessage` record with `ToAddress`, `ToName`, `Subject`, `HtmlBody`, `PlainTextBody`, `UserId?`, `Category`, `Attachments?`. New `BroadcastEmailMessage` record with `Recipients` list and `BroadcastId`. New `EmailRecipient` record (`Address`, `Name`, `UserId?`, `MergeFields`). | M |
+| R1.2 | Update `LoggingEmailService` to satisfy new surface. `IsConfiguredAsync` returns true (logging is always available). | S |
+| R1.3 | Suppression service: `IEmailSuppressionService.IsSuppressedAsync(email)`, `BulkLookupAsync(emails)`, `AddAsync(email, type, source, reason)`, `RemoveAsync(email, currentUser)`. All admin operations audit-logged. | M |
+| R1.4 | Refactor every existing `IEmailService` caller (`ConnectCardService`, `UserAdminService` invitation + reset, `GroupMembershipService` approve/decline, prayer-request notifier if any) to use `SendTransactionalAsync` with appropriate `Category=Transactional` (or `GroupCommunication` for group emails). Inline strings preserved here; template refactor is Stage R6. | L |
+| R1.5 | `EmailEnabled=false` short-circuit: when false (or provider=None), `SendTransactionalAsync` and `SendBroadcastAsync` log + return successfully without dispatching. Document the reasoning. | S |
+| R1.6 | Tests: suppression bulk-lookup, EmailEnabled gate, transactional bypasses suppression list, broadcast respects suppression list. | M |
+
+### Stage R2 — SendGridEmailService
+
+| # | Step | Effort |
+|---|---|---|
+| R2.1 | Add `SendGrid` NuGet to Infrastructure. `SendGridEmailService` impl: ApiKey from SiteSettings; `SendTransactionalAsync` builds a single-personalization message; `SendBroadcastAsync` chunks 500-at-a-time, each chunk one HTTP call with per-recipient personalizations + merge-field substitutions. | L |
+| R2.2 | Captures returned SendGrid `X-Message-Id` for each personalization. Returned to caller via a new `EmailSendResult` so broadcast recipient rows can store the IDs. | M |
+| R2.3 | Failure handling: per-batch HTTP error → mark all recipients in batch as `Failed` with reason; partial-success per personalization → store individual results; transient errors retried via SendGrid SDK's built-in retry (verified in tests). | M |
+| R2.4 | Tests (Infrastructure): mock the `ISendGridClient`; verify request body shape; verify chunking; verify error handling. | M |
+
+### Stage R3 — SmtpEmailService
+
+| # | Step | Effort |
+|---|---|---|
+| R3.1 | Add `MailKit` NuGet. `SmtpEmailService` impl: connects per send (no long-lived connection); reads host/port/credentials/SSL from SiteSettings; sends one message per recipient (no batching — generic SMTP doesn't have a batch API). | M |
+| R3.2 | List-Unsubscribe + List-Unsubscribe-Post headers added on broadcast messages. Reply-To header set when `EmailReplyToAddress` configured. | S |
+| R3.3 | Tests (Infrastructure): mock SmtpClient (or use abstraction); verify message construction + header presence + recipient iteration. | M |
+
+### Stage R4 — Provider Selection + Test Send Endpoint
+
+| # | Step | Effort |
+|---|---|---|
+| R4.1 | DI: `IConfigureNamedOptions<EmailProviderOptions>` reading SiteSettings; factory chooses concrete `IEmailService` impl (Logging / SendGrid / SMTP) at request scope. Falls back to `LoggingEmailService` when provider configured but credentials missing (with WARN log). | M |
+| R4.2 | `POST /api/admin/site-settings/test-email` — accepts in-flight provider config; constructs transient `IEmailService`; sends to current admin's email; returns success/failure JSON. Administrator-only. | M |
+| R4.3 | Tests (Api): provider switch behavior; missing-credentials fallback; test-send endpoint happy + error paths. | M |
+
+### Stage R5 — SendGrid Webhook Endpoint
+
+| # | Step | Effort |
+|---|---|---|
+| R5.1 | `POST /api/webhooks/sendgrid` (`AllowAnonymous`). Reads raw body + signature header + timestamp header; verifies via SendGrid SDK's `EventWebhook` helper using `SendGridWebhookSecret`. Rejects 401 on mismatch / >5min timestamp skew. | M |
+| R5.2 | Event handler: parse JSON array; for each event, look up `WebhookEventLog` by `sg_event_id` and skip if processed; otherwise process per type (delivered / open / click / bounce hard / spam_report / unsubscribe / dropped); update `EmailBroadcastRecipient` by `SendGridMessageId`; update `EmailSuppression` for hard-bounce/spam/unsubscribe; on spam/unsubscribe set user's notification prefs to all-off; record event in `WebhookEventLog`. | L |
+| R5.3 | Aggregate-stats updater on `EmailBroadcast`: increment `DeliveredCount`/`BouncedCount`/`ComplaintCount`/`OpenCount` after webhook event; emit `BroadcastStatsUpdated` SignalR to admins group; evict broadcast-stats cache. | M |
+| R5.4 | Tests (Api + Infrastructure): signed valid request → 200 + processed; unsigned → 401; expired timestamp → 401; duplicate event_id → no-op; bounce/spam suppression flow; stats increment. | L |
+
+### Stage R6 — Email Templates + Refactor of Existing Senders
+
+| # | Step | Effort |
+|---|---|---|
+| R6.1 | `IEmailTemplateRepository` + `EmailTemplateService`: GetByKey, List, Update (system templates: subject + body only). | M |
+| R6.2 | `IEmailTemplateRenderer.RenderAsync(templateKey, contextDict)` returning `RenderedEmail { Subject, HtmlBody, PlainTextBody }`. Uses `{{variable}}` substitution with strict-mode default (missing variable → `TemplateRenderException`). Common merge fields injected automatically: `churchName`, `currentYear`, `unsubscribeLink` (when applicable). | M |
+| R6.3 | Plain-text auto-derivation: walks the TipTap ProseMirror JSON via existing extractor (Phase 4 reuse from BlogService) to produce a text fallback when manual override is null. | S |
+| R6.4 | Refactor existing transactional callers (Stage R1's stop-gap inline strings) to use `IEmailTemplateRenderer`. Includes invitation, password reset, account activated, connect-card ack, group-join approve/decline, event-registration confirm/cancel/waitlist-promotion. | L |
+| R6.5 | Admin templates UI: `/admin/email-templates` list + `/admin/email-templates/{key}` editor (TipTap body, merge-field documentation panel, test-send button). Administrator-only. | L |
+| R6.6 | Seed system templates with placeholder copy. Idempotent (skip if any rows exist). | M |
+| R6.7 | Tests: render with all fields present; render with missing required field throws; system template delete forbidden; key immutability. | M |
+
+### Stage R7 — Broadcast Composer Backend + Worker
+
+| # | Step | Effort |
+|---|---|---|
+| R7.1 | `IRecipientResolver`: resolves `(targetMode, targetGroupIds, category)` → `IReadOnlyList<EmailRecipient>` by joining ApplicationUser + GroupMembership + suppression-list bulk lookup, applying preference filters per category. | L |
+| R7.2 | `EmailBroadcastService`: CRUD (create draft, update draft, send-now, schedule, cancel, test-send). Permission: Editors + Administrators. | L |
+| R7.3 | `BroadcastSendWorker` (`BackgroundService`): polls for `Status=Sending` (immediate) and `Status=Scheduled AND ScheduledSendAt <= now`. Resolves recipients at send time (re-evaluation per spec). Creates `EmailBroadcastRecipient` rows; calls `IEmailService.SendBroadcastAsync`; stores returned message IDs; emits `BroadcastSendStarted` / `BroadcastSendCompleted` SignalR; transitions Status. Errors per recipient logged; broadcast moves to `Failed` only on whole-batch error. | XL |
+| R7.4 | Endpoints: `POST /api/admin/broadcasts` (draft), `PUT /api/admin/broadcasts/{id}`, `POST .../send`, `POST .../schedule`, `POST .../cancel`, `POST .../test-send`, `POST .../preview-recipients`, `GET /api/admin/broadcasts`, `GET .../{id}`, `GET .../{id}/recipients`, `GET .../{id}/recipients.csv`. | L |
+| R7.5 | User-hard-delete extension: NULL `EmailBroadcastRecipient.UserId` while preserving `EmailAddressSnapshot` / `DisplayNameSnapshot`. | S |
+| R7.6 | Tests: recipient resolution (all-members vs groups; preference filters; suppression filter); send-now flow; schedule + cancel; test-send isolation (no rows created in main recipient table); RowVersion concurrency on status flip; CSV export. | XL |
+
+### Stage R8 — Broadcast Composer SPA
+
+| # | Step | Effort |
+|---|---|---|
+| R8.1 | `/admin/broadcasts` list page (status badges, recipient count, send time, delivered/bounce stats columns). | M |
+| R8.2 | `/admin/broadcasts/new` composer: subject, TipTap body (with merge-field picker dropdown), plain-text auto/override section, target-mode radio, group multi-select with member counts, send-mode radio, scheduled-at picker, recipient-preview panel ("47 members" + sample names), Save Draft / Test Send / Send Now / Schedule buttons. | XL |
+| R8.3 | `/admin/broadcasts/{id}` detail: aggregate stats cards, paginated recipient table with status filter, CSV export button, Cancel-Schedule action when applicable. | L |
+| R8.4 | SignalR client: subscribes to `BroadcastSendStarted` / `BroadcastSendCompleted` / `BroadcastStatsUpdated` and updates list/detail in place. | M |
+| R8.5 | Mobile audit: composer at 375px (fields stack; toolbar accessible). | S |
+
+### Stage R9 — Email-on-Publish for News and Blog
+
+| # | Step | Effort |
+|---|---|---|
+| R9.1 | News + Blog publish flow: when `IsPublished` flips false→true and `SendEmailOnPublish=true`, auto-create `EmailBroadcast` (Subject from prefix + title; Body from rendered preview template — hero + excerpt + Read More link; Target from SiteSettings news/blog target mode). Inside the same transaction set `SendEmailOnPublish=false` to prevent dupes on re-publish. | L |
+| R9.2 | News + Blog edit forms: `SendEmailOnPublish` toggle visible; defaults from SiteSettings (News=ON, Blog=OFF). Inline help: "This will email all members on publish — once sent, the toggle clears automatically." | M |
+| R9.3 | Templates: `NewsEmailPreview` and `BlogEmailPreview` system templates seeded; rendered by the broadcast worker with the post's data as context. | M |
+| R9.4 | Tests: publish triggers broadcast; preference filter (news/blog) respected; flag clears post-send; re-publish does not re-fire unless re-enabled. | M |
+
+### Stage R10 — Scheduled Publishing Background Service
+
+| # | Step | Effort |
+|---|---|---|
+| R10.1 | `ScheduledPublishingService` (`BackgroundService`): tick interval 60s; per-tick queries Blog + News + EmailBroadcast for due records; flips IsPublished/PublishedAt or transitions broadcast Status; runs post-publish workflows (search index upsert, cache eviction, email-on-publish trigger). RowVersion-guarded flip. | L |
+| R10.2 | Audit log entry per auto-publish (action: `AutoPublished`, entity type, entity ID, scheduled time vs. actual time). | S |
+| R10.3 | News + Blog edit forms: Publish-Now / Save-Draft / Schedule-for-Later. Status badges show "Scheduled for [date+time]". Cancel-schedule by clearing the date or reverting to Draft. | M |
+| R10.4 | Tests: due record published; not-yet-due skipped; concurrent tick safety (RowVersion); audit entry written; broadcast schedule path. | M |
+
+### Stage R11 — Notification Batching (Admin Digests)
+
+| # | Step | Effort |
+|---|---|---|
+| R11.1 | `AdminNotificationDigestService` (`BackgroundService`): tick every 5 minutes; for each Editor/Administrator with `IsActive=true`, computes pending counts since `AdminNotificationLastSent.LastSentAt` for each `AdminNotificationCategory`; if frequency window elapsed (default 30min, configurable), sends digest using `ConnectCardDigest` / `GroupJoinRequestDigest` template with item summaries + admin links; updates `LastSentAt`. | L |
+| R11.2 | `/profile/notifications` extension (Editor+ only): Admin Notifications section with per-category frequency override (Off / 30min / 1h / Daily). | M |
+| R11.3 | Templates seeded: `ConnectCardDigest`, `GroupJoinRequestDigest`. | S |
+| R11.4 | Tests: zero pending → no send; frequency-window check; per-user override beats default; multiple categories independent. | M |
+
+### Stage R12 — One-Click Unsubscribe
+
+| # | Step | Effort |
+|---|---|---|
+| R12.1 | `UnsubscribeTokenService`: HMAC-SHA256 sign + verify with `UnsubscribeSigningKey`; token format `base64url(userId|category|ts|hmac)`; 30-day expiry; auto-generates secret on first read if blank. | M |
+| R12.2 | `GET /unsubscribe?token=...&category=...` endpoint: validates token; renders confirmation page (anonymous-OK); on confirmation `POST` (or HEAD/POST per RFC 8058 one-click), flips the appropriate `Receive*` preference; sends `BroadcastUnsubscribeConfirmation` template. Redirect to `/profile/notifications` with success banner if user is logged in. | M |
+| R12.3 | `POST /unsubscribe` (RFC 8058 one-click endpoint): empty body, immediate flip, no confirmation page. | S |
+| R12.4 | Broadcast email footer renderer: appends "Unsubscribe from [Category] | Unsubscribe from all | Manage preferences" links + List-Unsubscribe + List-Unsubscribe-Post headers on every non-transactional send. Server-side enforced (broadcast send pipeline rejects messages without footer). | M |
+| R12.5 | Tests: token round-trip; expired token rejected; wrong-category rejected; one-click POST; preference flip persisted; bulk-unsubscribe adds to suppression list and flips all prefs. | M |
+
+### Stage R13 — Volunteer Signups
+
+| # | Step | Effort |
+|---|---|---|
+| R13.1 | `EventVolunteerRoleService` (admin CRUD) + `EventVolunteerSignupService` (member sign-up / cancel; admin list). Capacity check enforced server-side: count active signups for `(roleId, occurrenceDate)` < `SlotsNeeded`. | L |
+| R13.2 | Endpoints: `GET/POST/PUT/DELETE /api/admin/events/{id}/volunteer-roles`; `GET /api/admin/events/{id}/volunteer-signups`; `GET /api/admin/events/{id}/volunteer-signups.csv`; `POST /api/events/{id}/volunteer/signup`, `POST /api/events/{id}/volunteer/cancel`; `GET /api/profile/volunteer`. | L |
+| R13.3 | Admin event-edit page: "Volunteer Roles" tab (add/edit/delete/reorder roles). Signups view with date+role+status filters. | L |
+| R13.4 | Member event-detail page: "Volunteer for this event" section with role list + slot counts; for recurring events, occurrence selector (next 4–8 dates); confirmation modal on Sign Up. | L |
+| R13.5 | `/profile/volunteer` page: list of upcoming commitments with [Cancel] action. | M |
+| R13.6 | `EventVolunteerReminderService` (`BackgroundService`): runs daily at configurable time (default 9am); finds signups where `OccurrenceDate` is 1-2 days out, `CanceledAt IS NULL`, `ReminderEmailSentAt IS NULL`; sends `EventVolunteerReminder` template; sets `ReminderEmailSentAt`. | M |
+| R13.7 | `EventRegistrationReminderService` (mirrors above): 24-48h-before reminder for `EventRegistration` rows using `ReminderEmailSentAt` column added in R0.2. | M |
+| R13.8 | Templates seeded: `EventVolunteerSignupConfirmation`, `EventVolunteerCancellation`, `EventVolunteerReminder`, `EventRegistrationReminder`. | S |
+| R13.9 | SignalR: `VolunteerSlotFilled` / `VolunteerSlotOpened` to admins group. | S |
+| R13.10 | Tests: capacity enforcement; double-signup blocked; cancel reopens slot; reminder idempotency; permission gates. | L |
+
+### Stage R14 — SMS Service Stub
+
+| # | Step | Effort |
+|---|---|---|
+| R14.1 | `ISmsService` interface (`SendAsync`, `IsConfiguredAsync`) + `SmsMessage` record in Application. | S |
+| R14.2 | `NoOpSmsService` (default impl, WARN-logs message and returns). DI registers always. | S |
+| R14.3 | `TwilioSmsService` stub class — ctor throws `NotImplementedException("SMS via Twilio is not implemented in v1; planned for v1.5")`. Twilio NuGet referenced. Class exists for v1.5 swap-in. | S |
+
+### Stage R15 — Site Settings Email & Notifications Tab
+
+| # | Step | Effort |
+|---|---|---|
+| R15.1 | SPA Email & Notifications tab — Provider Configuration section: provider dropdown, conditional fields, From/Reply-To, Test Recipient, Test Send button. Secret fields use existing masked-input component (Phase 4 Turnstile). | L |
+| R15.2 | Member Communications section: News/Blog target-mode radio + group multi-select; subject prefix fields. | M |
+| R15.3 | Admin Notifications section: default frequency dropdown. | S |
+| R15.4 | Suppression List section: paginated table (email/type/reason/created); manual-add modal; manual-remove with CAN-SPAM warning confirm. | M |
+| R15.5 | SMS Configuration section: provider dropdown (None / Disabled-Twilio with v1.5 tooltip); stub fields dimmed. | S |
+| R15.6 | Mobile audit: section accordion at 375px; tables → cards. | M |
+
+### Stage R16 — Output Cache + SignalR Surface
+
+| # | Step | Effort |
+|---|---|---|
+| R16.1 | Cache tag policy: broadcast detail/stats cached 30s with tag `broadcast-{id}-stats`; webhook events evict matching tag. Admin endpoints uncached. | S |
+| R16.2 | SignalR additions documented + emitted: `BroadcastSendStarted`, `BroadcastSendCompleted`, `BroadcastStatsUpdated` (admins group); `VolunteerSlotFilled`, `VolunteerSlotOpened` (admins group). | M |
+
+### Stage R17 — Seed Data
+
+| # | Step | Effort |
+|---|---|---|
+| R17.1 | All system email templates seeded with placeholder copy + merge-field documentation. | M |
+| R17.2 | One sample completed broadcast (`Status=Sent`, sample recipient stats) for empty-state UX. | S |
+| R17.3 | Sample volunteer roles on a seeded event (e.g., "Setup Crew × 2", "Greeters × 2"); sample signups by seeded members. | M |
+| R17.4 | Idempotency: every seed checks for existing rows first. | S |
+
+### Stage R18 — Tests
+
+| # | Step | Effort |
+|---|---|---|
+| R18.1 | Application tests (recipient resolution, template rendering, scheduled publishing, notification batching, unsubscribe tokens, volunteer capacity). Aim: +30 tests. | L |
+| R18.2 | Infrastructure tests (SendGrid mocked, SMTP mocked, webhook signature verification, suppression-list updates from webhooks). Aim: +12 tests. | L |
+| R18.3 | Api tests (broadcast endpoints, test-send, webhook signed/unsigned, unsubscribe one-click, volunteer signup endpoints). Aim: +18 tests. | L |
+| R18.4 | SPA tests (broadcast composer interactions, email-template editor, volunteer signup modal, profile/volunteer). Aim: +6 tests. | M |
+
+### Stage R19 — Mobile Responsive Audit
+
+| # | Step | Effort |
+|---|---|---|
+| R19.1 | 375px pass on every Phase 5 admin and public surface not already audited inline. | M |
+
+### Stage R20 — Documentation + Final Verification
+
+| # | Step | Effort |
+|---|---|---|
+| R20.1 | `IMPLEMENTATION_NOTES.md`: provider selection logic, suppression policy + transactional bypass, webhook signature approach, recipient resolution precedence (suppression > preferences > membership), scheduled-publishing concurrency safety, notification batching design, one-click unsubscribe + RFC 8058 compliance, volunteer-signup v1 limitations. | M |
+| R20.2 | `README.md`: SendGrid setup, SMTP alternative, webhook URL configuration in SendGrid dashboard, suppression-list admin guide, broadcast workflow, template customization. | M |
+| R20.3 | `ROADMAP.md`: SMS via Twilio (v1.5), volunteer substitute requests, skill tracking, automated scheduling, "members not attended N months" segment, branded newsletter templates. | S |
+| R20.4 | Final smoke: `dotnet build` clean, `dotnet test` green, `npm run build` clean, `npm test` green, API boots, send a real test email through each provider path (Logging fallback verified; SendGrid + SMTP only if creds available locally). | M |
+| R20.5 | `IMPLEMENTATION_NOTES.md` closing entry: end-of-Phase-5 state (test counts, new entity count, migration name). | S |
+
+---
+
+## R-4. Dependencies & Critical-Path Notes
+
+- **R0 → all** Migration must land before any service references new entities.
+- **R1 → R2, R3, R4, R6, R7** New `IEmailService` surface must exist before
+  any concrete implementation or template-using caller compiles.
+- **R2 → R5** SendGrid impl exists before webhook handler references its
+  signature helpers and message-ID correlation.
+- **R6 → R7, R9, R11, R13** Templates + renderer required before any sender
+  uses `RenderAsync(templateKey, context)`.
+- **R7 → R9** Email-on-publish creates a broadcast — broadcast pipeline
+  must work first.
+- **R7 → R12** Broadcast send pipeline must enforce footer + List-Unsubscribe
+  headers — implement R12 inside R7 (interleaved) so no broadcast is ever
+  sent without an unsubscribe path.
+- **R10 → R7, R9** Scheduled publish triggers email-on-publish which uses
+  the broadcast pipeline.
+- **R0.5 → R15** SiteSettings keys must exist before the UI binds to them.
+- **R13** is largely independent (only needs R6 templates).
+- **R14** is fully independent.
+- **R17 → R18** Seeds before integration tests that rely on seeded templates.
+
+Critical path: **R0 → R1 → R6 → R7 → R12 → R9 → R10 → R20.**
+**R2, R3** are parallelizable after R1. **R5** parallelizable after R2.
+**R11** parallelizable after R6. **R13, R14** parallelizable after R0/R6.
+
+---
+
+## R-5. Risks
+
+| Risk | Mitigation |
+|---|---|
+| Breaking change to `IEmailService` mid-flight leaves callers broken. | Stage R1 is one atomic refactor; all callers updated in lockstep; full backend build must pass before R1 closes. |
+| Webhook signature verification bug = security bypass. | Use SendGrid SDK's official `EventWebhook` helper, not hand-rolled crypto. Tests cover signed + unsigned + expired-timestamp paths. |
+| Broadcast worker double-sends on restart. | Status flip Draft→Sending→Sent guarded by RowVersion; in-flight Sending rows checked for partial recipient progress on worker startup; resume from where left off. |
+| Suppression list lookup performance for large broadcasts. | Bulk `WHERE EmailAddress IN (...)` once per send. At church scale (≤500 recipients) this is one query. |
+| One-click unsubscribe token leaks userId. | By design — unsubscribe must identify the recipient. HMAC prevents tampering; 30-day expiry limits replay window. |
+| `EmailEnabled=false` accidentally left on after go-live; nobody notices for days. | Site Settings UI shows persistent banner: "Email is disabled — outbound mail is not being sent" when `EmailEnabled=false` and provider configured. Admin notification on save when toggled off. |
+| SendGrid free tier (100/day) hit during dev. | Document in README. `LoggingEmailService` is the dev default — explicit opt-in to live SendGrid. |
+| Scheduled publish + email-on-publish double-send when content is republished. | `SendEmailOnPublish` flag flipped to false in same transaction as broadcast row creation; tests cover re-publish path. |
+| Volunteer signup race: two members claim the last slot simultaneously. | Capacity check inside the same transaction as the insert; unique constraint on `(roleId, occurrenceDate, userId)` prevents same-user double-claim; capacity overrun resolved by transaction-scoped count + insert pattern (catch unique violation, return 409). |
+| Email rendering inconsistency across clients. | Templates use simple inline-styled HTML — no flexbox/grid in body markup; tested against the SendGrid preview viewer. |
+| Hard-deleted user's broadcast history loses meaning. | UserId nulled, but `EmailAddressSnapshot` + `DisplayNameSnapshot` preserved at send time → audit row remains meaningful. |
+
+---
+
+## R-6. What I Will NOT Do in Phase 5
+
+- No SMS implementation (only stub). SMS is v1.5.
+- No volunteer substitute requests, skill tracking, or automated scheduling — ROADMAP.
+- No bulk recipient targeting beyond Groups (e.g., "members who haven't
+  attended in N months") — ROADMAP.
+- No newsletter-style branded email templates (advanced visual design) — ROADMAP.
+- No Astro docs site — Phase 6.
+- No GA4 + cookie banner — Phase 6.
+- No RSS feeds — Phase 6.
+- No final accessibility audit — Phase 6.
+- No image-compression refinements (already done in Phase 2).
+- No multi-instance scale-out hardening for the broadcast/publish workers
+  (single App Service instance is the v1 deployment target; RowVersion
+  patterns are used so v1.5+ scale-out is a small change).
+
+If during implementation I find myself drawn into any of the above, I will stop and ask.
+
+---
+
+## R-7. Awaiting Review
+
+This Phase 5 plan is the only deliverable until you approve it. Once approved
+(with or without adjustments), I'll execute R0 through R20 in order, updating
+`IMPLEMENTATION_NOTES.md` as I go and surfacing genuine ambiguities via
+`// TODO:` comments rather than guessing silently. Phases 1, 2, 3, and 4
+deliverables stay intact throughout. Email deliverability rigor (suppression
+list checks, RFC 2369 + RFC 8058 unsubscribe headers, immediate one-click
+response, transactional/broadcast separation) is treated as a hard
+correctness constraint, not a nice-to-have.
