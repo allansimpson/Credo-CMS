@@ -74,6 +74,27 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.HomepageHeroCtaLink = request.HomepageHeroCtaLink;
         s.DefaultMetaDescription = request.DefaultMetaDescription;
 
+        // Phase 4 fields.
+        s.GetInvolvedPageLabel = request.GetInvolvedPageLabel;
+        s.ClassesPageLabel = request.ClassesPageLabel;
+        s.ClassAudienceAgeGroupsJson = request.ClassAudienceAgeGroupsJson;
+        s.ShowRecentPastOnPublicClasses = request.ShowRecentPastOnPublicClasses;
+        s.RecentPastClassesLookbackDays = request.RecentPastClassesLookbackDays;
+        s.BlogCategoriesJson = request.BlogCategoriesJson;
+        s.BlogPageLabel = request.BlogPageLabel;
+        s.ProfanityWordlist = request.ProfanityWordlist;
+        s.ProfanityAllowlist = request.ProfanityAllowlist;
+        s.PrayerRequestArchiveDays = request.PrayerRequestArchiveDays;
+        s.PrayerRequestRequireApproval = request.PrayerRequestRequireApproval;
+        s.ConnectCardInterestsJson = request.ConnectCardInterestsJson;
+        s.ConnectCardAcknowledgmentMessageJson = request.ConnectCardAcknowledgmentMessageJson;
+        s.ConnectCardPageLabel = request.ConnectCardPageLabel;
+        s.CloudflareTurnstileSiteKey = request.CloudflareTurnstileSiteKey;
+        s.CloudflareTurnstileSecretKey = request.CloudflareTurnstileSecretKey;
+        s.FacebookOAuthAppId = request.FacebookOAuthAppId;
+        s.FacebookOAuthAppSecret = request.FacebookOAuthAppSecret;
+        s.FacebookLoginEnabled = request.FacebookLoginEnabled;
+
         s.ModifiedAt = DateTimeOffset.UtcNow;
         s.RowVersion = Convert.FromBase64String(request.RowVersion);
 
@@ -111,6 +132,16 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.MembersWelcomeText,
         s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink,
         s.DefaultMetaDescription,
+        s.GetInvolvedPageLabel, s.ClassesPageLabel, s.ClassAudienceAgeGroupsJson,
+        s.ShowRecentPastOnPublicClasses, s.RecentPastClassesLookbackDays,
+        s.BlogCategoriesJson, s.BlogPageLabel,
+        s.ProfanityWordlist, s.ProfanityAllowlist,
+        s.PrayerRequestArchiveDays, s.PrayerRequestRequireApproval,
+        s.ConnectCardInterestsJson, s.ConnectCardAcknowledgmentMessageJson,
+        s.ConnectCardPageLabel,
+        s.CloudflareTurnstileSiteKey, s.CloudflareTurnstileSecretKey,
+        s.FacebookOAuthAppId, s.FacebookOAuthAppSecret,
+        s.FacebookLoginEnabled,
         s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
         Convert.ToBase64String(s.RowVersion));
 }

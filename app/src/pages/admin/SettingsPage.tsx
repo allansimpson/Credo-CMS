@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { id: "branding", label: "Branding" },
   { id: "content", label: "Content" },
+  { id: "members", label: "Members & Community" },
   { id: "email", label: "Email & Notifications" },
   { id: "integrations", label: "Integrations" },
   { id: "privacy", label: "Privacy & Security" },
@@ -56,8 +57,9 @@ export function SettingsPage() {
         <div className="min-w-0">
           {active === "branding" && <BrandingTab />}
           {active === "content" && <ContentTab />}
+          {active === "members" && <MembersTab />}
           {active === "email" && <PlaceholderTab name="Email & Notifications" phase="Phase 5" />}
-          {active === "integrations" && <PlaceholderTab name="Integrations" phase="Phase 3+" />}
+          {active === "integrations" && <IntegrationsTab />}
           {active === "privacy" && <PlaceholderTab name="Privacy & Security" phase="future phase" />}
           {active === "advanced" && <AdvancedTab />}
         </div>
@@ -114,6 +116,27 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     homepageHeroCtaLabel: s.homepageHeroCtaLabel,
     homepageHeroCtaLink: s.homepageHeroCtaLink,
     defaultMetaDescription: s.defaultMetaDescription,
+    // Phase 4 fields — round-tripped on every save so partial-update
+    // flows from individual tabs don't accidentally drop values.
+    getInvolvedPageLabel: s.getInvolvedPageLabel,
+    classesPageLabel: s.classesPageLabel,
+    classAudienceAgeGroupsJson: s.classAudienceAgeGroupsJson,
+    showRecentPastOnPublicClasses: s.showRecentPastOnPublicClasses,
+    recentPastClassesLookbackDays: s.recentPastClassesLookbackDays,
+    blogCategoriesJson: s.blogCategoriesJson,
+    blogPageLabel: s.blogPageLabel,
+    profanityWordlist: s.profanityWordlist,
+    profanityAllowlist: s.profanityAllowlist,
+    prayerRequestArchiveDays: s.prayerRequestArchiveDays,
+    prayerRequestRequireApproval: s.prayerRequestRequireApproval,
+    connectCardInterestsJson: s.connectCardInterestsJson,
+    connectCardAcknowledgmentMessageJson: s.connectCardAcknowledgmentMessageJson,
+    connectCardPageLabel: s.connectCardPageLabel,
+    cloudflareTurnstileSiteKey: s.cloudflareTurnstileSiteKey,
+    cloudflareTurnstileSecretKey: s.cloudflareTurnstileSecretKey,
+    facebookOAuthAppId: s.facebookOAuthAppId,
+    facebookOAuthAppSecret: s.facebookOAuthAppSecret,
+    facebookLoginEnabled: s.facebookLoginEnabled,
     rowVersion: s.rowVersion,
   };
 }
@@ -356,6 +379,210 @@ function ContentTab() {
           placeholder="Welcome our members back…"
         />
       </fieldset>
+
+      <SubmitButton submitting={submitting} />
+      <Styles />
+    </form>
+  );
+}
+
+function MembersTab() {
+  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!settings) return <p className="text-danger">Could not load settings.</p>;
+
+  const ageGroups = parseCategories(settings.classAudienceAgeGroupsJson);
+  const blogCats = parseCategories(settings.blogCategoriesJson);
+  const interests = parseCategories(settings.connectCardInterestsJson);
+
+  const setAgeGroups = (next: string[]) => setSettings({ ...settings, classAudienceAgeGroupsJson: JSON.stringify(next) });
+  const setBlogCats = (next: string[]) => setSettings({ ...settings, blogCategoriesJson: JSON.stringify(next) });
+  const setInterests = (next: string[]) => setSettings({ ...settings, connectCardInterestsJson: JSON.stringify(next) });
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormBanner errors={errors} success={success} />
+
+      <Section number="01" title="Public page labels">
+        <Field label="Get involved page label" required>
+          <input
+            value={settings.getInvolvedPageLabel}
+            required
+            maxLength={100}
+            onChange={(e) => setSettings({ ...settings, getInvolvedPageLabel: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field label="Classes page label" required>
+          <input
+            value={settings.classesPageLabel}
+            required
+            maxLength={100}
+            onChange={(e) => setSettings({ ...settings, classesPageLabel: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field label="Blog page label" required>
+          <input
+            value={settings.blogPageLabel}
+            required
+            maxLength={100}
+            onChange={(e) => setSettings({ ...settings, blogPageLabel: e.target.value })}
+            className="input"
+          />
+        </Field>
+        <Field label="Connect card page label" required>
+          <input
+            value={settings.connectCardPageLabel}
+            required
+            maxLength={100}
+            onChange={(e) => setSettings({ ...settings, connectCardPageLabel: e.target.value })}
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section number="02" title="Classes">
+        <Field label="Audience age groups" hint="Drives the dropdown on the class slot editor.">
+          <CategoryListEditor values={ageGroups} onChange={setAgeGroups} />
+        </Field>
+        <Field label="Show recently-ended offerings" hint="When on, classes whose offerings ended within the lookback window still show on the public page.">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.showRecentPastOnPublicClasses}
+              onChange={(e) => setSettings({ ...settings, showRecentPastOnPublicClasses: e.target.checked })}
+            />
+            Show recent past
+          </label>
+        </Field>
+        <Field label="Recent-past lookback (days)">
+          <input
+            type="number" min={0} max={365}
+            value={settings.recentPastClassesLookbackDays}
+            onChange={(e) => setSettings({ ...settings, recentPastClassesLookbackDays: Number(e.target.value) || 0 })}
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section number="03" title="Blog">
+        <Field label="Categories" hint="Used by the admin category dropdown on the blog editor.">
+          <CategoryListEditor values={blogCats} onChange={setBlogCats} />
+        </Field>
+      </Section>
+
+      <Section number="04" title="Prayer requests">
+        <Field label="Archive lookback (days)" hint="Answered prayers stay on the member list this many days before being implicitly archived.">
+          <input
+            type="number" min={0} max={365}
+            value={settings.prayerRequestArchiveDays}
+            onChange={(e) => setSettings({ ...settings, prayerRequestArchiveDays: Number(e.target.value) || 0 })}
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section number="05" title="Connect card">
+        <Field label="Interest checkboxes" hint="Each entry becomes a checkbox on the public connect-card form.">
+          <CategoryListEditor values={interests} onChange={setInterests} />
+        </Field>
+        <Field label="Acknowledgment message (HTML/JSON)" hint="Optional. ProseMirror JSON; falls back to a default if blank.">
+          <textarea
+            value={settings.connectCardAcknowledgmentMessageJson ?? ""}
+            onChange={(e) => setSettings({ ...settings, connectCardAcknowledgmentMessageJson: e.target.value || null })}
+            className="input min-h-24 py-2"
+          />
+        </Field>
+      </Section>
+
+      <Section number="06" title="Profanity filter">
+        <Field label="Wordlist" hint="Newline-delimited. Merged on top of the built-in baseline.">
+          <textarea
+            value={settings.profanityWordlist ?? ""}
+            onChange={(e) => setSettings({ ...settings, profanityWordlist: e.target.value || null })}
+            className="input min-h-24 py-2"
+          />
+        </Field>
+        <Field label="Allowlist" hint="Newline-delimited. Suppresses matches in the merged set (false-positive recovery).">
+          <textarea
+            value={settings.profanityAllowlist ?? ""}
+            onChange={(e) => setSettings({ ...settings, profanityAllowlist: e.target.value || null })}
+            className="input min-h-24 py-2"
+          />
+        </Field>
+      </Section>
+
+      <SubmitButton submitting={submitting} />
+      <Styles />
+    </form>
+  );
+}
+
+function IntegrationsTab() {
+  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!settings) return <p className="text-danger">Could not load settings.</p>;
+
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormBanner errors={errors} success={success} />
+
+      <Section number="01" title="Cloudflare Turnstile">
+        <Field label="Site key (public)" hint="Rendered into the connect-card page's Turnstile widget.">
+          <input
+            value={settings.cloudflareTurnstileSiteKey ?? ""}
+            maxLength={200}
+            onChange={(e) => setSettings({ ...settings, cloudflareTurnstileSiteKey: e.target.value || null })}
+            className="input"
+          />
+        </Field>
+        <Field label="Secret key" hint="Used server-side for siteverify. Treated as a secret in transit.">
+          <input
+            type="password"
+            value={settings.cloudflareTurnstileSecretKey ?? ""}
+            maxLength={200}
+            onChange={(e) => setSettings({ ...settings, cloudflareTurnstileSecretKey: e.target.value || null })}
+            className="input"
+          />
+        </Field>
+      </Section>
+
+      <Section number="02" title="Facebook OAuth">
+        <Field label="App ID">
+          <input
+            value={settings.facebookOAuthAppId ?? ""}
+            maxLength={200}
+            onChange={(e) => setSettings({ ...settings, facebookOAuthAppId: e.target.value || null })}
+            className="input"
+          />
+        </Field>
+        <Field label="App secret">
+          <input
+            type="password"
+            value={settings.facebookOAuthAppSecret ?? ""}
+            maxLength={200}
+            onChange={(e) => setSettings({ ...settings, facebookOAuthAppSecret: e.target.value || null })}
+            className="input"
+          />
+        </Field>
+        <Field label="Enable Facebook sign-in" hint="When on, the /login page shows a Continue with Facebook button.">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={settings.facebookLoginEnabled}
+              onChange={(e) => setSettings({ ...settings, facebookLoginEnabled: e.target.checked })}
+            />
+            Enabled
+          </label>
+        </Field>
+      </Section>
 
       <SubmitButton submitting={submitting} />
       <Styles />

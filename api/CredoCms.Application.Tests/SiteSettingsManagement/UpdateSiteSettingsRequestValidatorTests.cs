@@ -36,6 +36,26 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         HomepageHeroCtaLabel: "Join us Sunday",
         HomepageHeroCtaLink: "#service-times",
         DefaultMetaDescription: null,
+        // Phase 4 fields — defaults match SiteSettings entity defaults.
+        GetInvolvedPageLabel: "Get Involved",
+        ClassesPageLabel: "Classes",
+        ClassAudienceAgeGroupsJson: "[\"Adults\"]",
+        ShowRecentPastOnPublicClasses: false,
+        RecentPastClassesLookbackDays: 30,
+        BlogCategoriesJson: "[\"Devotional\"]",
+        BlogPageLabel: "Blog",
+        ProfanityWordlist: null,
+        ProfanityAllowlist: null,
+        PrayerRequestArchiveDays: 30,
+        PrayerRequestRequireApproval: false,
+        ConnectCardInterestsJson: "[\"Prayer\"]",
+        ConnectCardAcknowledgmentMessageJson: null,
+        ConnectCardPageLabel: "Connect with us",
+        CloudflareTurnstileSiteKey: null,
+        CloudflareTurnstileSecretKey: null,
+        FacebookOAuthAppId: null,
+        FacebookOAuthAppSecret: null,
+        FacebookLoginEnabled: false,
         RowVersion: "AAAAAAAAB9E=");
 
     [Fact]

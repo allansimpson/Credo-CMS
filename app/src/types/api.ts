@@ -81,6 +81,25 @@ export interface SiteSettings extends PublicSiteSettings {
   imageQuality: number;
   membersWelcomeText: string | null;
   defaultMetaDescription: string | null;
+  // Phase 4 fields ---------------------------------------------------------
+  getInvolvedPageLabel: string;
+  classesPageLabel: string;
+  classAudienceAgeGroupsJson: string;
+  showRecentPastOnPublicClasses: boolean;
+  recentPastClassesLookbackDays: number;
+  blogCategoriesJson: string;
+  blogPageLabel: string;
+  profanityWordlist: string | null;
+  profanityAllowlist: string | null;
+  prayerRequestArchiveDays: number;
+  prayerRequestRequireApproval: boolean;
+  connectCardInterestsJson: string;
+  connectCardAcknowledgmentMessageJson: string | null;
+  connectCardPageLabel: string;
+  cloudflareTurnstileSiteKey: string | null;
+  cloudflareTurnstileSecretKey: string | null;
+  facebookOAuthAppId: string | null;
+  facebookOAuthAppSecret: string | null;
   createdAt: string;
   modifiedAt: string;
   modifiedByUserId: string | null;
