@@ -69,14 +69,21 @@ public sealed record EmailAttachment(
 /// <summary>Multi-recipient outbound email payload (broadcast). Recipients
 /// already passed through the resolver — preference + suppression filters
 /// applied. Each <see cref="EmailRecipient"/> may carry its own merge fields
-/// for personalization.</summary>
+/// for personalization.
+///
+/// <para><see cref="AdditionalHeaders"/> is the seam through which R7's
+/// broadcast pipeline injects <c>List-Unsubscribe</c> /
+/// <c>List-Unsubscribe-Post</c> headers (RFC 2369 + RFC 8058) once R12
+/// generates the per-broadcast unsubscribe URL. SMTP and SendGrid impls
+/// emit each entry verbatim.</para></summary>
 public sealed record BroadcastEmailMessage(
     string Subject,
     string HtmlBody,
     string? PlainTextBody,
     IReadOnlyList<EmailRecipient> Recipients,
     Guid BroadcastId,
-    EmailCategory Category);
+    EmailCategory Category,
+    IReadOnlyDictionary<string, string>? AdditionalHeaders = null);
 
 /// <summary>One recipient of a broadcast send.</summary>
 public sealed record EmailRecipient(

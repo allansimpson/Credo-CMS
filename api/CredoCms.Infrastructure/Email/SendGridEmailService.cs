@@ -187,6 +187,13 @@ public sealed class SendGridEmailService : IEmailService
         sg.AddCustomArg("category", m.Category.ToString());
         sg.AddCustomArg("broadcastId", m.BroadcastId.ToString("N"));
 
+        // Per-broadcast top-level headers (e.g., List-Unsubscribe set by
+        // R7/R12). SendGrid forwards these verbatim to recipients.
+        if (m.AdditionalHeaders is { Count: > 0 } extra)
+        {
+            foreach (var kv in extra) sg.AddHeader(kv.Key, kv.Value);
+        }
+
         // One Personalization block per recipient. Substitutions wrap the
         // merge tokens in {{...}} which SendGrid replaces server-side at
         // send time, so the body is templated once and reused.
