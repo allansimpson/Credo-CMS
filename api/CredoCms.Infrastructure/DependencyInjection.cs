@@ -211,6 +211,9 @@ public static class DependencyInjection
         // exists for v1.5 swap-in.
         services.AddScoped<CredoCms.Application.Sms.ISmsService, CredoCms.Infrastructure.Sms.NoOpSmsService>();
 
+        // R12 — One-click unsubscribe.
+        services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
+
         services.AddScoped<DataSeeder>();
 
         services.AddIdentity<ApplicationUser, ApplicationRole>(options =>

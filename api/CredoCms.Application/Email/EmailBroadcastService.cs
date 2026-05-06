@@ -36,6 +36,8 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
     private readonly IEmailService _email;
     private readonly IRealtimeNotifier _notifier;
     private readonly IAuditLogger _audit;
+    private readonly IUnsubscribeTokenService? _unsubscribeTokens;
+    private readonly SiteSettingsManagement.ISiteSettingsRepository? _settings;
 
     public EmailBroadcastService(
         IEmailBroadcastRepository broadcasts,
@@ -43,7 +45,9 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
         IRecipientResolver resolver,
         IEmailService email,
         IRealtimeNotifier notifier,
-        IAuditLogger audit)
+        IAuditLogger audit,
+        IUnsubscribeTokenService? unsubscribeTokens = null,
+        SiteSettingsManagement.ISiteSettingsRepository? settings = null)
     {
         _broadcasts = broadcasts;
         _recipients = recipients;
@@ -51,6 +55,8 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
         _email = email;
         _notifier = notifier;
         _audit = audit;
+        _unsubscribeTokens = unsubscribeTokens;
+        _settings = settings;
     }
 
     public async Task<EmailBroadcast> CreateDraftAsync(BroadcastDraftInput input, CancellationToken ct = default)
@@ -144,9 +150,14 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
 
         // Resolve recipients fresh — captures group-membership changes
         // between compose-time and send-time.
-        var recipients = await _resolver.ResolveAsync(
+        var resolved = await _resolver.ResolveAsync(
             b.TargetMode, DeserializeGuids(b.TargetGroupIdsJson), b.Category, ct).ConfigureAwait(false);
-        b.RecipientCountAtSend = recipients.Count;
+        b.RecipientCountAtSend = resolved.Count;
+
+        // R12: per-recipient signed unsubscribe URL injected as a
+        // {{unsubscribeUrl}} merge field. The body footer (rendered by
+        // the email service / template renderer) substitutes the URL.
+        var recipients = await EnrichWithUnsubscribeUrlsAsync(resolved, b.Category, ct).ConfigureAwait(false);
 
         await _notifier.NotifyBroadcastLifecycleAsync(new BroadcastLifecycleMessage(
             "BroadcastSendStarted", b.Id, RecipientCount: recipients.Count), ct).ConfigureAwait(false);
@@ -175,6 +186,7 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
         await _recipients.BulkInsertAsync(rows, ct).ConfigureAwait(false);
 
         // Dispatch.
+        var headers = await BuildUnsubscribeHeadersAsync(ct).ConfigureAwait(false);
         var msg = new BroadcastEmailMessage(
             Subject: b.Subject,
             HtmlBody: b.Body,
@@ -182,8 +194,7 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
             Recipients: recipients,
             BroadcastId: b.Id,
             Category: b.Category,
-            // R12 will populate List-Unsubscribe headers here.
-            AdditionalHeaders: null);
+            AdditionalHeaders: headers);
 
         BroadcastSendResult result;
         try
@@ -227,6 +238,60 @@ public sealed class EmailBroadcastService : IEmailBroadcastService
         await _notifier.NotifyBroadcastLifecycleAsync(new BroadcastLifecycleMessage(
             "BroadcastSendCompleted", b.Id, RecipientCount: recipients.Count), ct).ConfigureAwait(false);
     }
+
+    /// <summary>R12 — generates a per-recipient signed unsubscribe URL,
+    /// merges it into each recipient's MergeFields under
+    /// <c>{{unsubscribeUrl}}</c> so the body footer can render the
+    /// correct one-click link per recipient.</summary>
+    private async Task<IReadOnlyList<EmailRecipient>> EnrichWithUnsubscribeUrlsAsync(
+        IReadOnlyList<EmailRecipient> recipients,
+        EmailCategory category,
+        CancellationToken ct)
+    {
+        if (_unsubscribeTokens is null) return recipients;
+
+        var enriched = new List<EmailRecipient>(recipients.Count);
+        foreach (var r in recipients)
+        {
+            if (r.UserId is null)
+            {
+                enriched.Add(r);
+                continue;
+            }
+            var token = await _unsubscribeTokens.GenerateAsync(r.UserId.Value, category, ct).ConfigureAwait(false);
+            var url = $"/api/unsubscribe?token={Uri.EscapeDataString(token)}&category={CategoryQueryValue(category)}";
+            var merged = new Dictionary<string, string>(r.MergeFields ?? new Dictionary<string, string>())
+            {
+                ["unsubscribeUrl"] = url,
+            };
+            enriched.Add(r with { MergeFields = merged });
+        }
+        return enriched;
+    }
+
+    /// <summary>RFC 2369 + RFC 8058 headers attached at the broadcast level.
+    /// The mailto fallback is intentionally generic (broadcast-level, not
+    /// per-recipient); the body footer carries the actual per-recipient
+    /// HTTPS one-click URL.</summary>
+    private async Task<IReadOnlyDictionary<string, string>?> BuildUnsubscribeHeadersAsync(CancellationToken ct)
+    {
+        if (_settings is null) return null;
+        var s = await _settings.GetAsync(ct).ConfigureAwait(false);
+        var mailto = $"mailto:{s.EmailFromAddress}?subject=Unsubscribe";
+        return new Dictionary<string, string>
+        {
+            ["List-Unsubscribe"] = $"<{mailto}>",
+            ["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click",
+        };
+    }
+
+    private static string CategoryQueryValue(EmailCategory category) => category switch
+    {
+        EmailCategory.News => "news",
+        EmailCategory.Blog => "blog",
+        EmailCategory.GroupCommunication => "group",
+        _ => "broadcast",
+    };
 
     private async Task<EmailBroadcast> GetEditable(Guid id, CancellationToken ct)
     {
