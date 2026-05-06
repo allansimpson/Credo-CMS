@@ -175,13 +175,22 @@ public static class DependencyInjection
         services.AddHostedService(sp => sp.GetRequiredService<YouTubeSyncService>());
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
-        services.AddScoped<IEmailService, LoggingEmailService>();
+        // Phase 5 — three IEmailService impls + the router that picks one
+        // per request based on SiteSettings.EmailProvider. R4 introduces
+        // this; before R4 the registration was just LoggingEmailService.
+        services.AddScoped<LoggingEmailService>();
+        services.AddScoped<SendGridEmailService>();
+        services.AddScoped<SmtpEmailService>();
+        services.AddSingleton<ISendGridClientFactory, SendGridClientFactory>();
+        services.AddSingleton<IMailKitSmtpClientFactory, MailKitSmtpClientFactory>();
+        services.AddScoped<IEmailService, EmailServiceRouter>();
         services.AddScoped<IAuthService, AuthService>();
 
         // Phase 5 — email suppression service. SendGrid/SMTP impls of
         // IEmailService land in R2/R3; this list grows then.
         services.AddScoped<IEmailSuppressionRepository, EmailSuppressionRepository>();
         services.AddScoped<IEmailSuppressionService, EmailSuppressionService>();
+        services.AddScoped<ITestEmailService, TestEmailService>();
 
         services.AddScoped<DataSeeder>();
 
