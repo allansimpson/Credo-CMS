@@ -25,8 +25,10 @@ public interface IEmailService
     /// <summary>Bulk send for member mail (broadcasts, news/blog email-on-
     /// publish, group communication). Recipients are filtered against the
     /// suppression list before dispatch; preference filtering is the
-    /// caller's responsibility (handled by the recipient resolver).</summary>
-    Task SendBroadcastAsync(BroadcastEmailMessage message, CancellationToken cancellationToken = default);
+    /// caller's responsibility (handled by the recipient resolver). Returns
+    /// per-recipient outcomes so the broadcast worker can persist message
+    /// IDs and surface partial failures.</summary>
+    Task<BroadcastSendResult> SendBroadcastAsync(BroadcastEmailMessage message, CancellationToken cancellationToken = default);
 
     /// <summary>True when the configured provider has the credentials it
     /// needs to actually dispatch mail. <c>LoggingEmailService</c> always
@@ -82,3 +84,19 @@ public sealed record EmailRecipient(
     string Name,
     Guid? UserId,
     IReadOnlyDictionary<string, string>? MergeFields = null);
+
+/// <summary>Per-recipient outcome of a broadcast send. The broadcast
+/// worker persists this onto each <c>EmailBroadcastRecipient</c> row;
+/// <see cref="SendGridMessageId"/> is the X-Message-Id of the HTTP batch
+/// the recipient was in (SendGrid's webhook events surface a longer
+/// per-message id with this as the prefix).</summary>
+public sealed record RecipientSendResult(
+    Guid? UserId,
+    string Address,
+    bool Success,
+    string? SendGridMessageId,
+    string? ErrorMessage);
+
+/// <summary>Aggregate result of a broadcast send.</summary>
+public sealed record BroadcastSendResult(
+    IReadOnlyList<RecipientSendResult> Recipients);

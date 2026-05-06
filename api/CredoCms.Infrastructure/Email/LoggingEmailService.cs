@@ -52,7 +52,7 @@ public sealed class LoggingEmailService : IEmailService
             message.PlainTextBody ?? "(none)");
     }
 
-    public async Task SendBroadcastAsync(BroadcastEmailMessage message, CancellationToken cancellationToken = default)
+    public async Task<BroadcastSendResult> SendBroadcastAsync(BroadcastEmailMessage message, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(message);
 
@@ -61,7 +61,11 @@ public sealed class LoggingEmailService : IEmailService
             _logger.LogInformation(
                 "[LoggingEmailService] EmailEnabled=false — skipping broadcast {BroadcastId} ({Recipients} recipients, {Category})",
                 message.BroadcastId, message.Recipients.Count, message.Category);
-            return;
+            // Skipped is reported as success-without-id (matches Suppressed
+            // semantics on the recipient row — no attempt was made).
+            return new BroadcastSendResult(message.Recipients
+                .Select(r => new RecipientSendResult(r.UserId, r.Address, Success: true, SendGridMessageId: null, ErrorMessage: null))
+                .ToList());
         }
 
         _logger.LogInformation(
@@ -70,12 +74,15 @@ public sealed class LoggingEmailService : IEmailService
 
         // For dev visibility, log each recipient at Debug. Body logged once
         // at Information (per-recipient body is identical pre-merge).
+        var results = new List<RecipientSendResult>(message.Recipients.Count);
         foreach (var r in message.Recipients)
         {
             _logger.LogDebug(
                 "[LoggingEmailService] Broadcast {BroadcastId} recipient {Name} <{Address}> userId={UserId}",
                 message.BroadcastId, r.Name, r.Address, r.UserId);
+            results.Add(new RecipientSendResult(r.UserId, r.Address, Success: true, SendGridMessageId: null, ErrorMessage: null));
         }
+        return new BroadcastSendResult(results);
     }
 
     /// <summary>Honors the SiteSettings master kill switch. Transactional

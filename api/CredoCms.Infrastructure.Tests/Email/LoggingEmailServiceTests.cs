@@ -63,7 +63,10 @@ public sealed class LoggingEmailServiceTests
             Recipients: new[] { new EmailRecipient("a@example.org", "A", null) },
             BroadcastId: Guid.NewGuid(),
             Category: EmailCategory.Broadcast);
-        await sut.SendBroadcastAsync(msg);
+        var result = await sut.SendBroadcastAsync(msg);
+        result.Recipients.Should().HaveCount(1);
+        result.Recipients[0].Success.Should().BeTrue();
+        result.Recipients[0].SendGridMessageId.Should().BeNull();
     }
 
     [Fact]
