@@ -214,6 +214,15 @@ public static class DependencyInjection
         // R12 — One-click unsubscribe.
         services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
 
+        // R13 — Volunteer signups.
+        services.AddScoped<CredoCms.Application.Volunteers.IEventVolunteerRoleRepository,
+            CredoCms.Infrastructure.Volunteers.EventVolunteerRoleRepository>();
+        services.AddScoped<CredoCms.Application.Volunteers.IEventVolunteerSignupRepository,
+            CredoCms.Infrastructure.Volunteers.EventVolunteerSignupRepository>();
+        services.AddScoped<CredoCms.Application.Volunteers.IEventVolunteerService,
+            CredoCms.Application.Volunteers.EventVolunteerService>();
+        services.AddHostedService<EventVolunteerReminderService>();
+
         services.AddScoped<DataSeeder>();
 
         services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
