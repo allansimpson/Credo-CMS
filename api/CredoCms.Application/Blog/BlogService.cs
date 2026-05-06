@@ -1,5 +1,6 @@
 using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
+using CredoCms.Application.Search;
 using CredoCms.Application.Tags;
 using CredoCms.Domain.Blog;
 using CredoCms.Domain.Common;
@@ -18,6 +19,7 @@ public sealed class BlogService : IBlogService
     private readonly ICurrentUserService _currentUser;
     private readonly IAuditLogger _audit;
     private readonly IOutputCacheInvalidator _cache;
+    private readonly ISearchIndexer? _search;
     private readonly IValidator<CreateBlogPostRequest> _createValidator;
     private readonly IValidator<UpdateBlogPostRequest> _updateValidator;
 
@@ -30,7 +32,8 @@ public sealed class BlogService : IBlogService
         IAuditLogger audit,
         IOutputCacheInvalidator cache,
         IValidator<CreateBlogPostRequest> createValidator,
-        IValidator<UpdateBlogPostRequest> updateValidator)
+        IValidator<UpdateBlogPostRequest> updateValidator,
+        ISearchIndexer? search = null)
     {
         _repo = repo;
         _users = users;
@@ -39,8 +42,24 @@ public sealed class BlogService : IBlogService
         _currentUser = currentUser;
         _audit = audit;
         _cache = cache;
+        _search = search;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+    }
+
+    private async Task IndexAsync(BlogPost p, CancellationToken ct)
+    {
+        if (_search is null) return;
+        var bodyText = ExtractText(p.BodyJson);
+        var index = (p.Title ?? string.Empty) + " " + bodyText + " " + (p.Excerpt ?? string.Empty);
+        await _search.UpsertAsync(new SearchUpsertCommand(
+            EntityType: nameof(BlogPost), EntityId: p.Id,
+            Title: p.Title ?? string.Empty,
+            BodyText: index,
+            Url: "/blog/" + p.Slug,
+            IsPublished: p.IsPublished
+                && p.PublishedAt is { } at && at <= DateTimeOffset.UtcNow,
+            IsMembersOnly: p.IsMembersOnly), ct).ConfigureAwait(false);
     }
 
     private bool IsAdmin => _currentUser.Roles.Contains(SystemConstants.Roles.Administrator);
@@ -158,6 +177,7 @@ public sealed class BlogService : IBlogService
         await _audit.WriteAsync("BlogPost.Created", nameof(BlogPost), entity.Id.ToString(),
             new { entity.Slug, entity.Title, entity.IsPublished }, ct).ConfigureAwait(false);
         await _cache.InvalidateAsync(OutputCacheTags.Blog, ct).ConfigureAwait(false);
+        await IndexAsync(entity, ct).ConfigureAwait(false);
 
         return BlogMutationResult.Success(await ToDetailAsync(entity, ct).ConfigureAwait(false));
     }
@@ -216,6 +236,7 @@ public sealed class BlogService : IBlogService
         await _audit.WriteAsync("BlogPost.Updated", nameof(BlogPost), entity.Id.ToString(),
             new { entity.Slug, entity.Title, entity.IsPublished }, ct).ConfigureAwait(false);
         await _cache.InvalidateAsync(OutputCacheTags.Blog, ct).ConfigureAwait(false);
+        await IndexAsync(entity, ct).ConfigureAwait(false);
 
         return BlogMutationResult.Success(await ToDetailAsync(entity, ct).ConfigureAwait(false));
     }
@@ -230,6 +251,10 @@ public sealed class BlogService : IBlogService
         await _audit.WriteAsync("BlogPost.SoftDeleted", nameof(BlogPost), id.ToString(),
             new { entity.Slug, entity.Title }, ct).ConfigureAwait(false);
         await _cache.InvalidateAsync(OutputCacheTags.Blog, ct).ConfigureAwait(false);
+        if (_search is not null)
+        {
+            await _search.RemoveAsync(nameof(BlogPost), id, ct).ConfigureAwait(false);
+        }
 
         return BlogMutationResult.Success(await ToDetailAsync(entity, ct).ConfigureAwait(false));
     }
