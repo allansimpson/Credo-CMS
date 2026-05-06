@@ -17,19 +17,22 @@ public sealed class UserAdminService : IUserAdminService
     private readonly IInvitationEmailComposer _emailComposer;
     private readonly IEmailService _email;
     private readonly IAuditLogger _audit;
+    private readonly Email.IEmailBroadcastRecipientRepository _broadcastRecipients;
 
     public UserAdminService(
         UserManager<ApplicationUser> userManager,
         IUserAdminQueries queries,
         IInvitationEmailComposer emailComposer,
         IEmailService email,
-        IAuditLogger audit)
+        IAuditLogger audit,
+        Email.IEmailBroadcastRecipientRepository broadcastRecipients)
     {
         _userManager = userManager;
         _queries = queries;
         _emailComposer = emailComposer;
         _email = email;
         _audit = audit;
+        _broadcastRecipients = broadcastRecipients;
     }
 
     public Task<PagedResult<UserListItemDto>> ListAsync(UserListQuery query, CancellationToken ct = default)
@@ -380,6 +383,11 @@ public sealed class UserAdminService : IUserAdminService
             DisplayName = user.DisplayName,
             user.CreatedAt,
         };
+
+        // Phase 5: null UserId on broadcast-recipient rows BEFORE deleting the
+        // user. Snapshot fields preserve the audit row's meaning; cascading
+        // foreign-key delete would discard the historical record.
+        await _broadcastRecipients.NullUserReferencesAsync(id, ct).ConfigureAwait(false);
 
         var del = await _userManager.DeleteAsync(user);
         if (!del.Succeeded)
