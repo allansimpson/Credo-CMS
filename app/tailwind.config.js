@@ -18,6 +18,18 @@ export default {
         // /<alpha> modifiers on bg-primary/50, etc.
         background: "hsl(var(--background) / <alpha-value>)",
         foreground: "hsl(var(--foreground) / <alpha-value>)",
+        // Editorial tokens (system theme — see themes/system-theme.css §3).
+        panel: {
+          DEFAULT: "hsl(var(--panel) / <alpha-value>)",
+          alt: "hsl(var(--panel-alt) / <alpha-value>)",
+        },
+        sidebar: "hsl(var(--sidebar) / <alpha-value>)",
+        fg: {
+          DEFAULT: "hsl(var(--foreground) / <alpha-value>)",
+          soft: "hsl(var(--fg-soft) / <alpha-value>)",
+        },
+        success: "hsl(var(--success) / <alpha-value>)",
+        warn: "hsl(var(--warn) / <alpha-value>)",
         primary: {
           DEFAULT: "hsl(var(--primary) / <alpha-value>)",
           foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
@@ -46,13 +58,17 @@ export default {
           DEFAULT: "hsl(var(--popover) / <alpha-value>)",
           foreground: "hsl(var(--popover-foreground) / <alpha-value>)",
         },
-        border: "hsl(var(--border) / <alpha-value>)",
+        border: {
+          DEFAULT: "hsl(var(--border) / <alpha-value>)",
+          soft: "hsl(var(--border-soft) / <alpha-value>)",
+        },
         input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
       },
       fontFamily: {
         heading: "var(--font-heading)",
         body: "var(--font-body)",
+        mono: "var(--font-mono)",
       },
       borderRadius: {
         lg: "var(--radius)",

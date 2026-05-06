@@ -1,40 +1,100 @@
 /*
- * System theme — applied to /admin/* and /docs/* only. Fixed across all churches
- * forever. Only the church name and logo swap in for visual continuity; the rest
- * of the palette is invariant: clean, professional, neutral grayscale plus a
- * single accent.
+ * System theme — applied to /admin/* and /docs/* (and the sign-in screen as of
+ * the Editorial refresh). Editorial direction per DESIGN_HANDOFF.md §3.
+ *
+ * Palette is warm-grounded magazine: ink + cream + a single warm accent.
+ * Squared corners are global (--radius: 0); see /src/index.css for the
+ * `border-radius: 0 !important` override.
+ *
+ * Variables follow the shadcn channel-triplet convention so Tailwind utilities
+ * (bg-background, text-fg, border-border, /<alpha>) work transparently.
+ *
+ * Dark mode is opted in by adding `.theme-dark` to the same element that has
+ * `data-theme="system"`. The variable bundle is replaced; components don't
+ * need to fork.
  */
+
 [data-theme="system"] {
-  --background: 220 14% 98%;
-  --foreground: 220 26% 14%;
+  /* Surfaces ----------------------------------------------------------- */
+  --background: 43 29% 95%;          /* #f6f4ef — page bg */
+  --panel: 48 38% 97%;               /* #fbfaf6 — card / table surface */
+  --panel-alt: 44 27% 92%;           /* #f0ede5 — table headers, inset rows */
+  --sidebar: 36 11% 9%;              /* #1a1815 — left rail + dark insets */
 
-  --primary: 220 26% 14%;
-  --primary-foreground: 0 0% 100%;
+  /* Text --------------------------------------------------------------- */
+  --foreground: 36 11% 9%;           /* #1a1815 — primary text */
+  --fg-soft: 35 12% 20%;             /* #3a352e — secondary text */
+  --muted-foreground: 34 9% 44%;     /* #7a7165 — tertiary / metadata */
 
-  --accent: 220 90% 56%;
-  --accent-foreground: 0 0% 100%;
+  /* Borders ------------------------------------------------------------ */
+  --border: 42 25% 82%;              /* #dcd5c5 — hairline, panel edges */
+  --border-soft: 44 32% 88%;         /* #ebe6d8 — row dividers */
 
-  --secondary: 220 14% 93%;
-  --secondary-foreground: 220 26% 14%;
+  /* Accent (single, warm) --------------------------------------------- */
+  --accent: 22 75% 41%;              /* #b8531a */
+  --accent-foreground: 48 38% 97%;   /* #fbfaf6 */
 
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 98%;
+  /* Status ------------------------------------------------------------- */
+  --success: 106 23% 33%;            /* #4a6741 — published / active / MFA on */
+  --warn: 38 74% 40%;                /* #b07a1a — drafts / capacity / no-MFA */
+  --destructive: 9 71% 38%;          /* #a8311c — destructive / failures */
+  --destructive-foreground: 48 38% 97%;
 
-  --muted: 220 14% 93%;
-  --muted-foreground: 220 9% 46%;
-
-  --card: 0 0% 100%;
-  --card-foreground: 220 26% 14%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 220 26% 14%;
-
-  --border: 220 13% 88%;
-  --input: 220 13% 88%;
-  --ring: 220 90% 56%;
+  /* shadcn-compat aliases --------------------------------------------- */
+  /* These mirror Editorial tokens so existing Tailwind utilities and
+     shadcn components keep working without per-component edits. */
+  --primary: 36 11% 9%;              /* primary action ink — same as fg */
+  --primary-foreground: 48 38% 97%;
+  --secondary: 44 27% 92%;           /* same as panel-alt */
+  --secondary-foreground: 36 11% 9%;
+  --muted: 44 27% 92%;               /* same as panel-alt */
+  --card: 48 38% 97%;                /* same as panel */
+  --card-foreground: 36 11% 9%;
+  --popover: 48 38% 97%;
+  --popover-foreground: 36 11% 9%;
+  --input: 42 25% 82%;               /* same as border */
+  --ring: 22 75% 41%;                /* accent for focus ring */
 
   --radius: 0;
 
-  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Typography --------------------------------------------------------- */
+  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Inter Tight", sans-serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Inter Tight", sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Dark mode — toggle .theme-dark on the same element as data-theme="system". */
+[data-theme="system"].theme-dark,
+[data-theme="system"] .theme-dark {
+  --background: 43 19% 7%;           /* #16140f */
+  --panel: 38 14% 11%;               /* #201d18 */
+  --panel-alt: 36 13% 15%;
+  --sidebar: 36 20% 5%;              /* #0f0d0a */
+
+  --foreground: 41 49% 92%;          /* #f5efe2 */
+  --fg-soft: 40 28% 80%;
+  --muted-foreground: 34 9% 49%;
+
+  --border: 40 19% 19%;
+  --border-soft: 36 13% 15%;
+
+  --accent: 22 75% 41%;              /* unchanged */
+  --accent-foreground: 41 49% 92%;
+
+  --success: 106 23% 45%;
+  --warn: 38 74% 50%;
+  --destructive: 9 71% 48%;
+  --destructive-foreground: 41 49% 92%;
+
+  --primary: 41 49% 92%;
+  --primary-foreground: 36 11% 9%;
+  --secondary: 36 13% 15%;
+  --secondary-foreground: 41 49% 92%;
+  --muted: 36 13% 15%;
+  --card: 38 14% 11%;
+  --card-foreground: 41 49% 92%;
+  --popover: 38 14% 11%;
+  --popover-foreground: 41 49% 92%;
+  --input: 40 19% 19%;
+  --ring: 22 75% 41%;
 }
