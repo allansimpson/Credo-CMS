@@ -1,5 +1,6 @@
 using CredoCms.Application.Announcements;
 using CredoCms.Application.Auditing;
+using CredoCms.Application.Classes;
 using CredoCms.Application.Homepage;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Events;
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IEventRegistrationService, EventRegistrationService>();
         services.AddScoped<IGroupService, GroupService>();
+        services.AddScoped<IClassService, ClassService>();
         // RegistrationTokenSigner + options bound from configuration in
         // CredoCms.Infrastructure.DependencyInjection (IConfiguration lives there).
 
