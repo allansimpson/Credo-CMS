@@ -1,6 +1,8 @@
 using CredoCms.Domain.Announcements;
+using CredoCms.Domain.Blog;
 using CredoCms.Domain.Common;
 using CredoCms.Domain.Events;
+using CredoCms.Domain.Groups;
 using CredoCms.Domain.Identity;
 using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
@@ -58,6 +60,8 @@ public sealed class DataSeeder
         await SeedSampleNewsAsync(ct).ConfigureAwait(false);
         await SeedSampleSermonContentAsync(ct).ConfigureAwait(false);
         await SeedSampleEventsAsync(ct).ConfigureAwait(false);
+        await SeedSampleGroupsAsync(ct).ConfigureAwait(false);
+        await SeedSampleBlogPostsAsync(ct).ConfigureAwait(false);
     }
 
     private async Task SeedRolesAsync(CancellationToken ct)
@@ -475,4 +479,75 @@ public sealed class DataSeeder
     private static string ParaJson(string text)
         => "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
            + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"}]}]}";
+
+    // ---- Phase 4 seed methods ---------------------------------------------
+
+    private async Task SeedSampleGroupsAsync(CancellationToken ct)
+    {
+        if (await _db.Groups.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        var youth = new Group
+        {
+            Id = Guid.NewGuid(),
+            Slug = "youth-group",
+            Name = "Youth Group",
+            DescriptionJson = ParaJson("Sunday-evening community for middle and high school students."),
+            MeetingInfo = "Sundays · 6:00 pm · Fellowship Hall",
+            ContactEmail = "youth@example.org",
+            Visibility = GroupVisibility.Public,
+            Joinability = GroupJoinability.Open,
+            RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
+            RosterVisibility = RosterVisibility.LeadersOnly,
+            IsActive = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+        var menBibleStudy = new Group
+        {
+            Id = Guid.NewGuid(),
+            Slug = "mens-bible-study",
+            Name = "Men's Bible Study",
+            DescriptionJson = ParaJson("Saturday-morning study for men. Coffee provided."),
+            MeetingInfo = "Saturdays · 7:00 am · Library",
+            Visibility = GroupVisibility.MembersOnly,
+            Joinability = GroupJoinability.Open,
+            RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
+            RosterVisibility = RosterVisibility.AllGroupMembers,
+            IsActive = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+        _db.Groups.AddRange(youth, menBibleStudy);
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample groups (youth + men's Bible study).");
+    }
+
+    private async Task SeedSampleBlogPostsAsync(CancellationToken ct)
+    {
+        if (await _db.BlogPosts.AnyAsync(ct).ConfigureAwait(false)) return;
+        var admin = await _userManager.FindByEmailAsync(_identitySeed.DefaultAdminEmail).ConfigureAwait(false);
+        if (admin is null) return;
+
+        var now = DateTimeOffset.UtcNow;
+        var welcome = new BlogPost
+        {
+            Id = Guid.NewGuid(),
+            Slug = "welcome-to-our-blog",
+            Title = "Welcome to our blog",
+            BodyJson = ParaJson(
+                "We're starting a regular space for devotionals, sermon notes, and reflections " +
+                "from the pastors. Subscribe via the church newsletter to be notified when new " +
+                "posts go up."),
+            Excerpt = "A space for devotionals, sermon notes, and reflections.",
+            AuthorUserId = admin.Id,
+            Category = "Announcements",
+            IsPublished = true,
+            IsPinned = true,
+            PublishedAt = now,
+            ReadingTimeMinutes = 1,
+            CreatedAt = now, ModifiedAt = now,
+            ModifiedByUserId = admin.Id,
+        };
+        _db.BlogPosts.Add(welcome);
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample blog post (welcome).");
+    }
 }
