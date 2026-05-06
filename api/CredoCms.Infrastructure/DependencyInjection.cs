@@ -202,7 +202,14 @@ public static class DependencyInjection
         services.AddScoped<IRecipientResolver, RecipientResolver>();
         services.AddScoped<IEmailBroadcastService, EmailBroadcastService>();
         services.AddScoped<IEmailOnPublishService, EmailOnPublishService>();
+        services.AddScoped<IAdminNotificationLastSentRepository, AdminNotificationLastSentRepository>();
         services.AddHostedService<BroadcastSendWorker>();
+        services.AddHostedService<ScheduledPublishingService>();
+        services.AddHostedService<AdminNotificationDigestService>();
+
+        // R14 — SMS service stub. Always NoOpSmsService; Twilio class
+        // exists for v1.5 swap-in.
+        services.AddScoped<CredoCms.Application.Sms.ISmsService, CredoCms.Infrastructure.Sms.NoOpSmsService>();
 
         services.AddScoped<DataSeeder>();
 
