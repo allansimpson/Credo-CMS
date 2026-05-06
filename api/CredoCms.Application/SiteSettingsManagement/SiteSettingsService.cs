@@ -95,6 +95,33 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.FacebookOAuthAppSecret = request.FacebookOAuthAppSecret;
         s.FacebookLoginEnabled = request.FacebookLoginEnabled;
 
+        // Phase 5
+        s.EmailProvider = request.EmailProvider;
+        s.EmailFromAddress = request.EmailFromAddress;
+        s.EmailFromName = request.EmailFromName;
+        s.EmailReplyToAddress = request.EmailReplyToAddress;
+        s.SendGridApiKey = request.SendGridApiKey;
+        s.SendGridWebhookSecret = request.SendGridWebhookSecret;
+        s.SmtpHost = request.SmtpHost;
+        s.SmtpPort = request.SmtpPort;
+        s.SmtpUsername = request.SmtpUsername;
+        s.SmtpPassword = request.SmtpPassword;
+        s.SmtpUseSsl = request.SmtpUseSsl;
+        // EmailProvider=None forces EmailEnabled=false regardless of UI state.
+        s.EmailEnabled = request.EmailProvider != Domain.Email.EmailProvider.None && request.EmailEnabled;
+        s.TestEmailRecipient = request.TestEmailRecipient;
+        s.NewsEmailTargetMode = request.NewsEmailTargetMode;
+        s.NewsEmailTargetGroupIdsJson = request.NewsEmailTargetGroupIdsJson;
+        s.BlogEmailTargetMode = request.BlogEmailTargetMode;
+        s.BlogEmailTargetGroupIdsJson = request.BlogEmailTargetGroupIdsJson;
+        s.EmailSubjectPrefixNews = request.EmailSubjectPrefixNews;
+        s.EmailSubjectPrefixBlog = request.EmailSubjectPrefixBlog;
+        s.AdminNotificationFrequency = request.AdminNotificationFrequency;
+        s.SmsProvider = request.SmsProvider;
+        s.TwilioAccountSid = request.TwilioAccountSid;
+        s.TwilioAuthToken = request.TwilioAuthToken;
+        s.TwilioFromNumber = request.TwilioFromNumber;
+
         s.ModifiedAt = DateTimeOffset.UtcNow;
         s.RowVersion = Convert.FromBase64String(request.RowVersion);
 
@@ -142,6 +169,16 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.CloudflareTurnstileSiteKey, s.CloudflareTurnstileSecretKey,
         s.FacebookOAuthAppId, s.FacebookOAuthAppSecret,
         s.FacebookLoginEnabled,
+        // Phase 5
+        s.EmailProvider, s.EmailFromAddress, s.EmailFromName, s.EmailReplyToAddress,
+        s.SendGridApiKey, s.SendGridWebhookSecret,
+        s.SmtpHost, s.SmtpPort, s.SmtpUsername, s.SmtpPassword, s.SmtpUseSsl,
+        s.EmailEnabled, s.TestEmailRecipient,
+        s.NewsEmailTargetMode, s.NewsEmailTargetGroupIdsJson,
+        s.BlogEmailTargetMode, s.BlogEmailTargetGroupIdsJson,
+        s.EmailSubjectPrefixNews, s.EmailSubjectPrefixBlog,
+        s.AdminNotificationFrequency,
+        s.SmsProvider, s.TwilioAccountSid, s.TwilioAuthToken, s.TwilioFromNumber,
         s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
         Convert.ToBase64String(s.RowVersion));
 }

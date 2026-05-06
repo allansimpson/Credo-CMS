@@ -71,9 +71,49 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
 
         RuleFor(x => x.DefaultMetaDescription).MaximumLength(300);
 
+        // ---- Phase 5 fields -----------------------------------------------
+
+        RuleFor(x => x.EmailFromAddress).NotEmpty().EmailAddress().MaximumLength(200);
+        RuleFor(x => x.EmailFromName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.EmailReplyToAddress)
+            .EmailAddress()
+            .When(x => !string.IsNullOrWhiteSpace(x.EmailReplyToAddress))
+            .MaximumLength(200);
+        RuleFor(x => x.SendGridApiKey).MaximumLength(200);
+        RuleFor(x => x.SendGridWebhookSecret).MaximumLength(200);
+        RuleFor(x => x.SmtpHost).MaximumLength(200);
+        RuleFor(x => x.SmtpPort).InclusiveBetween(1, 65535);
+        RuleFor(x => x.SmtpUsername).MaximumLength(200);
+        RuleFor(x => x.SmtpPassword).MaximumLength(500);
+        RuleFor(x => x.TestEmailRecipient)
+            .EmailAddress()
+            .When(x => !string.IsNullOrWhiteSpace(x.TestEmailRecipient))
+            .MaximumLength(200);
+        RuleFor(x => x.NewsEmailTargetGroupIdsJson).Must(BeJsonArray).WithMessage("News email target group ids must be a JSON array.");
+        RuleFor(x => x.BlogEmailTargetGroupIdsJson).Must(BeJsonArray).WithMessage("Blog email target group ids must be a JSON array.");
+        RuleFor(x => x.EmailSubjectPrefixNews).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.EmailSubjectPrefixBlog).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.TwilioAccountSid).MaximumLength(200);
+        RuleFor(x => x.TwilioAuthToken).MaximumLength(500);
+        RuleFor(x => x.TwilioFromNumber).MaximumLength(50);
+
         // -------------------------------------------------------------------
 
         RuleFor(x => x.RowVersion).NotEmpty();
+    }
+
+    private static bool BeJsonArray(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        try
+        {
+            using var doc = JsonDocument.Parse(value);
+            return doc.RootElement.ValueKind == JsonValueKind.Array;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     private static bool BeValidOptionalAbsoluteUrl(string? value) =>

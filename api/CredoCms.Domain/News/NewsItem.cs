@@ -55,6 +55,18 @@ public sealed class NewsItem : IVersionedEntity
     /// scheduled. Surfaced on the detail page.</summary>
     public DateTimeOffset? CalendarDate { get; set; }
 
+    /// <summary>When set on an unpublished item, the scheduled-publishing
+    /// background service publishes the item once this instant has passed.
+    /// Cleared once published.</summary>
+    public DateTimeOffset? ScheduledPublishAt { get; set; }
+
+    /// <summary>When true, publishing the item auto-creates an
+    /// <c>EmailBroadcast</c> targeted per Site Settings news email config.
+    /// The flag is cleared inside the same transaction that creates the
+    /// broadcast so re-publishing does not re-fire unless the editor
+    /// explicitly re-enables the toggle.</summary>
+    public bool SendEmailOnPublish { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public Guid? ModifiedByUserId { get; set; }

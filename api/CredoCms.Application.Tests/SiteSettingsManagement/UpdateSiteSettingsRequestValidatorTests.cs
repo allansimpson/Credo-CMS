@@ -1,4 +1,5 @@
 using CredoCms.Application.SiteSettingsManagement;
+using CredoCms.Domain.Email;
 using FluentValidation.TestHelper;
 
 namespace CredoCms.Application.Tests.SiteSettingsManagement;
@@ -56,6 +57,31 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         FacebookOAuthAppId: null,
         FacebookOAuthAppSecret: null,
         FacebookLoginEnabled: false,
+        // Phase 5 fields — defaults match SiteSettings entity defaults.
+        EmailProvider: EmailProvider.None,
+        EmailFromAddress: "noreply@example.org",
+        EmailFromName: "Church Communications",
+        EmailReplyToAddress: null,
+        SendGridApiKey: null,
+        SendGridWebhookSecret: null,
+        SmtpHost: null,
+        SmtpPort: 587,
+        SmtpUsername: null,
+        SmtpPassword: null,
+        SmtpUseSsl: true,
+        EmailEnabled: false,
+        TestEmailRecipient: null,
+        NewsEmailTargetMode: BroadcastTargetMode.AllMembers,
+        NewsEmailTargetGroupIdsJson: "[]",
+        BlogEmailTargetMode: BroadcastTargetMode.AllMembers,
+        BlogEmailTargetGroupIdsJson: "[]",
+        EmailSubjectPrefixNews: "[News]",
+        EmailSubjectPrefixBlog: "[Blog]",
+        AdminNotificationFrequency: AdminNotificationFrequency.Every30Minutes,
+        SmsProvider: SmsProvider.None,
+        TwilioAccountSid: null,
+        TwilioAuthToken: null,
+        TwilioFromNumber: null,
         RowVersion: "AAAAAAAAB9E=");
 
     [Fact]

@@ -212,6 +212,86 @@ public class SiteSettings
 
     public bool FacebookLoginEnabled { get; set; }
 
+    // -- Phase 5: Communications -------------------------------------------
+
+    /// <summary>Provider selection for outbound email. <c>None</c> forces
+    /// <see cref="EmailEnabled"/>=false regardless of UI state.</summary>
+    public Email.EmailProvider EmailProvider { get; set; } = Email.EmailProvider.None;
+
+    [MaxLength(200)]
+    public string EmailFromAddress { get; set; } = "noreply@example.org";
+
+    [MaxLength(200)]
+    public string EmailFromName { get; set; } = "Church Communications";
+
+    [MaxLength(200)]
+    public string? EmailReplyToAddress { get; set; }
+
+    [MaxLength(200)]
+    public string? SendGridApiKey { get; set; }
+
+    [MaxLength(200)]
+    public string? SendGridWebhookSecret { get; set; }
+
+    [MaxLength(200)]
+    public string? SmtpHost { get; set; }
+
+    public int SmtpPort { get; set; } = 587;
+
+    [MaxLength(200)]
+    public string? SmtpUsername { get; set; }
+
+    [MaxLength(500)]
+    public string? SmtpPassword { get; set; }
+
+    public bool SmtpUseSsl { get; set; } = true;
+
+    /// <summary>Master kill switch. When false, all <c>IEmailService</c> calls
+    /// log + return successfully without dispatching. Defaults to false so
+    /// initial deployments cannot accidentally email storms.</summary>
+    public bool EmailEnabled { get; set; }
+
+    /// <summary>Staging override: when set, ALL outbound email goes here
+    /// regardless of intended recipient. Cleared in production.</summary>
+    [MaxLength(200)]
+    public string? TestEmailRecipient { get; set; }
+
+    public Email.BroadcastTargetMode NewsEmailTargetMode { get; set; } = Email.BroadcastTargetMode.AllMembers;
+
+    /// <summary>JSON array of Group GUIDs. Used when
+    /// <see cref="NewsEmailTargetMode"/>=<c>SpecificGroups</c>.</summary>
+    public string NewsEmailTargetGroupIdsJson { get; set; } = "[]";
+
+    public Email.BroadcastTargetMode BlogEmailTargetMode { get; set; } = Email.BroadcastTargetMode.AllMembers;
+
+    public string BlogEmailTargetGroupIdsJson { get; set; } = "[]";
+
+    [MaxLength(50)]
+    public string EmailSubjectPrefixNews { get; set; } = "[News]";
+
+    [MaxLength(50)]
+    public string EmailSubjectPrefixBlog { get; set; } = "[Blog]";
+
+    /// <summary>Default frequency for admin-notification digests. Per-user
+    /// override on <c>ApplicationUser</c> beats this.</summary>
+    public Email.AdminNotificationFrequency AdminNotificationFrequency { get; set; } = Email.AdminNotificationFrequency.Every30Minutes;
+
+    /// <summary>HMAC key for signing one-click unsubscribe tokens.
+    /// Auto-generated on first read if blank.</summary>
+    [MaxLength(200)]
+    public string? UnsubscribeSigningKey { get; set; }
+
+    public Email.SmsProvider SmsProvider { get; set; } = Email.SmsProvider.None;
+
+    [MaxLength(200)]
+    public string? TwilioAccountSid { get; set; }
+
+    [MaxLength(500)]
+    public string? TwilioAuthToken { get; set; }
+
+    [MaxLength(50)]
+    public string? TwilioFromNumber { get; set; }
+
     // -----------------------------------------------------------------------
 
     public DateTimeOffset CreatedAt { get; set; }

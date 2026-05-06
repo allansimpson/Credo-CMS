@@ -78,4 +78,9 @@ public sealed class EventRegistration
     public string? CancelReason { get; set; }
 
     public DateTimeOffset? ConfirmationEmailSentAt { get; set; }
+
+    /// <summary>Set when the event-registration reminder service has emailed
+    /// this registrant for the upcoming event. Used to enforce
+    /// once-per-registration reminder semantics.</summary>
+    public DateTimeOffset? ReminderEmailSentAt { get; set; }
 }

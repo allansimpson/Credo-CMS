@@ -23,5 +23,14 @@ internal sealed class SiteSettingsConfiguration : IEntityTypeConfiguration<SiteS
         builder.Property(x => x.ProfanityAllowlist).HasColumnType("nvarchar(max)");
         builder.Property(x => x.ConnectCardInterestsJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.ConnectCardAcknowledgmentMessageJson).HasColumnType("nvarchar(max)");
+
+        // Phase 5 enum-as-int + JSON columns.
+        builder.Property(x => x.EmailProvider).HasConversion<int>();
+        builder.Property(x => x.NewsEmailTargetMode).HasConversion<int>();
+        builder.Property(x => x.BlogEmailTargetMode).HasConversion<int>();
+        builder.Property(x => x.AdminNotificationFrequency).HasConversion<int>();
+        builder.Property(x => x.SmsProvider).HasConversion<int>();
+        builder.Property(x => x.NewsEmailTargetGroupIdsJson).HasColumnType("nvarchar(max)");
+        builder.Property(x => x.BlogEmailTargetGroupIdsJson).HasColumnType("nvarchar(max)");
     }
 }

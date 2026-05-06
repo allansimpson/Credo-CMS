@@ -5,6 +5,7 @@ using CredoCms.Domain.Blog;
 using CredoCms.Domain.Classes;
 using CredoCms.Domain.ConnectCard;
 using CredoCms.Domain.Documents;
+using CredoCms.Domain.Email;
 using CredoCms.Domain.Events;
 using CredoCms.Domain.Groups;
 using CredoCms.Domain.Identity;
@@ -18,6 +19,7 @@ using CredoCms.Domain.Sermons;
 using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using CredoCms.Domain.Tags;
+using CredoCms.Domain.Volunteers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -69,6 +71,16 @@ public class ApplicationDbContext
     public DbSet<ConnectCardSubmission> ConnectCardSubmissions => Set<ConnectCardSubmission>();
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogPostTag> BlogPostTags => Set<BlogPostTag>();
+
+    // Phase 5
+    public DbSet<EmailSuppression> EmailSuppressions => Set<EmailSuppression>();
+    public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
+    public DbSet<EmailBroadcast> EmailBroadcasts => Set<EmailBroadcast>();
+    public DbSet<EmailBroadcastRecipient> EmailBroadcastRecipients => Set<EmailBroadcastRecipient>();
+    public DbSet<WebhookEventLog> WebhookEventLog => Set<WebhookEventLog>();
+    public DbSet<AdminNotificationLastSent> AdminNotificationLastSent => Set<AdminNotificationLastSent>();
+    public DbSet<EventVolunteerRole> EventVolunteerRoles => Set<EventVolunteerRole>();
+    public DbSet<EventVolunteerSignup> EventVolunteerSignups => Set<EventVolunteerSignup>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

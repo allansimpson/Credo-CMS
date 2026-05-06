@@ -1,3 +1,5 @@
+using CredoCms.Domain.Email;
+
 namespace CredoCms.Application.SiteSettingsManagement;
 
 /// <summary>Public-facing subset, returned to anonymous SPA bootstrap.
@@ -79,6 +81,35 @@ public sealed record SiteSettingsDto(
     /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
     string? FacebookOAuthAppSecret,
     bool FacebookLoginEnabled,
+    // ---- Phase 5 admin-side fields ---------------------------------------
+    EmailProvider EmailProvider,
+    string EmailFromAddress,
+    string EmailFromName,
+    string? EmailReplyToAddress,
+    /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
+    string? SendGridApiKey,
+    /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
+    string? SendGridWebhookSecret,
+    string? SmtpHost,
+    int SmtpPort,
+    string? SmtpUsername,
+    /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
+    string? SmtpPassword,
+    bool SmtpUseSsl,
+    bool EmailEnabled,
+    string? TestEmailRecipient,
+    BroadcastTargetMode NewsEmailTargetMode,
+    string NewsEmailTargetGroupIdsJson,
+    BroadcastTargetMode BlogEmailTargetMode,
+    string BlogEmailTargetGroupIdsJson,
+    string EmailSubjectPrefixNews,
+    string EmailSubjectPrefixBlog,
+    AdminNotificationFrequency AdminNotificationFrequency,
+    SmsProvider SmsProvider,
+    string? TwilioAccountSid,
+    /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
+    string? TwilioAuthToken,
+    string? TwilioFromNumber,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
     Guid? ModifiedByUserId,
@@ -133,4 +164,29 @@ public sealed record UpdateSiteSettingsRequest(
     string? FacebookOAuthAppId,
     string? FacebookOAuthAppSecret,
     bool FacebookLoginEnabled,
+    // ---- Phase 5 admin-side fields ---------------------------------------
+    EmailProvider EmailProvider,
+    string EmailFromAddress,
+    string EmailFromName,
+    string? EmailReplyToAddress,
+    string? SendGridApiKey,
+    string? SendGridWebhookSecret,
+    string? SmtpHost,
+    int SmtpPort,
+    string? SmtpUsername,
+    string? SmtpPassword,
+    bool SmtpUseSsl,
+    bool EmailEnabled,
+    string? TestEmailRecipient,
+    BroadcastTargetMode NewsEmailTargetMode,
+    string NewsEmailTargetGroupIdsJson,
+    BroadcastTargetMode BlogEmailTargetMode,
+    string BlogEmailTargetGroupIdsJson,
+    string EmailSubjectPrefixNews,
+    string EmailSubjectPrefixBlog,
+    AdminNotificationFrequency AdminNotificationFrequency,
+    SmsProvider SmsProvider,
+    string? TwilioAccountSid,
+    string? TwilioAuthToken,
+    string? TwilioFromNumber,
     string RowVersion);

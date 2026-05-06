@@ -54,8 +54,16 @@ public sealed class BlogPost : IVersionedEntity
 
     public DateTimeOffset? PublishedAt { get; set; }
 
-    /// <summary>Captured in Phase 4; the scheduled-publish job activates in Phase 5.</summary>
+    /// <summary>When set on an unpublished post, the scheduled-publishing
+    /// background service publishes the post once this instant has passed.
+    /// Cleared once published.</summary>
     public DateTimeOffset? ScheduledPublishAt { get; set; }
+
+    /// <summary>When true, publishing auto-creates an <c>EmailBroadcast</c>
+    /// targeted per Site Settings blog email config. Cleared inside the
+    /// same transaction that creates the broadcast so re-publishing does
+    /// not re-fire unless the editor explicitly re-enables the toggle.</summary>
+    public bool SendEmailOnPublish { get; set; }
 
     /// <summary>Reading time in minutes, recomputed from body word count on save.
     /// Formula: max(1, ceil(words / 250)).</summary>
