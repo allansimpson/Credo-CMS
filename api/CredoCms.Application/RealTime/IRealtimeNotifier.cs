@@ -8,6 +8,15 @@ public sealed record GroupJoinRequestMessage(Guid GroupId, string GroupName, Gui
 /// <summary>Group join-request resolution. Sent to <c>user-{requesterId}</c>.</summary>
 public sealed record GroupMembershipDecisionMessage(Guid GroupId, string GroupName, bool Approved);
 
+/// <summary>Prayer request events. Sent to the <c>members</c> SignalR group;
+/// Editors and Administrators are also in <c>members</c> so admin shells
+/// receive the same stream.</summary>
+public sealed record PrayerRequestEventMessage(
+    string Kind,
+    Guid PrayerRequestId,
+    string Title,
+    int? PrayedForCount = null);
+
 public interface IRealtimeNotifier
 {
     Task NotifyContentChangedAsync(ContentChangedMessage message, CancellationToken ct = default);
@@ -24,4 +33,9 @@ public interface IRealtimeNotifier
         Guid requesterUserId,
         GroupMembershipDecisionMessage message,
         CancellationToken ct = default);
+
+    /// <summary>Broadcast a prayer-request event to the <c>members</c> group.
+    /// The same channel powers the member list page and the admin moderation
+    /// queue.</summary>
+    Task NotifyPrayerRequestEventAsync(PrayerRequestEventMessage message, CancellationToken ct = default);
 }

@@ -16,6 +16,11 @@ public sealed class NotificationHub : Hub
 {
     public const string AdminGroup = "admins";
 
+    /// <summary>Members + Editors + Administrators (Editors/Admins are
+    /// auto-joined so admin shells get the same prayer-request stream the
+    /// member list shows).</summary>
+    public const string MembersGroup = "members";
+
     /// <summary>SignalR group name for messaging a single user across all
     /// their open connections.</summary>
     public static string UserGroup(Guid userId) => $"user-{userId:N}";
@@ -30,6 +35,16 @@ public sealed class NotificationHub : Hub
             && Guid.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId)).ConfigureAwait(false);
+
+            // Members + Editors + Administrators all receive the prayer-
+            // request stream. Auto-joining covers the common case; the
+            // explicit JoinAdminGroup remains for the admin-only stream.
+            if (user.IsInRole(SystemConstants.Roles.Member)
+                || user.IsInRole(SystemConstants.Roles.Editor)
+                || user.IsInRole(SystemConstants.Roles.Administrator))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, MembersGroup).ConfigureAwait(false);
+            }
         }
         await base.OnConnectedAsync().ConfigureAwait(false);
     }

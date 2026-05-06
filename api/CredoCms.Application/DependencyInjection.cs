@@ -9,6 +9,7 @@ using CredoCms.Application.Leaders;
 using CredoCms.Application.Members;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
+using CredoCms.Application.Prayer;
 using CredoCms.Application.Profile;
 using CredoCms.Application.Scripture;
 using CredoCms.Application.Sermons;
@@ -50,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IEventRegistrationService, EventRegistrationService>();
         services.AddScoped<IGroupService, GroupService>();
         services.AddScoped<IClassService, ClassService>();
+        services.AddScoped<IPrayerRequestService, PrayerRequestService>();
         // RegistrationTokenSigner + options bound from configuration in
         // CredoCms.Infrastructure.DependencyInjection (IConfiguration lives there).
 

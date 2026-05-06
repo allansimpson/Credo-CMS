@@ -37,4 +37,8 @@ public sealed class SignalRRealtimeNotifier : IRealtimeNotifier
         CancellationToken ct = default)
         => _hub.Clients.Group(NotificationHub.UserGroup(requesterUserId))
             .SendAsync(message.Approved ? "GroupMembershipApproved" : "GroupMembershipDeclined", message, ct);
+
+    public Task NotifyPrayerRequestEventAsync(PrayerRequestEventMessage message, CancellationToken ct = default)
+        => _hub.Clients.Group(NotificationHub.MembersGroup)
+            .SendAsync(message.Kind, message, ct);
 }
