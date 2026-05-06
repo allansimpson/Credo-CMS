@@ -75,4 +75,28 @@ public sealed class UsersController : ControllerBase
         var result = await _users.HardDeleteAsync(id, request, ct);
         return result.Succeeded ? NoContent() : BadRequest(new { errors = result.Errors });
     }
+
+    [HttpPut("{id:guid}/profile-fields")]
+    public async Task<ActionResult<UserDetailDto>> UpdateProfileFieldsAsync(
+        Guid id,
+        [FromBody] UpdateUserProfileFieldsRequest request,
+        CancellationToken ct)
+    {
+        var result = await _users.UpdateProfileFieldsAsync(id, request, ct);
+        return result.Succeeded ? Ok(result.User) : BadRequest(new { errors = result.Errors });
+    }
+
+    [HttpPost("{id:guid}/reset-notifications")]
+    public async Task<ActionResult<UserDetailDto>> ResetNotificationsAsync(Guid id, CancellationToken ct)
+    {
+        var result = await _users.ResetNotificationsAsync(id, ct);
+        return result.Succeeded ? Ok(result.User) : BadRequest(new { errors = result.Errors });
+    }
+
+    [HttpGet("{id:guid}/admin-notes")]
+    public async Task<ActionResult<AdminUserNotesDto>> GetAdminNotesAsync(Guid id, CancellationToken ct)
+    {
+        var notes = await _users.GetAdminNotesAsync(id, ct);
+        return notes is null ? NotFound() : Ok(notes);
+    }
 }

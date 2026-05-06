@@ -1,5 +1,6 @@
 using CredoCms.Application.Common;
 using CredoCms.Application.UserManagement;
+using CredoCms.Domain.Groups;
 using CredoCms.Domain.Identity;
 using CredoCms.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -115,5 +116,25 @@ public sealed class UserAdminQueries : IUserAdminQueries
             user.CreatedAt,
             user.LastLoginAt,
             roles);
+    }
+
+    public async Task<AdminUserNotesDto?> GetAdminNotesAsync(Guid id, CancellationToken ct = default)
+    {
+        // Confirm the user exists before computing counts; returning null lets
+        // the controller surface a 404 cleanly rather than a misleading zero.
+        var exists = await _db.Users.AsNoTracking().AnyAsync(u => u.Id == id, ct).ConfigureAwait(false);
+        if (!exists) return null;
+
+        var groupTotal = await _db.GroupMemberships.AsNoTracking()
+            .CountAsync(m => m.UserId == id, ct).ConfigureAwait(false);
+        var groupActive = await _db.GroupMemberships.AsNoTracking()
+            .CountAsync(m => m.UserId == id && m.Status == GroupMembershipStatus.Active, ct)
+            .ConfigureAwait(false);
+        var prayerCount = await _db.PrayerRequests.AsNoTracking()
+            .CountAsync(p => p.SubmittedByUserId == id, ct).ConfigureAwait(false);
+        var registrationCount = await _db.EventRegistrations.AsNoTracking()
+            .CountAsync(r => r.UserId == id, ct).ConfigureAwait(false);
+
+        return new AdminUserNotesDto(id, groupTotal, groupActive, prayerCount, registrationCount);
     }
 }

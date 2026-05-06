@@ -56,3 +56,43 @@ public sealed record UserMutationResult(bool Succeeded, IReadOnlyList<string> Er
 }
 
 public sealed record HardDeleteUserRequest(string ConfirmDisplayName);
+
+/// <summary>
+/// Patch shape for the admin user-edit screen. Mirrors the four sections of
+/// the member-self profile API (personal / directory / notifications) plus
+/// any field the user themselves cannot edit (e.g. names — which still flow
+/// through the admin edit endpoint, not this profile-fields endpoint).
+/// </summary>
+public sealed record UpdateUserProfileFieldsRequest(
+    string? PhoneNumber,
+    string? AddressLine1,
+    string? AddressLine2,
+    string? City,
+    string? StateOrRegion,
+    string? PostalCode,
+    string? Country,
+    string? PhotoBlobUrl,
+    string? PhotoWebpBlobUrl,
+    string? PhotoAltText,
+    string? PublicAuthorBio,
+    bool IsListedInDirectory,
+    bool ShowEmailInDirectory,
+    bool ShowPhoneInDirectory,
+    bool ShowAddressInDirectory,
+    bool ShowPhotoInDirectory,
+    bool ReceiveNewsEmails,
+    bool ReceiveBlogEmails,
+    bool ReceiveBroadcastEmails,
+    bool ReceiveGroupEmailsGlobal);
+
+/// <summary>
+/// Aggregate read-side payload that powers the admin user-detail screen.
+/// Counts come from a single DB round-trip via <c>IUserAdminQueries</c>.
+/// </summary>
+public sealed record AdminUserNotesDto(
+    Guid UserId,
+    int GroupMembershipCount,
+    int ActiveGroupMembershipCount,
+    int PrayerRequestCount,
+    int EventRegistrationCount);
+

@@ -254,6 +254,104 @@ public sealed class UserAdminService : IUserAdminService
         return UserMutationResult.Success(detail);
     }
 
+    public async Task<UserMutationResult> UpdateProfileFieldsAsync(Guid id, UpdateUserProfileFieldsRequest request, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user is null) return UserMutationResult.Failure("User not found.");
+
+        // Admin-edit mirrors the self-profile contract: photo without alt is
+        // an invariant violation, master directory toggle gates per-field.
+        if (!string.IsNullOrWhiteSpace(request.PhotoBlobUrl)
+            && string.IsNullOrWhiteSpace(request.PhotoAltText))
+        {
+            return UserMutationResult.Failure("Alt text is required when a photo is set.");
+        }
+
+        user.PhoneNumber = NullIfBlank(request.PhoneNumber);
+        user.AddressLine1 = NullIfBlank(request.AddressLine1);
+        user.AddressLine2 = NullIfBlank(request.AddressLine2);
+        user.City = NullIfBlank(request.City);
+        user.StateOrRegion = NullIfBlank(request.StateOrRegion);
+        user.PostalCode = NullIfBlank(request.PostalCode);
+        user.Country = NullIfBlank(request.Country);
+        user.PhotoBlobUrl = NullIfBlank(request.PhotoBlobUrl);
+        user.PhotoWebpBlobUrl = NullIfBlank(request.PhotoWebpBlobUrl);
+        user.PhotoAltText = NullIfBlank(request.PhotoAltText);
+        user.PublicAuthorBio = NullIfBlank(request.PublicAuthorBio);
+
+        var listed = request.IsListedInDirectory;
+        user.IsListedInDirectory = listed;
+        user.ShowEmailInDirectory = listed && request.ShowEmailInDirectory;
+        user.ShowPhoneInDirectory = listed && request.ShowPhoneInDirectory;
+        user.ShowAddressInDirectory = listed && request.ShowAddressInDirectory;
+        user.ShowPhotoInDirectory = listed && request.ShowPhotoInDirectory;
+
+        user.ReceiveNewsEmails = request.ReceiveNewsEmails;
+        user.ReceiveBlogEmails = request.ReceiveBlogEmails;
+        user.ReceiveBroadcastEmails = request.ReceiveBroadcastEmails;
+        user.ReceiveGroupEmailsGlobal = request.ReceiveGroupEmailsGlobal;
+
+        var update = await _userManager.UpdateAsync(user);
+        if (!update.Succeeded)
+        {
+            return UserMutationResult.Failure([.. update.Errors.Select(e => e.Description)]);
+        }
+
+        await _audit.WriteAsync(
+            "User.ProfileFieldsUpdatedByAdmin",
+            nameof(ApplicationUser),
+            user.Id.ToString(),
+            details: new
+            {
+                user.IsListedInDirectory,
+                user.ReceiveNewsEmails,
+                user.ReceiveBlogEmails,
+                user.ReceiveBroadcastEmails,
+                user.ReceiveGroupEmailsGlobal,
+                hasPhoto = !string.IsNullOrEmpty(user.PhotoBlobUrl),
+            },
+            cancellationToken: ct);
+
+        var detail = await _queries.GetAsync(user.Id, ct)
+            ?? throw new InvalidOperationException("Profile updated but query failed.");
+        return UserMutationResult.Success(detail);
+    }
+
+    public async Task<UserMutationResult> ResetNotificationsAsync(Guid id, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user is null) return UserMutationResult.Failure("User not found.");
+
+        // Defaults match ApplicationUserConfiguration: News + Broadcast + Group
+        // global on, Blog off.
+        user.ReceiveNewsEmails = true;
+        user.ReceiveBlogEmails = false;
+        user.ReceiveBroadcastEmails = true;
+        user.ReceiveGroupEmailsGlobal = true;
+
+        var update = await _userManager.UpdateAsync(user);
+        if (!update.Succeeded)
+        {
+            return UserMutationResult.Failure([.. update.Errors.Select(e => e.Description)]);
+        }
+
+        await _audit.WriteAsync(
+            "User.NotificationsResetByAdmin",
+            nameof(ApplicationUser),
+            user.Id.ToString(),
+            cancellationToken: ct);
+
+        var detail = await _queries.GetAsync(user.Id, ct)
+            ?? throw new InvalidOperationException("Reset succeeded but query failed.");
+        return UserMutationResult.Success(detail);
+    }
+
+    public Task<AdminUserNotesDto?> GetAdminNotesAsync(Guid id, CancellationToken ct = default) =>
+        _queries.GetAdminNotesAsync(id, ct);
+
+    private static string? NullIfBlank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     public async Task<UserMutationResult> HardDeleteAsync(Guid id, HardDeleteUserRequest request, CancellationToken ct = default)
     {
         if (id == SystemConstants.SystemUserId)
@@ -313,6 +411,7 @@ public interface IUserAdminQueries
 {
     Task<PagedResult<UserListItemDto>> ListAsync(UserListQuery query, CancellationToken ct = default);
     Task<UserDetailDto?> GetAsync(Guid id, CancellationToken ct = default);
+    Task<AdminUserNotesDto?> GetAdminNotesAsync(Guid id, CancellationToken ct = default);
 }
 
 /// <summary>
