@@ -18,6 +18,7 @@ import {
   Megaphone,
   Mic,
   Calendar,
+  Users as UsersIcon,
 } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/sermons", label: "Sermons", icon: Mic },
   { to: "/admin/sermon-series", label: "Sermon Series", icon: Mic },
   { to: "/admin/events", label: "Events", icon: Calendar },
+  { to: "/admin/groups", label: "Groups", icon: UsersIcon },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },

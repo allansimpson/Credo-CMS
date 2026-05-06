@@ -1,6 +1,7 @@
 import { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/lib/AuthContext";
+import { AdminNotificationsProvider } from "@/hooks/useAdminNotifications";
 import { SiteSettingsProvider } from "@/lib/SiteSettingsContext";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import { SessionExpiryWarning } from "@/components/shared/SessionExpiryWarning";
@@ -145,11 +146,27 @@ const MembersDirectoryPage = lazy(() =>
 const MemberDetailPage = lazy(() =>
   import("@/pages/MemberDetailPage").then((m) => ({ default: m.MemberDetailPage }))
 );
+const GetInvolvedPage = lazy(() =>
+  import("@/pages/public/GetInvolvedPage").then((m) => ({ default: m.GetInvolvedPage }))
+);
+const GroupDetailPage = lazy(() =>
+  import("@/pages/public/GroupDetailPage").then((m) => ({ default: m.GroupDetailPage }))
+);
+const ProfileGroupsPage = lazy(() =>
+  import("@/pages/ProfileGroupsPage").then((m) => ({ default: m.ProfileGroupsPage }))
+);
+const GroupsListPage = lazy(() =>
+  import("@/pages/admin/GroupsListPage").then((m) => ({ default: m.GroupsListPage }))
+);
+const GroupEditorPage = lazy(() =>
+  import("@/pages/admin/GroupEditorPage").then((m) => ({ default: m.GroupEditorPage }))
+);
 
 export default function App() {
   return (
     <SiteSettingsProvider>
       <AuthProvider>
+        <AdminNotificationsProvider>
         <SessionExpiryWarning />
         <Routes>
           {/* Public, church-themed */}
@@ -392,6 +409,32 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="get-involved"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
+                <GetInvolvedPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="groups/:slug"
+            element={
+              <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                <GroupDetailPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="profile/groups"
+            element={
+              <ProtectedRoute mode="auth">
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                  <ProfileGroupsPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin shell (system-themed). Wrapped in admin-mode covert-404 gate. */}
           <Route
@@ -532,6 +575,22 @@ export default function App() {
               }
             />
             <Route
+              path="groups"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <GroupsListPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="groups/:id"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <GroupEditorPage />
+                </Suspense>
+              }
+            />
+            <Route
               path="users"
               element={
                 <ProtectedRoute mode="admin" roles={["Administrator"]}>
@@ -572,6 +631,7 @@ export default function App() {
           {/* Catch-all */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </AdminNotificationsProvider>
       </AuthProvider>
     </SiteSettingsProvider>
   );
