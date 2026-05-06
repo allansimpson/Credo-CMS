@@ -36,6 +36,8 @@
     <!-- Phase 3 additions -->
     <PackageReference Include="Ical.Net" Version="4.2.0" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.69.0.3707" />
+    <!-- Phase 4 additions -->
+    <PackageReference Include="Profanity.Detector" Version="0.1.8" />
   </ItemGroup>
 
 </Project>

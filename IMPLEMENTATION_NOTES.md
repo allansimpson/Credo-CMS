@@ -679,14 +679,18 @@ Phase 4 lands the members + community feature set across 21 stages
   `MemberClassSlot`) so the privacy contract is compile-time enforced.
   Public list grouped by audience age group with filter chips; member-
   augmented response surfaces teacher / room / weekly schedule.
-- **Q9–Q10** — Prayer requests. `IProfanityCheckService` ships an in-
-  process implementation (NuGet `ProfanityFilter` was unreachable in
-  this build env; surface unchanged so the package can drop in later).
-  Anonymous-display rule hides submitter from non-privileged viewers but
-  keeps it visible to admins/editors/the submitter. SignalR
-  `PrayerRequest{Created,Updated,StatusChanged,PrayedForCountChanged,
-  UpdateAdded}` on the new "members" SignalR group; `useNotificationHub`
-  auto-joins authenticated members on connect.
+- **Q9–Q10** — Prayer requests. `IProfanityCheckService` is backed by
+  the `Profanity.Detector` 0.1.8 NuGet package (Stephen Haunts), with
+  `SiteSettings.ProfanityWordlist`/`ProfanityAllowlist` layered on top.
+  We call `DetectAllProfanities(text, removePartialMatches: true)`
+  rather than the package's `ContainsProfanity`, which uses naive
+  substring matching and trips on the Scunthorpe problem ("hello"
+  matches "hell", "classic" matches "ass"). Anonymous-display rule
+  hides submitter from non-privileged viewers but keeps it visible to
+  admins/editors/the submitter. SignalR `PrayerRequest{Created,Updated,
+  StatusChanged,PrayedForCountChanged,UpdateAdded}` on the new
+  "members" SignalR group; `useNotificationHub` auto-joins
+  authenticated members on connect.
 - **Q11–Q12** — Connect card. Anti-bot ladder: honeypot →
   5-second time-to-submit → Cloudflare Turnstile siteverify → field
   validation. Sliding-window rate limit `5/hour` per IP. SignalR
@@ -714,9 +718,10 @@ Phase 4 lands the members + community feature set across 21 stages
   members-only Men's Bible Study) and one pinned welcome blog post.
   Other Phase 4 domains intentionally start empty so admins
   populate them with real content.
-- **Q19** — Tests. 198 backend (Domain 15, Application 127,
-  Infrastructure 13, Api 43) + 21 SPA. Coverage added per stage:
-  permission gates, privacy filters, anti-bot rules, SignalR emission.
+- **Q19** — Tests. 209 backend (Domain 15, Application 127,
+  Infrastructure 24, Api 43) + 21 SPA. Coverage added per stage:
+  permission gates, privacy filters, anti-bot rules, SignalR emission,
+  profanity NuGet adapter (incl. Scunthorpe regression guards).
 - **Q20** — Documentation + final verification (this section).
 
 ### Editorial design refresh
@@ -731,7 +736,7 @@ primitives in `app/src/components/shared/admin/EditorialPrimitives.tsx`.
 
 ### Verification
 
-- API: `dotnet test` — 198/198 passing.
+- API: `dotnet test` — 209/209 passing.
 - SPA: `npm test` — 21/21 passing.
 - API build: `dotnet build CredoCms.slnx` — 0 warnings.
 - SPA build: `npx vite build` — clean (chunk-size warning is the
@@ -739,8 +744,6 @@ primitives in `app/src/components/shared/admin/EditorialPrimitives.tsx`.
 
 ### Known carry-forwards
 
-- Profanity check uses an in-process implementation; swap in NuGet
-  `ProfanityFilter` package when env reachability allows.
 - Scheduled-publish on blog posts captures the date but doesn't run
   automation (Phase 5 ships the background job).
 - Email acknowledgment for connect cards uses
