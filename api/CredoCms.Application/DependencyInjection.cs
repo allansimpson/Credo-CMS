@@ -4,6 +4,7 @@ using CredoCms.Application.Homepage;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Events;
 using CredoCms.Application.Leaders;
+using CredoCms.Application.Members;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
 using CredoCms.Application.Profile;
@@ -30,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IUserAdminService, UserAdminService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<IMembersDirectoryService, MembersDirectoryService>();
         services.AddScoped<IPageService, PageService>();
         services.AddScoped<INewsService, NewsService>();
         services.AddScoped<IServiceTimeService, ServiceTimeService>();

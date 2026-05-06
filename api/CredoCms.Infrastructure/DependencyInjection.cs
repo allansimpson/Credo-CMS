@@ -7,6 +7,7 @@ using CredoCms.Application.Common;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Events;
 using CredoCms.Application.Leaders;
+using CredoCms.Application.Members;
 using CredoCms.Application.News;
 using CredoCms.Application.Pages;
 using CredoCms.Application.Scripture;
@@ -32,6 +33,7 @@ using CredoCms.Infrastructure.Calendar;
 using CredoCms.Infrastructure.Documents;
 using CredoCms.Infrastructure.Events;
 using CredoCms.Infrastructure.Leaders;
+using CredoCms.Infrastructure.Members;
 using CredoCms.Infrastructure.News;
 using CredoCms.Infrastructure.Pages;
 using CredoCms.Infrastructure.Scripture;
@@ -112,6 +114,7 @@ public static class DependencyInjection
 
         services.AddScoped<ISiteSettingsRepository, SiteSettingsRepository>();
         services.AddScoped<IUserAdminQueries, UserAdminQueries>();
+        services.AddScoped<IMembersDirectoryQueries, MembersDirectoryQueries>();
         services.AddScoped<IPageRepository, PageRepository>();
         services.AddScoped<INewsRepository, NewsRepository>();
         services.AddScoped<IServiceTimeRepository, ServiceTimeRepository>();

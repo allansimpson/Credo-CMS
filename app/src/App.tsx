@@ -139,6 +139,12 @@ const ProfileCalendarFeedPage = lazy(() =>
 const ProfileRegistrationsPage = lazy(() =>
   import("@/pages/ProfileRegistrationsPage").then((m) => ({ default: m.ProfileRegistrationsPage }))
 );
+const MembersDirectoryPage = lazy(() =>
+  import("@/pages/MembersDirectoryPage").then((m) => ({ default: m.MembersDirectoryPage }))
+);
+const MemberDetailPage = lazy(() =>
+  import("@/pages/MemberDetailPage").then((m) => ({ default: m.MemberDetailPage }))
+);
 
 export default function App() {
   return (
@@ -362,6 +368,26 @@ export default function App() {
               <ProtectedRoute mode="auth">
                 <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <ProfileRegistrationsPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="members"
+            element={
+              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
+                  <MembersDirectoryPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="members/:userId"
+            element={
+              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                  <MemberDetailPage />
                 </Suspense>
               </ProtectedRoute>
             }
