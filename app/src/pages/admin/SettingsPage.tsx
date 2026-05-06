@@ -34,7 +34,7 @@ export function SettingsPage() {
                 "h-10 px-4 text-sm transition-colors " +
                 (active === t.id
                   ? "border-b-2 border-accent text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground")
+                  : "text-muted hover:text-foreground")
               }
             >
               {t.label}
@@ -59,7 +59,7 @@ function PlaceholderTab({ name, phase }: { name: string; phase: string }) {
   return (
     <div className="rounded-lg border bg-card p-6">
       <h2 className="text-lg font-semibold">{name}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm text-muted">
         Settings for {name.toLowerCase()} arrive in {phase}. The tab is shown here so the
         layout is consistent from day one.
       </p>
@@ -159,7 +159,7 @@ function FormBanner({ errors, success }: { errors: string[]; success: boolean })
   return (
     <>
       {errors.length > 0 && (
-        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-disc pl-5">
             {errors.map((err) => <li key={err}>{err}</li>)}
           </ul>
@@ -189,8 +189,8 @@ function SubmitButton({ submitting }: { submitting: boolean }) {
 function BrandingTab() {
   const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!settings) return <p className="text-danger">Could not load settings.</p>;
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
 
@@ -274,8 +274,8 @@ function BrandingTab() {
 function ContentTab() {
   const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!settings) return <p className="text-danger">Could not load settings.</p>;
 
   const leaderCats = parseCategories(settings.leaderCategoriesJson);
   const docCats = parseCategories(settings.documentCategoriesJson);
@@ -335,7 +335,7 @@ function ContentTab() {
 
       <fieldset className="space-y-3 rounded-lg border bg-card p-4">
         <legend className="px-2 text-sm font-semibold">Members welcome message</legend>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           Shown on the homepage to authenticated members only. Leave blank to hide the welcome block.
         </p>
         <TipTapEditor
@@ -356,8 +356,8 @@ function AdvancedTab() {
   const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
   const [rebuildState, setRebuildState] = useState<"idle" | "queued">("idle");
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!settings) return <p className="text-destructive">Could not load settings.</p>;
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!settings) return <p className="text-danger">Could not load settings.</p>;
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
   const handleRebuild = async () => {
@@ -440,7 +440,7 @@ function AdvancedTab() {
 
       <fieldset className="space-y-3 rounded-lg border bg-card p-4">
         <legend className="px-2 text-sm font-semibold">Search</legend>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           Re-indexes all published Pages, News items, Leaders, and Documents. Safe to run; triggers a
           background job.
         </p>
@@ -448,7 +448,7 @@ function AdvancedTab() {
           type="button"
           onClick={handleRebuild}
           disabled={rebuildState === "queued"}
-          className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-muted disabled:opacity-50"
+          className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-panel-alt disabled:opacity-50"
         >
           {rebuildState === "queued" ? "Rebuilding…" : "Rebuild search index"}
         </button>
@@ -498,13 +498,13 @@ function CategoryListEditor({ values, onChange }: CategoryListEditorProps) {
           />
           <button type="button" onClick={() => moveUp(i)} aria-label="Move up" className="iconbtn">↑</button>
           <button type="button" onClick={() => moveDown(i)} aria-label="Move down" className="iconbtn">↓</button>
-          <button type="button" onClick={() => remove(i)} aria-label="Remove" className="iconbtn text-destructive">✕</button>
+          <button type="button" onClick={() => remove(i)} aria-label="Remove" className="iconbtn text-danger">✕</button>
         </div>
       ))}
       <button
         type="button"
         onClick={add}
-        className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs hover:bg-muted"
+        className="inline-flex h-8 items-center justify-center rounded-md border px-3 text-xs hover:bg-panel-alt"
       >
         + Add category
       </button>
@@ -534,10 +534,10 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

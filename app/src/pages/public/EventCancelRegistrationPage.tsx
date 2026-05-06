@@ -50,12 +50,12 @@ export function EventCancelRegistrationPage() {
       <h1 className="text-2xl font-bold sm:text-3xl">Cancel registration</h1>
 
       {stage === "validating" && (
-        <p className="mt-4 text-muted-foreground">Validating link…</p>
+        <p className="mt-4 text-muted">Validating link…</p>
       )}
 
       {(stage === "invalid" || stage === "error") && (
         <>
-          <div className="mt-4 border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <div className="mt-4 border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
             <ul className="list-inside list-disc">
               {errors.map((er, i) => <li key={i}>{er}</li>)}
             </ul>
@@ -69,7 +69,7 @@ export function EventCancelRegistrationPage() {
 
       {(stage === "valid" || stage === "cancelling") && (
         <>
-          <p className="mt-4 text-sm text-muted-foreground">
+          <p className="mt-4 text-sm text-muted">
             Please confirm you'd like to cancel your registration. You may add an optional
             note below to let the organisers know why.
           </p>
@@ -86,12 +86,12 @@ export function EventCancelRegistrationPage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <button
               type="button" onClick={onConfirm} disabled={stage === "cancelling"}
-              className="inline-flex h-11 items-center justify-center bg-destructive px-6 text-sm font-semibold text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center bg-danger px-6 text-sm font-semibold text-danger-foreground hover:bg-danger/90 disabled:opacity-50"
             >
               {stage === "cancelling" ? "Cancelling…" : "Confirm cancellation"}
             </button>
             <Link to={slug ? `/events/${slug}` : "/events"}
-              className="inline-flex h-11 items-center justify-center border bg-card px-6 text-sm hover:bg-muted">
+              className="inline-flex h-11 items-center justify-center border bg-card px-6 text-sm hover:bg-panel-alt">
               Keep registration
             </Link>
           </div>

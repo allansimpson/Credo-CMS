@@ -47,9 +47,9 @@ export function SearchPage() {
         </button>
       </form>
 
-      {loading && <p className="mt-6 text-muted-foreground">Searching…</p>}
+      {loading && <p className="mt-6 text-muted">Searching…</p>}
       {!loading && results && results.items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">No results.</p>
+        <p className="mt-6 text-muted">No results.</p>
       )}
 
       {results && results.items.length > 0 && (
@@ -58,10 +58,10 @@ export function SearchPage() {
             <li key={`${r.entityType}-${r.entityId}`} className="rounded-lg border bg-card p-4">
               <Link to={r.url} className="block">
                 <h2 className="font-semibold hover:underline">{r.title}</h2>
-                <p className="mt-1 text-xs uppercase text-muted-foreground">
+                <p className="mt-1 text-xs uppercase text-muted">
                   {r.entityType}{r.isMembersOnly && " · Members only"}
                 </p>
-                {r.snippet && <p className="mt-2 text-sm text-muted-foreground">{r.snippet}</p>}
+                {r.snippet && <p className="mt-2 text-sm text-muted">{r.snippet}</p>}
               </Link>
             </li>
           ))}
@@ -72,15 +72,15 @@ export function SearchPage() {
         <div className="mt-6 flex items-center justify-between text-sm">
           <button type="button" onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-md border bg-card px-3 py-1.5 hover:bg-muted disabled:opacity-50">
+            className="rounded-md border bg-card px-3 py-1.5 hover:bg-panel-alt disabled:opacity-50">
             Previous
           </button>
-          <span className="text-muted-foreground">
+          <span className="text-muted">
             Page {results.page} of {results.totalPages} · {results.totalCount} result{results.totalCount === 1 ? "" : "s"}
           </span>
           <button type="button" onClick={() => setPage((p) => Math.min(results.totalPages, p + 1))}
             disabled={page >= results.totalPages}
-            className="rounded-md border bg-card px-3 py-1.5 hover:bg-muted disabled:opacity-50">
+            className="rounded-md border bg-card px-3 py-1.5 hover:bg-panel-alt disabled:opacity-50">
             Next
           </button>
         </div>

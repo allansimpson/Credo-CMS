@@ -175,14 +175,14 @@ export function EventEditorPage() {
     window.alert("Occurrence skipped. Refresh to see it removed from the public calendar.");
   };
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="text-muted">Loading…</p>;
 
   return (
     <form onSubmit={submit} className="space-y-6">
       <h1 className="text-2xl font-bold">{isNew ? "New event" : "Edit event"}</h1>
 
       {errors.length > 0 && (
-        <div role="alert" className="border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-disc pl-5">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
@@ -319,7 +319,7 @@ export function EventEditorPage() {
       {!isNew && original?.recurrenceRule && (
         <fieldset className="space-y-3 border bg-card p-4">
           <legend className="px-2 text-sm font-semibold">Skip an occurrence</legend>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted">
             Use this to cancel a single date in the series. The skip is rendered as an EXDATE in iCal feeds.
           </p>
           <div className="flex items-end gap-2">
@@ -331,7 +331,7 @@ export function EventEditorPage() {
                 const el = document.getElementById("skip-date") as HTMLInputElement | null;
                 if (el?.value) skipOccurrence(el.value);
               }}
-              className="inline-flex h-10 items-center justify-center border border-destructive/30 bg-card px-4 text-sm text-destructive hover:bg-destructive/10">
+              className="inline-flex h-10 items-center justify-center border border-danger/30 bg-card px-4 text-sm text-danger hover:bg-danger/10">
               Skip
             </button>
           </div>
@@ -340,7 +340,7 @@ export function EventEditorPage() {
 
       <fieldset className="space-y-3 border bg-card p-4">
         <legend className="px-2 text-sm font-semibold">Visibility</legend>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-muted">
           Required before publishing. No default — pick deliberately.
         </p>
         <div className="space-y-1">
@@ -358,7 +358,7 @@ export function EventEditorPage() {
         <legend className="px-2 text-sm font-semibold">Registration</legend>
         {!isNew && (
           <Link to={`/admin/events/${id}/registrations`}
-            className="inline-flex h-8 items-center justify-center border bg-card px-3 text-xs hover:bg-muted">
+            className="inline-flex h-8 items-center justify-center border bg-card px-3 text-xs hover:bg-panel-alt">
             Manage registrations & fields →
           </Link>
         )}
@@ -432,7 +432,7 @@ export function EventEditorPage() {
         </button>
         {!isNew && original && !original.isDeleted && (
           <button type="button" onClick={softDelete}
-            className="inline-flex h-10 items-center justify-center border border-destructive/30 bg-card px-4 text-sm text-destructive hover:bg-destructive/10">
+            className="inline-flex h-10 items-center justify-center border border-danger/30 bg-card px-4 text-sm text-danger hover:bg-danger/10">
             Delete
           </button>
         )}
@@ -460,10 +460,10 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

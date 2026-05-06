@@ -110,7 +110,7 @@ export function ResponsiveTable<TRow>({
     <div className="space-y-4">
       {searchable && (
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
             type="search"
             value={search}
@@ -119,7 +119,7 @@ export function ResponsiveTable<TRow>({
               setPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-10 w-full rounded-md border border-input bg-background pl-10 pr-3 text-sm placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
       )}
@@ -127,7 +127,7 @@ export function ResponsiveTable<TRow>({
       {breakpoint === "mobile" ? (
         <div className="space-y-3">
           {pageRows.length === 0 ? (
-            <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+            <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted">
               {emptyMessage}
             </div>
           ) : (
@@ -138,13 +138,13 @@ export function ResponsiveTable<TRow>({
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={cn(
                   "block w-full rounded-lg border bg-card p-4 text-left shadow-sm",
-                  onRowClick && "cursor-pointer hover:bg-muted",
+                  onRowClick && "cursor-pointer hover:bg-panel-alt",
                 )}
               >
                 <dl className="grid grid-cols-1 gap-2">
                   {mobileColumns.map((col) => (
                     <div key={col.id}>
-                      <dt className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <dt className="text-xs uppercase tracking-wide text-muted">
                         {col.header}
                       </dt>
                       <dd className="mt-0.5 text-sm">{col.accessor(row)}</dd>
@@ -158,13 +158,13 @@ export function ResponsiveTable<TRow>({
       ) : (
         <div className="overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
+            <thead className="bg-panel-alt/50">
               <tr>
                 {columns.map((col) => (
                   <th
                     key={col.id}
                     className={cn(
-                      "px-4 py-2 text-left font-medium text-muted-foreground",
+                      "px-4 py-2 text-left font-medium text-muted",
                       col.className,
                     )}
                   >
@@ -183,7 +183,7 @@ export function ResponsiveTable<TRow>({
             <tbody>
               {pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="p-6 text-center text-muted-foreground">
+                  <td colSpan={columns.length} className="p-6 text-center text-muted">
                     {emptyMessage}
                   </td>
                 </tr>
@@ -193,7 +193,7 @@ export function ResponsiveTable<TRow>({
                     key={rowKey(row)}
                     className={cn(
                       "border-t",
-                      onRowClick && "cursor-pointer hover:bg-muted",
+                      onRowClick && "cursor-pointer hover:bg-panel-alt",
                     )}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                   >
@@ -211,7 +211,7 @@ export function ResponsiveTable<TRow>({
       )}
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-sm text-muted">
           <span>
             Page {safePage} of {totalPages} · {sorted.length} item{sorted.length === 1 ? "" : "s"}
           </span>

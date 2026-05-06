@@ -122,13 +122,13 @@ export function ServiceTimesPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div>
-          {loading && <p className="text-muted-foreground">Loading…</p>}
+          {loading && <p className="text-muted">Loading…</p>}
           {!loading && items.length === 0 && (
-            <p className="text-muted-foreground">No service times yet. Add one to get started.</p>
+            <p className="text-muted">No service times yet. Add one to get started.</p>
           )}
           {grouped.filter((g) => g.items.length > 0).map((g) => (
             <div key={g.day.value} className="mb-6">
-              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{g.day.label}</h2>
+              <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{g.day.label}</h2>
               <ul className="divide-y rounded-lg border bg-card">
                 {g.items.map((s) => (
                   <li key={s.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-4">
@@ -140,7 +140,7 @@ export function ServiceTimesPage() {
                       >
                         {s.name}
                       </button>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted">
                         {s.startTime.slice(0, 5)}{s.endTime && ` – ${s.endTime.slice(0, 5)}`}
                         {s.location && ` · ${s.location}`}
                         {!s.isActive && " · Inactive"}
@@ -154,7 +154,7 @@ export function ServiceTimesPage() {
                       </button>
                     ) : (
                       <button type="button" onClick={() => softDelete(s)}
-                        className="text-xs text-destructive hover:underline">
+                        className="text-xs text-danger hover:underline">
                         Delete
                       </button>
                     )}
@@ -169,7 +169,7 @@ export function ServiceTimesPage() {
           <h2 className="text-lg font-semibold">{editing ? "Edit service time" : "New service time"}</h2>
 
           {errors.length > 0 && (
-            <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
+            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-2 text-xs text-danger">
               <ul className="list-disc pl-4">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
             </div>
           )}
@@ -217,7 +217,7 @@ export function ServiceTimesPage() {
             </button>
             {editing && (
               <button type="button" onClick={startNew}
-                className="inline-flex h-10 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-muted">
+                className="inline-flex h-10 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-panel-alt">
                 Cancel
               </button>
             )}
@@ -241,7 +241,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
     </label>

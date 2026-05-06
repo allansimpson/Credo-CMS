@@ -28,7 +28,7 @@ export function DocumentDetailPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>;
   if (notFound || !item) return <NotFoundPage />;
 
   const fileUrl = publicDocumentFileUrl(item.id);
@@ -38,8 +38,8 @@ export function DocumentDetailPage() {
     <div className="mx-auto max-w-4xl px-4 py-8">
       <SeoTags title={item.title} description={item.description ?? undefined} />
       <h1 className="text-2xl font-bold sm:text-3xl">{item.title}</h1>
-      {item.description && <p className="mt-2 text-muted-foreground">{item.description}</p>}
-      <p className="mt-1 text-xs text-muted-foreground">
+      {item.description && <p className="mt-2 text-muted">{item.description}</p>}
+      <p className="mt-1 text-xs text-muted">
         {item.category} · {Math.round(item.sizeBytes / 1024)} KB
       </p>
 

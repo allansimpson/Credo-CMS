@@ -47,7 +47,7 @@ export function SessionExpiryWarning() {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4">
       <div className="w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
         <h2 className="text-lg font-semibold">Your session is about to expire</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted">
           Your session will expire in 5 minutes. Continue to stay signed in.
         </p>
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

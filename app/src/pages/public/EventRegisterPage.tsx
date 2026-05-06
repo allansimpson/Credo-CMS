@@ -63,7 +63,7 @@ export function EventRegisterPage() {
     [fields]
   );
 
-  if (loading) return <p className="mx-auto max-w-2xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>;
   if (notFound || !event) return <NotFoundPage />;
 
   const canRegister = event.registrationMode > 0
@@ -75,7 +75,7 @@ export function EventRegisterPage() {
       <article className="mx-auto max-w-2xl px-4 py-8">
         <SeoTags title={`Register · ${event.title}`} description={event.title} />
         <h1 className="text-2xl font-bold">{event.title}</h1>
-        <p className="mt-4 text-muted-foreground">Registration is not currently open for this event.</p>
+        <p className="mt-4 text-muted">Registration is not currently open for this event.</p>
         <Link to={`/events/${event.slug}`} className="mt-4 inline-block text-sm text-primary hover:underline">
           ← Back to event
         </Link>
@@ -90,7 +90,7 @@ export function EventRegisterPage() {
         <h1 className="text-2xl font-bold sm:text-3xl">
           {result.registration.status === 1 ? "You're on the waitlist" : "You're registered!"}
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted">
           A confirmation has been sent to <strong>{result.registration.submitterEmail}</strong>.
         </p>
 
@@ -103,9 +103,9 @@ export function EventRegisterPage() {
         )}
 
         {result.cancelToken && (
-          <div className="mt-6 border bg-muted/40 p-4 text-sm">
+          <div className="mt-6 border bg-panel-alt/40 p-4 text-sm">
             <p className="font-semibold">Need to cancel?</p>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-muted">
               Use this link any time before the event:
             </p>
             <p className="mt-2 break-all">
@@ -122,7 +122,7 @@ export function EventRegisterPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             to={`/events/${event.slug}`}
-            className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted"
+            className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt"
           >
             Back to event
           </Link>
@@ -175,13 +175,13 @@ export function EventRegisterPage() {
         ← Back to event
       </Link>
       <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{event.title}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-sm text-muted">
         {new Date(event.startsAt).toLocaleString()}
         {event.location && ` · ${event.location}`}
       </p>
 
       {errors.length > 0 && (
-        <div className="mt-4 border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+        <div className="mt-4 border border-danger/40 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-inside list-disc">
             {errors.map((er, i) => <li key={i}>{er}</li>)}
           </ul>
@@ -261,10 +261,10 @@ function FieldRow({
   return (
     <label className="block">
       <span className="text-sm font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       <div className="mt-1">{children}</div>
-      {helpText && <p className="mt-1 text-xs text-muted-foreground">{helpText}</p>}
+      {helpText && <p className="mt-1 text-xs text-muted">{helpText}</p>}
     </label>
   );
 }
@@ -350,7 +350,7 @@ function DynamicField({
       return (
         <fieldset className="block">
           <legend className="text-sm font-medium">
-            {field.label}{field.required && <span className="text-destructive"> *</span>}
+            {field.label}{field.required && <span className="text-danger"> *</span>}
           </legend>
           <div className="mt-2 space-y-1">
             {(field.options ?? []).map((opt) => (
@@ -367,7 +367,7 @@ function DynamicField({
               </label>
             ))}
           </div>
-          {field.helpText && <p className="mt-1 text-xs text-muted-foreground">{field.helpText}</p>}
+          {field.helpText && <p className="mt-1 text-xs text-muted">{field.helpText}</p>}
         </fieldset>
       );
     }
@@ -375,7 +375,7 @@ function DynamicField({
       return (
         <fieldset className="block">
           <legend className="text-sm font-medium">
-            {field.label}{field.required && <span className="text-destructive"> *</span>}
+            {field.label}{field.required && <span className="text-danger"> *</span>}
           </legend>
           <div className="mt-2 flex gap-4 text-sm">
             <label className="flex items-center gap-2">
@@ -391,7 +391,7 @@ function DynamicField({
               No
             </label>
           </div>
-          {field.helpText && <p className="mt-1 text-xs text-muted-foreground">{field.helpText}</p>}
+          {field.helpText && <p className="mt-1 text-xs text-muted">{field.helpText}</p>}
         </fieldset>
       );
     default:

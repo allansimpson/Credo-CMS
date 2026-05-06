@@ -100,9 +100,9 @@ export function LeadersPage() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_400px]">
         <div>
-          {loading && <p className="text-muted-foreground">Loading…</p>}
+          {loading && <p className="text-muted">Loading…</p>}
           {!loading && items.length === 0 && (
-            <p className="text-muted-foreground">No leaders yet.</p>
+            <p className="text-muted">No leaders yet.</p>
           )}
           {grouped.filter((g) => g.items.length > 0).map((g) => (
             <CategoryBlock key={g.category} title={g.category}
@@ -118,7 +118,7 @@ export function LeadersPage() {
           <h2 className="text-lg font-semibold">{editing ? "Edit leader" : "New leader"}</h2>
 
           {errors.length > 0 && (
-            <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
+            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-2 text-xs text-danger">
               <ul className="list-disc pl-4">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
             </div>
           )}
@@ -174,7 +174,7 @@ export function LeadersPage() {
             </button>
             {editing && (
               <button type="button" onClick={startNew}
-                className="inline-flex h-10 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-muted">
+                className="inline-flex h-10 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-panel-alt">
                 Cancel
               </button>
             )}
@@ -199,7 +199,7 @@ function CategoryBlock({ title, items, onEdit, onDelete }: {
 }) {
   return (
     <div className="mb-6">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+      <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{title}</h2>
       <ul className="grid gap-3 sm:grid-cols-2">
         {items.map((l) => (
           <li key={l.id} className="flex gap-3 rounded-lg border bg-card p-3">
@@ -210,17 +210,17 @@ function CategoryBlock({ title, items, onEdit, onDelete }: {
                   className="h-16 w-16 rounded-full object-cover" />
               </picture>
             ) : (
-              <div className="h-16 w-16 rounded-full bg-muted" />
+              <div className="h-16 w-16 rounded-full bg-panel-alt" />
             )}
             <div className="flex-1">
               <button type="button" onClick={() => onEdit(l)}
                 className="text-left font-semibold hover:underline">
                 {l.fullName}
               </button>
-              {l.title && <p className="text-xs text-muted-foreground">{l.title}</p>}
+              {l.title && <p className="text-xs text-muted">{l.title}</p>}
               {onDelete && (
                 <button type="button" onClick={() => onDelete(l)}
-                  className="mt-1 text-xs text-destructive hover:underline">
+                  className="mt-1 text-xs text-danger hover:underline">
                   Delete
                 </button>
               )}
@@ -236,7 +236,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
     </label>

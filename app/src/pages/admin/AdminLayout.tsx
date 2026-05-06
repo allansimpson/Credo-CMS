@@ -14,10 +14,10 @@ import {
   Newspaper,
   Clock,
   UserCircle2,
-  FilePlus2,
+  File,
   Megaphone,
-  Video,
-  CalendarDays,
+  Mic,
+  Calendar,
 } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,11 +40,11 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/news", label: "News", icon: Newspaper },
   { to: "/admin/service-times", label: "Service Times", icon: Clock },
   { to: "/admin/leaders", label: "Leaders", icon: UserCircle2 },
-  { to: "/admin/documents", label: "Documents", icon: FilePlus2 },
+  { to: "/admin/documents", label: "Documents", icon: File },
   { to: "/admin/announcement", label: "Announcement", icon: Megaphone },
-  { to: "/admin/sermons", label: "Sermons", icon: Video },
-  { to: "/admin/sermon-series", label: "Sermon Series", icon: Video },
-  { to: "/admin/events", label: "Events", icon: CalendarDays },
+  { to: "/admin/sermons", label: "Sermons", icon: Mic },
+  { to: "/admin/sermon-series", label: "Sermon Series", icon: Mic },
+  { to: "/admin/events", label: "Events", icon: Calendar },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },
@@ -85,7 +85,7 @@ export function AdminLayout() {
               )}
               <div className="leading-tight">
                 <div className="text-sm font-semibold">{settings?.churchName ?? "Credo CMS"}</div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Credo CMS — Admin</div>
+                <div className="text-[11px] uppercase tracking-wide text-muted">Credo CMS — Admin</div>
               </div>
             </Link>
           </div>
@@ -94,7 +94,7 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+              className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm hover:bg-panel-alt"
             >
               <span aria-hidden className="grid h-7 w-7 place-items-center rounded-full bg-accent text-accent-foreground text-xs font-bold">
                 {(user?.firstName ?? "?").slice(0, 1).toUpperCase()}
@@ -109,14 +109,14 @@ export function AdminLayout() {
               >
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-panel-alt"
                   onClick={() => setProfileOpen(false)}
                 >
                   Profile
                 </Link>
                 <Link
                   to="/"
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-panel-alt"
                   onClick={() => setProfileOpen(false)}
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -124,7 +124,7 @@ export function AdminLayout() {
                 </Link>
                 <Link
                   to="/docs"
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-panel-alt"
                   onClick={() => setProfileOpen(false)}
                 >
                   <HelpCircle className="h-4 w-4" />
@@ -133,7 +133,7 @@ export function AdminLayout() {
                 <button
                   type="button"
                   onClick={() => { setProfileOpen(false); logout(); }}
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive hover:bg-muted"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-danger hover:bg-panel-alt"
                 >
                   <LogOut className="h-4 w-4" />
                   Log out
@@ -195,7 +195,7 @@ function SidebarNav({
                 className={({ isActive }) =>
                   cn(
                     "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
-                    isActive ? "bg-accent text-accent-foreground" : "hover:bg-muted",
+                    isActive ? "bg-accent text-accent-foreground" : "hover:bg-panel-alt",
                   )
                 }
               >

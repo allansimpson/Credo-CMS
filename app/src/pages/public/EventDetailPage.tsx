@@ -30,7 +30,7 @@ export function EventDetailPage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>;
   if (notFound || !event) return <NotFoundPage />;
 
   const orgName = settings?.churchName ?? null;
@@ -70,7 +70,7 @@ export function EventDetailPage() {
       )}
 
       <h1 className="text-3xl font-bold sm:text-4xl">{event.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm text-muted">
         {new Date(event.startsAt).toLocaleString()}
         {event.endsAt && ` – ${new Date(event.endsAt).toLocaleString()}`}
         {event.location && ` · ${event.location}`}
@@ -80,7 +80,7 @@ export function EventDetailPage() {
       {event.recurrenceRule && event.nextOccurrences.length > 1 && (
         <section className="mt-6 border bg-card p-4">
           <h2 className="text-sm font-semibold">Upcoming occurrences</h2>
-          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+          <ul className="mt-2 space-y-1 text-sm text-muted">
             {event.nextOccurrences.slice(0, 8).map((d, i) => (
               <li key={i}>{new Date(d).toLocaleString()}</li>
             ))}

@@ -18,7 +18,7 @@ export function NotFoundPage() {
         <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           Page not found
         </h1>
-        <p className="mt-3 text-base text-muted-foreground">
+        <p className="mt-3 text-base text-muted">
           The page you were looking for doesn't exist on the {churchName} site.
         </p>
         <Link

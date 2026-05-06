@@ -66,7 +66,7 @@ export function PublicNavBar() {
             type="button"
             aria-label="Search"
             onClick={() => setSearchOpen((v) => !v)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border bg-background hover:bg-muted"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border bg-background hover:bg-panel-alt"
           >
             <Search className="h-4 w-4" />
           </button>

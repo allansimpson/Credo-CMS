@@ -64,7 +64,7 @@ export function HomePage() {
               <li key={`${s.dayOfWeek}-${i}`} className="rounded-lg border bg-card p-4">
                 <p className="text-sm font-semibold">{DAY_LABELS[s.dayOfWeek]} · {s.startTime.slice(0, 5)}</p>
                 <p className="mt-1 font-semibold">{s.name}</p>
-                {s.location && <p className="text-sm text-muted-foreground">{s.location}</p>}
+                {s.location && <p className="text-sm text-muted">{s.location}</p>}
               </li>
             ))}
           </ul>
@@ -89,11 +89,11 @@ export function HomePage() {
               <li key={n.id} className="rounded-lg border bg-card p-4">
                 <Link to={`/news/${n.slug}`} className="block">
                   <h3 className="font-semibold hover:underline">{n.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted">
                     {new Date(n.publishedAt).toLocaleDateString()}
                     {n.isMembersOnly && " · Members only"}
                   </p>
-                  {n.excerpt && <p className="mt-2 text-sm text-muted-foreground">{n.excerpt}</p>}
+                  {n.excerpt && <p className="mt-2 text-sm text-muted">{n.excerpt}</p>}
                 </Link>
               </li>
             ))}
@@ -108,7 +108,7 @@ function PlaceholderCard({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-lg border bg-card p-6">
       <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+      <p className="mt-2 text-sm text-muted">{body}</p>
     </div>
   );
 }

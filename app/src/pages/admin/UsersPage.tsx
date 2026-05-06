@@ -102,14 +102,14 @@ export function UsersPage() {
       </div>
 
       {error && (
-        <div role="alert" className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="mt-4 rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </div>
       )}
 
       <div className="mt-6">
         {loading ? (
-          <p className="text-muted-foreground">Loading…</p>
+          <p className="text-muted">Loading…</p>
         ) : (
           <ResponsiveTable
             data={users}
@@ -166,7 +166,7 @@ function CreateUserDialog({
         <h2 className="text-lg font-semibold">Create user</h2>
 
         {errors.length > 0 && (
-          <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
             <ul className="list-disc pl-5">
               {errors.map((err) => <li key={err}>{err}</li>)}
             </ul>

@@ -127,14 +127,14 @@ export function NewsEditorPage() {
     setForm(fromDetail(fresh));
   };
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="text-muted">Loading…</p>;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <h1 className="text-2xl font-bold">{isNew ? "New news item" : "Edit news item"}</h1>
 
       {errors.length > 0 && (
-        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-disc pl-5">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
@@ -246,7 +246,7 @@ export function NewsEditorPage() {
         </button>
         {!isNew && original && !original.isDeleted && (
           <button type="button" onClick={handleSoftDelete}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-destructive/30 bg-card px-4 text-sm text-destructive hover:bg-destructive/10">
+            className="inline-flex h-10 items-center justify-center rounded-md border border-danger/30 bg-card px-4 text-sm text-danger hover:bg-danger/10">
             Delete
           </button>
         )}
@@ -268,10 +268,10 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
   return (
     <label className="block">
       <span className="mb-1 block text-sm font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

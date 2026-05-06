@@ -99,7 +99,7 @@ export function ImageUpload({
           }
         }}
         className={
-          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-center text-sm transition-colors hover:bg-muted/50 " +
+          "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-background p-4 text-center text-sm transition-colors hover:bg-panel-alt/50 " +
           (uploading ? "opacity-60 cursor-progress " : "") +
           (disabled ? "opacity-50 cursor-not-allowed " : "")
         }
@@ -116,7 +116,7 @@ export function ImageUpload({
             />
           </picture>
         ) : (
-          <div className="text-muted-foreground">
+          <div className="text-muted">
             <p>{uploading ? "Uploading…" : "Click or drop an image here"}</p>
             <p className="mt-1 text-xs">JPEG, PNG, or WebP</p>
           </div>
@@ -151,7 +151,7 @@ export function ImageUpload({
               type="button"
               onClick={handleClear}
               disabled={uploading || disabled}
-              className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-muted disabled:opacity-50"
+              className="inline-flex h-9 items-center justify-center rounded-md border bg-card px-3 text-sm hover:bg-panel-alt disabled:opacity-50"
             >
               Remove
             </button>
@@ -160,17 +160,17 @@ export function ImageUpload({
       )}
 
       {meta && (
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-muted">
           {meta.width}×{meta.height}px • {Math.round(meta.sizeBytes / 1024)} KB
         </p>
       )}
 
       {hint && !error && (
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        <p className="mt-1 text-xs text-muted">{hint}</p>
       )}
 
       {error && (
-        <p role="alert" className="mt-1 text-xs text-destructive">{error}</p>
+        <p role="alert" className="mt-1 text-xs text-danger">{error}</p>
       )}
     </div>
   );

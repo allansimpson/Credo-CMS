@@ -39,7 +39,7 @@ export function SermonSeriesListPage() {
               "h-10 px-4 text-sm transition-colors " +
               (tab === t
                 ? "border-b-2 border-accent text-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground")
+                : "text-muted hover:text-foreground")
             }>
             {t === "active" ? "Active" : "Deleted"}
           </button>
@@ -47,9 +47,9 @@ export function SermonSeriesListPage() {
       </div>
 
       <div className="mt-4">
-        {loading && <p className="text-muted-foreground">Loading…</p>}
+        {loading && <p className="text-muted">Loading…</p>}
         {!loading && data && data.items.length === 0 && (
-          <p className="text-muted-foreground">No sermon series.</p>
+          <p className="text-muted">No sermon series.</p>
         )}
         {!loading && data && data.items.length > 0 && (
           <ul className="divide-y border bg-card">
@@ -62,7 +62,7 @@ export function SermonSeriesListPage() {
                       className="h-16 w-28 object-cover" />
                   </picture>
                 ) : (
-                  <div className="h-16 w-28 bg-muted" />
+                  <div className="h-16 w-28 bg-panel-alt" />
                 )}
                 <div className="flex-1">
                   <button type="button"
@@ -70,8 +70,8 @@ export function SermonSeriesListPage() {
                     className="text-left font-semibold hover:underline">
                     {s.title}
                   </button>
-                  <p className="text-xs text-muted-foreground">/sermons/series/{s.slug}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-xs text-muted">/sermons/series/{s.slug}</p>
+                  <p className="mt-1 text-xs text-muted">
                     {s.startDate}{s.endDate ? ` – ${s.endDate}` : " – ongoing"}
                   </p>
                 </div>

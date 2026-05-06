@@ -45,7 +45,7 @@ export function TipTapFullEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none px-4 py-3 [&_p]:my-2 [&_h2]:mt-6 [&_h3]:mt-4 [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:italic [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded",
+          "prose prose-sm max-w-none focus:outline-none px-4 py-3 [&_p]:my-2 [&_h2]:mt-6 [&_h3]:mt-4 [&_blockquote]:border-l-4 [&_blockquote]:pl-4 [&_blockquote]:italic [&_pre]:bg-panel-alt [&_pre]:p-2 [&_pre]:rounded",
         "aria-label": ariaLabel ?? "Rich text editor",
       },
     },
@@ -95,7 +95,7 @@ function Toolbar({ editor }: { editor: Editor }) {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 px-2 py-1 text-sm">
+    <div className="flex flex-wrap items-center gap-1 border-b bg-panel-alt/30 px-2 py-1 text-sm">
       <Btn label="B" pressed={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()} />
       <Btn label="I" italic pressed={editor.isActive("italic")}
@@ -155,8 +155,8 @@ function Btn({ label, pressed, onClick, italic, strike }: BtnProps) {
       onClick={onClick}
       aria-pressed={pressed ?? false}
       className={
-        "h-7 rounded px-2 text-xs hover:bg-muted " +
-        (pressed ? "bg-muted font-semibold " : "") +
+        "h-7 rounded px-2 text-xs hover:bg-panel-alt " +
+        (pressed ? "bg-panel-alt font-semibold " : "") +
         (italic ? "italic " : "") +
         (strike ? "line-through " : "")
       }

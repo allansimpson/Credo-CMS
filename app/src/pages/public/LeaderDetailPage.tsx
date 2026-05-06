@@ -28,7 +28,7 @@ export function LeaderDetailPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>;
   if (notFound || !item) return <NotFoundPage />;
 
   const orgName = settings?.churchName ?? null;
@@ -59,12 +59,12 @@ export function LeaderDetailPage() {
               className="h-40 w-40 rounded-full object-cover" />
           </picture>
         ) : (
-          <div className="h-40 w-40 rounded-full bg-muted" />
+          <div className="h-40 w-40 rounded-full bg-panel-alt" />
         )}
         <div>
           <h1 className="text-3xl font-bold sm:text-4xl">{item.fullName}</h1>
-          {item.title && <p className="mt-1 text-lg text-muted-foreground">{item.title}</p>}
-          <p className="mt-1 text-sm text-muted-foreground">{item.category}</p>
+          {item.title && <p className="mt-1 text-lg text-muted">{item.title}</p>}
+          <p className="mt-1 text-sm text-muted">{item.category}</p>
         </div>
       </div>
 

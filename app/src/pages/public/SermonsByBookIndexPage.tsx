@@ -23,7 +23,7 @@ export function SermonsByBookIndexPage() {
       <SeoTags title="Sermons by Book" description="Browse sermons by book of the Bible." />
       <h1 className="text-3xl font-bold sm:text-4xl">Sermons by Book</h1>
 
-      {loading && <p className="mt-6 text-muted-foreground">Loading…</p>}
+      {loading && <p className="mt-6 text-muted">Loading…</p>}
 
       <div className="mt-6 grid gap-8 sm:grid-cols-2">
         <BookList title="Old Testament" books={ot} />
@@ -46,10 +46,10 @@ function BookList({ title, books }: { title: string; books: BookCount[] }) {
                 <Link to={`/sermons/by-book/${b.slug}`}
                   className="flex items-center justify-between py-1 text-sm hover:text-primary">
                   <span>{b.name}</span>
-                  <span className="text-xs text-muted-foreground">{b.count}</span>
+                  <span className="text-xs text-muted">{b.count}</span>
                 </Link>
               ) : (
-                <div className="flex items-center justify-between py-1 text-sm text-muted-foreground/60">
+                <div className="flex items-center justify-between py-1 text-sm text-muted/60">
                   <span>{b.name}</span>
                   <span className="text-xs">—</span>
                 </div>

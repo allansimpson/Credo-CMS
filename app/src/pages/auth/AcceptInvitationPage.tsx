@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { ChurchThemeLayout } from "@/themes/ChurchThemeLayout";
+import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { authApi } from "@/lib/api/auth";
 
 export function AcceptInvitationPage() {
@@ -32,16 +32,16 @@ export function AcceptInvitationPage() {
   }
 
   return (
-    <ChurchThemeLayout>
+    <SystemThemeLayout>
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
         <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-6 shadow-sm">
           <h1 className="text-xl font-semibold">Welcome — set your password</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted">
             You're accepting an invitation for <strong>{email || "your email"}</strong>.
           </p>
 
           {errors.length > 0 && (
-            <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
               <ul className="list-disc pl-5">
                 {errors.map((err) => <li key={err}>{err}</li>)}
               </ul>
@@ -60,7 +60,7 @@ export function AcceptInvitationPage() {
               onChange={(e) => setNewPassword(e.target.value)}
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-muted">
               Minimum 12 characters with uppercase, lowercase, digit, and a non-alphanumeric character.
             </p>
           </div>
@@ -78,6 +78,6 @@ export function AcceptInvitationPage() {
           </div>
         </form>
       </main>
-    </ChurchThemeLayout>
+    </SystemThemeLayout>
   );
 }

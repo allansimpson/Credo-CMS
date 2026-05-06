@@ -62,7 +62,7 @@ export function ScriptureReferenceInput({
           />
         </label>
         <label className="block text-sm">
-          <span className="mb-1 block font-medium">Verse <span className="text-muted-foreground">(optional)</span></span>
+          <span className="mb-1 block font-medium">Verse <span className="text-muted">(optional)</span></span>
           <input
             type="number" min={1}
             value={value.verseStart ?? ""}
@@ -96,7 +96,7 @@ export function ScriptureReferenceInput({
             />
           </label>
           <label className="block text-sm">
-            <span className="mb-1 block font-medium">End verse <span className="text-muted-foreground">(optional)</span></span>
+            <span className="mb-1 block font-medium">End verse <span className="text-muted">(optional)</span></span>
             <input
               type="number" min={1}
               value={value.verseEnd ?? ""}
@@ -108,15 +108,15 @@ export function ScriptureReferenceInput({
       )}
 
       <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{formatScriptureReference(value)}</span>
+        <span className="text-muted">{formatScriptureReference(value)}</span>
         {onRemove && (
           <button type="button" onClick={onRemove}
-            className="text-destructive hover:underline">Remove</button>
+            className="text-danger hover:underline">Remove</button>
         )}
       </div>
 
       {validation && (
-        <p role="alert" className="text-xs text-destructive">{validation}</p>
+        <p role="alert" className="text-xs text-danger">{validation}</p>
       )}
     </div>
   );

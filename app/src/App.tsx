@@ -152,7 +152,7 @@ export default function App() {
             <Route
               path="service-times"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <PublicServiceTimesPage />
                 </Suspense>
               }
@@ -165,7 +165,7 @@ export default function App() {
             <Route
               path="news"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <PublicNewsListPage />
                 </Suspense>
               }
@@ -173,7 +173,7 @@ export default function App() {
             <Route
               path="news/:slug"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <NewsDetailPage />
                 </Suspense>
               }
@@ -183,7 +183,7 @@ export default function App() {
             <Route
               path="leaders"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
                   <PublicLeadersPage />
                 </Suspense>
               }
@@ -191,7 +191,7 @@ export default function App() {
             <Route
               path="leaders/:id"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <LeaderDetailPage />
                 </Suspense>
               }
@@ -201,7 +201,7 @@ export default function App() {
             <Route
               path="documents"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <PublicDocumentsListPage />
                 </Suspense>
               }
@@ -209,7 +209,7 @@ export default function App() {
             <Route
               path="documents/:id"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted">Loading…</p>}>
                   <DocumentDetailPage />
                 </Suspense>
               }
@@ -219,7 +219,7 @@ export default function App() {
             <Route
               path="sermons"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-6xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-6xl p-8 text-muted">Loading…</p>}>
                   <SermonsArchivePage />
                 </Suspense>
               }
@@ -227,7 +227,7 @@ export default function App() {
             <Route
               path="sermons/series"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
                   <SermonSeriesPublicListPage />
                 </Suspense>
               }
@@ -235,7 +235,7 @@ export default function App() {
             <Route
               path="sermons/series/:slug"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <SermonSeriesPublicDetailPage />
                 </Suspense>
               }
@@ -243,7 +243,7 @@ export default function App() {
             <Route
               path="sermons/by-book"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
                   <SermonsByBookIndexPage />
                 </Suspense>
               }
@@ -251,7 +251,7 @@ export default function App() {
             <Route
               path="sermons/by-book/:bookSlug"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
                   <SermonsByBookPage />
                 </Suspense>
               }
@@ -259,7 +259,7 @@ export default function App() {
             <Route
               path="sermons/:slug"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted">Loading…</p>}>
                   <SermonDetailPage />
                 </Suspense>
               }
@@ -269,7 +269,7 @@ export default function App() {
             <Route
               path="events"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
                   <PublicEventsListPage />
                 </Suspense>
               }
@@ -277,7 +277,7 @@ export default function App() {
             <Route
               path="events/:slug"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <PublicEventDetailPage />
                 </Suspense>
               }
@@ -285,7 +285,7 @@ export default function App() {
             <Route
               path="events/:slug/register"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>}>
                   <EventRegisterPage />
                 </Suspense>
               }
@@ -293,7 +293,7 @@ export default function App() {
             <Route
               path="calendar"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-6xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-6xl p-8 text-muted">Loading…</p>}>
                   <CalendarPage />
                 </Suspense>
               }
@@ -301,7 +301,7 @@ export default function App() {
             <Route
               path="events/:slug/register/cancel"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-xl p-8 text-muted">Loading…</p>}>
                   <EventCancelRegistrationPage />
                 </Suspense>
               }
@@ -311,7 +311,7 @@ export default function App() {
             <Route
               path="search"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <SearchPage />
                 </Suspense>
               }
@@ -324,7 +324,7 @@ export default function App() {
             <Route
               path=":slug"
               element={
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <DynamicPagePage />
                 </Suspense>
               }
@@ -350,7 +350,7 @@ export default function App() {
             path="profile/calendar-feed"
             element={
               <ProtectedRoute mode="auth">
-                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>}>
                   <ProfileCalendarFeedPage />
                 </Suspense>
               </ProtectedRoute>
@@ -360,7 +360,7 @@ export default function App() {
             path="profile/registrations"
             element={
               <ProtectedRoute mode="auth">
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
                   <ProfileRegistrationsPage />
                 </Suspense>
               </ProtectedRoute>
@@ -380,7 +380,7 @@ export default function App() {
             <Route
               path="pages"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <PagesListPage />
                 </Suspense>
               }
@@ -388,7 +388,7 @@ export default function App() {
             <Route
               path="pages/:id"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <PageEditorPage />
                 </Suspense>
               }
@@ -396,7 +396,7 @@ export default function App() {
             <Route
               path="news"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <NewsListPage />
                 </Suspense>
               }
@@ -404,7 +404,7 @@ export default function App() {
             <Route
               path="news/:id"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <NewsEditorPage />
                 </Suspense>
               }
@@ -412,7 +412,7 @@ export default function App() {
             <Route
               path="service-times"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <ServiceTimesAdminPage />
                 </Suspense>
               }
@@ -420,7 +420,7 @@ export default function App() {
             <Route
               path="leaders"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <LeadersAdminPage />
                 </Suspense>
               }
@@ -428,7 +428,7 @@ export default function App() {
             <Route
               path="documents"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <DocumentsAdminPage />
                 </Suspense>
               }
@@ -436,7 +436,7 @@ export default function App() {
             <Route
               path="announcement"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <AnnouncementAdminPage />
                 </Suspense>
               }
@@ -444,7 +444,7 @@ export default function App() {
             <Route
               path="sermon-series"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <SermonSeriesAdminListPage />
                 </Suspense>
               }
@@ -452,7 +452,7 @@ export default function App() {
             <Route
               path="sermon-series/:id"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <SermonSeriesAdminEditorPage />
                 </Suspense>
               }
@@ -460,7 +460,7 @@ export default function App() {
             <Route
               path="sermons"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <SermonsListPage />
                 </Suspense>
               }
@@ -468,7 +468,7 @@ export default function App() {
             <Route
               path="sermons/:id"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <SermonEditorPage />
                 </Suspense>
               }
@@ -476,7 +476,7 @@ export default function App() {
             <Route
               path="events"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <EventsListPage />
                 </Suspense>
               }
@@ -484,7 +484,7 @@ export default function App() {
             <Route
               path="events/calendar"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <EventsCalendarOverviewPage />
                 </Suspense>
               }
@@ -492,7 +492,7 @@ export default function App() {
             <Route
               path="events/:id"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <EventEditorPage />
                 </Suspense>
               }
@@ -500,7 +500,7 @@ export default function App() {
             <Route
               path="events/:id/registrations"
               element={
-                <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
                   <EventRegistrationsAdminPage />
                 </Suspense>
               }
@@ -525,7 +525,7 @@ export default function App() {
               path="settings"
               element={
                 <ProtectedRoute mode="admin" roles={["Administrator"]}>
-                  <Suspense fallback={<p className="text-muted-foreground">Loading…</p>}>
+                  <Suspense fallback={<p className="text-muted">Loading…</p>}>
                     <SettingsPage />
                   </Suspense>
                 </ProtectedRoute>

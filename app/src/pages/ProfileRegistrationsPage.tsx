@@ -37,14 +37,14 @@ export function ProfileRegistrationsPage() {
       <Link to="/profile" className="text-sm text-primary hover:underline">← Profile</Link>
       <h1 className="mt-2 text-2xl font-bold">My event registrations</h1>
 
-      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      {error && <p className="mt-4 text-sm text-danger">{error}</p>}
 
       {items === null && !error && (
-        <p className="mt-4 text-muted-foreground">Loading…</p>
+        <p className="mt-4 text-muted">Loading…</p>
       )}
 
       {items && items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">
+        <p className="mt-6 text-muted">
           You don't have any current registrations.
           {" "}<Link to="/events" className="text-primary hover:underline">Browse upcoming events →</Link>
         </p>
@@ -58,14 +58,14 @@ export function ProfileRegistrationsPage() {
                 <Link to={`/events/${r.eventSlug}`} className="font-medium hover:underline">
                   {r.eventTitle}
                 </Link>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted">
                   {new Date(r.eventStartsAt).toLocaleString()}
                   {" · "}{STATUS_LABEL[r.status] ?? "Unknown"}
                 </p>
               </div>
               {r.status !== 2 && (
                 <button type="button" onClick={() => cancel(r)} disabled={busyId === r.id}
-                  className="inline-flex h-9 items-center justify-center border border-destructive/30 bg-card px-3 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50">
+                  className="inline-flex h-9 items-center justify-center border border-danger/30 bg-card px-3 text-xs text-danger hover:bg-danger/10 disabled:opacity-50">
                   {busyId === r.id ? "Cancelling…" : "Cancel"}
                 </button>
               )}

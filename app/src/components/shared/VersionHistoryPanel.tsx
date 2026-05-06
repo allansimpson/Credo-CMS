@@ -15,7 +15,7 @@ export interface VersionHistoryPanelProps {
 
 export function VersionHistoryPanel(props: VersionHistoryPanelProps) {
   return (
-    <aside className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
+    <aside className="rounded-md border bg-card p-4 text-sm text-muted">
       <p>
         Version history shell for <code>{props.entityType}</code> /{" "}
         <code>{props.entityId}</code> (<code>{props.diffStrategy}</code> diff).

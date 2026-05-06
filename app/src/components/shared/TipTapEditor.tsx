@@ -73,7 +73,7 @@ export function TipTapEditor({
 
 function Toolbar({ editor }: { editor: Editor }) {
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b bg-muted/30 px-2 py-1 text-sm">
+    <div className="flex flex-wrap items-center gap-1 border-b bg-panel-alt/30 px-2 py-1 text-sm">
       <Btn label="B" pressed={editor.isActive("bold")}
         onClick={() => editor.chain().focus().toggleBold().run()} />
       <Btn label="I" italic pressed={editor.isActive("italic")}
@@ -119,8 +119,8 @@ function Btn({
       onClick={onClick}
       aria-pressed={pressed ?? false}
       className={
-        "h-7 rounded px-2 text-xs hover:bg-muted " +
-        (pressed ? "bg-muted font-semibold" : "") +
+        "h-7 rounded px-2 text-xs hover:bg-panel-alt " +
+        (pressed ? "bg-panel-alt font-semibold" : "") +
         (italic ? " italic" : "")
       }
     >

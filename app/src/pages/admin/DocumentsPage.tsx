@@ -104,7 +104,7 @@ export function DocumentsPage() {
       <form onSubmit={upload} className="mt-6 space-y-3 rounded-lg border bg-card p-4">
         <h2 className="text-lg font-semibold">Upload PDF</h2>
         {errors.length > 0 && (
-          <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
+          <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-2 text-xs text-danger">
             <ul className="list-disc pl-4">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
           </div>
         )}
@@ -155,11 +155,11 @@ export function DocumentsPage() {
       </form>
 
       <div className="mt-6">
-        {loading && <p className="text-muted-foreground">Loading…</p>}
-        {!loading && items.length === 0 && <p className="text-muted-foreground">No documents.</p>}
+        {loading && <p className="text-muted">Loading…</p>}
+        {!loading && items.length === 0 && <p className="text-muted">No documents.</p>}
         {grouped.map(([category, ds]) => (
           <section key={category} className="mb-6">
-            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">{category}</h2>
+            <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">{category}</h2>
             <ul className="divide-y rounded-lg border bg-card">
               {ds.map((d) => (
                 <li key={d.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-4">
@@ -174,7 +174,7 @@ export function DocumentsPage() {
                         {d.title}
                       </button>
                     )}
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted">
                       {Math.round(d.sizeBytes / 1024)} KB
                       {d.originalFilename && ` · ${d.originalFilename}`}
                       {d.isMembersOnly && " · Members only"}
@@ -191,7 +191,7 @@ export function DocumentsPage() {
                           onClick={() => saveMetadata(d, { title: editing!.title })}
                           className="text-emerald-700 hover:underline">Save</button>
                         <button type="button" onClick={() => setEditing(null)}
-                          className="text-muted-foreground hover:underline">Cancel</button>
+                          className="text-muted hover:underline">Cancel</button>
                       </>
                     ) : (
                       <>
@@ -205,7 +205,7 @@ export function DocumentsPage() {
                             className="text-emerald-700 hover:underline">Restore</button>
                         ) : (
                           <button type="button" onClick={() => softDelete(d)}
-                            className="text-destructive hover:underline">Delete</button>
+                            className="text-danger hover:underline">Delete</button>
                         )}
                       </>
                     )}
@@ -224,7 +224,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
     </label>

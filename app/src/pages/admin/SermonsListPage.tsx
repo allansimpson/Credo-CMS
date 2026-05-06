@@ -49,7 +49,7 @@ export function SermonsListPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Sermons</h1>
         <button type="button" onClick={handleSync}
-          className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted">
+          className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt">
           Run YouTube sync
         </button>
       </div>
@@ -68,7 +68,7 @@ export function SermonsListPage() {
             {importing ? "Importing…" : "Import"}
           </button>
         </div>
-        {importError && <p role="alert" className="text-xs text-destructive">{importError}</p>}
+        {importError && <p role="alert" className="text-xs text-danger">{importError}</p>}
       </form>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 border-b">
@@ -82,9 +82,9 @@ export function SermonsListPage() {
       </div>
 
       <div className="mt-4">
-        {loading && <p className="text-muted-foreground">Loading…</p>}
+        {loading && <p className="text-muted">Loading…</p>}
         {!loading && data && data.items.length === 0 && (
-          <p className="text-muted-foreground">No sermons. Try importing one above.</p>
+          <p className="text-muted">No sermons. Try importing one above.</p>
         )}
         {!loading && data && data.items.length > 0 && (
           <ul className="divide-y border bg-card">
@@ -97,7 +97,7 @@ export function SermonsListPage() {
                       className="h-16 w-28 object-cover" />
                   </picture>
                 ) : (
-                  <div className="h-16 w-28 bg-muted" />
+                  <div className="h-16 w-28 bg-panel-alt" />
                 )}
                 <div className="flex-1">
                   <button type="button"
@@ -105,12 +105,12 @@ export function SermonsListPage() {
                     className="text-left font-semibold hover:underline">
                     {s.title}
                   </button>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted">
                     {s.speakerName ?? "no speaker"}
                     {s.sermonSeriesTitle && ` · ${s.sermonSeriesTitle}`}
                     {s.isMembersOnly && " · Members only"}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted">
                     {new Date(s.publishedAt).toLocaleDateString()}
                     {!s.isPublished && " · Draft"}
                   </p>
@@ -121,7 +121,7 @@ export function SermonsListPage() {
         )}
       </div>
 
-      <p className="mt-6 text-xs text-muted-foreground">
+      <p className="mt-6 text-xs text-muted">
         New sermons created via <Link to="/admin/sermons/new" className="text-primary hover:underline">manual create</Link> too.
       </p>
     </div>

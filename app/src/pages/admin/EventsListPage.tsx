@@ -28,7 +28,7 @@ export function EventsListPage() {
         <h1 className="text-2xl font-bold">Events</h1>
         <div className="flex flex-wrap items-center gap-2">
           <Link to="/admin/events/calendar"
-            className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted">
+            className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt">
             Calendar view
           </Link>
           <Link to="/admin/events/new"
@@ -54,9 +54,9 @@ export function EventsListPage() {
       </div>
 
       <div className="mt-4">
-        {loading && <p className="text-muted-foreground">Loading…</p>}
+        {loading && <p className="text-muted">Loading…</p>}
         {!loading && data && data.items.length === 0 && (
-          <p className="text-muted-foreground">No events found.</p>
+          <p className="text-muted">No events found.</p>
         )}
         {!loading && data && data.items.length > 0 && (
           <ul className="divide-y border bg-card">
@@ -67,8 +67,8 @@ export function EventsListPage() {
                     className="text-left font-semibold hover:underline">
                     {e.title}
                   </button>
-                  <p className="text-xs text-muted-foreground">/events/{e.slug}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-xs text-muted">/events/{e.slug}</p>
+                  <p className="mt-1 text-xs text-muted">
                     {new Date(e.startsAt).toLocaleString()}
                     {e.location && ` · ${e.location}`}
                     {e.hasRecurrence && " · Recurring"}
@@ -95,7 +95,7 @@ function Badge({ color, children }: { color: "emerald" | "amber" | "indigo" | "m
     emerald: "bg-emerald-100 text-emerald-800 border-emerald-200",
     amber: "bg-amber-100 text-amber-800 border-amber-200",
     indigo: "bg-indigo-100 text-indigo-800 border-indigo-200",
-    muted: "bg-muted text-muted-foreground border-border",
+    muted: "bg-panel-alt text-muted border-border",
   };
   return <span className={`inline-flex items-center border px-2 py-0.5 ${palette[color]}`}>{children}</span>;
 }

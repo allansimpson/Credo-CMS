@@ -24,11 +24,16 @@
   --secondary: 210 40% 96%;
   --secondary-foreground: 222 47% 11%;
 
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 98%;
+  --danger: 0 72% 51%;
+  --danger-foreground: 0 0% 98%;
 
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
+  /* Token rename (sync with system-theme.css):
+   *   tertiary text — was --muted-foreground, now --muted.
+   * The legacy `--muted` (subtle surface) is dropped; `bg-muted` callers were
+   * migrated to `bg-panel-alt`, so we expose --panel-alt as an alias to the
+   * old surface value for any stray references. */
+  --muted: 215 16% 47%;
+  --panel-alt: 210 40% 96%;
 
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;

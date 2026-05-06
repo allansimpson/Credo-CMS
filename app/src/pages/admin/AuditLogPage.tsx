@@ -61,7 +61,7 @@ export function AuditLogPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Audit Log</h1>
-      <p className="mt-2 text-muted-foreground">Append-only record of who did what across the system.</p>
+      <p className="mt-2 text-muted">Append-only record of who did what across the system.</p>
 
       <div className="mt-4 flex flex-wrap gap-3">
         <input
@@ -81,14 +81,14 @@ export function AuditLogPage() {
       </div>
 
       {error && (
-        <div role="alert" className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="mt-4 rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </div>
       )}
 
       <div className="mt-6">
         {loading ? (
-          <p className="text-muted-foreground">Loading…</p>
+          <p className="text-muted">Loading…</p>
         ) : (
           <ResponsiveTable
             data={entries}
@@ -116,28 +116,28 @@ function AuditDetailDrawer({ entry, onClose }: { entry: AuditLogEntry; onClose: 
         </div>
         <dl className="mt-4 space-y-3 text-sm">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Timestamp</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted">Timestamp</dt>
             <dd>{new Date(entry.timestamp).toLocaleString()}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Actor</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted">Actor</dt>
             <dd>{entry.userDisplayNameSnapshot}</dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Entity</dt>
+            <dt className="text-xs uppercase tracking-wide text-muted">Entity</dt>
             <dd>{entry.entityType}{entry.entityId ? ` · ${entry.entityId}` : ""}</dd>
           </div>
           {entry.ipAddress && (
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">IP</dt>
+              <dt className="text-xs uppercase tracking-wide text-muted">IP</dt>
               <dd>{entry.ipAddress}</dd>
             </div>
           )}
           {entry.detailsJson && (
             <div>
-              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Details</dt>
+              <dt className="text-xs uppercase tracking-wide text-muted">Details</dt>
               <dd>
-                <pre className="mt-1 max-h-96 overflow-auto rounded-md bg-muted p-3 text-xs">
+                <pre className="mt-1 max-h-96 overflow-auto rounded-md bg-panel-alt p-3 text-xs">
                   {tryFormatJson(entry.detailsJson)}
                 </pre>
               </dd>

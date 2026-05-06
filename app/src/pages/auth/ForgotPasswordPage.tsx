@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ChurchThemeLayout } from "@/themes/ChurchThemeLayout";
+import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { authApi } from "@/lib/api/auth";
 
 export function ForgotPasswordPage() {
@@ -20,12 +20,12 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <ChurchThemeLayout>
+    <SystemThemeLayout>
       <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-12">
         {submitted ? (
           <div className="rounded-lg border bg-card p-6 text-center shadow-sm">
             <h1 className="text-xl font-semibold">Check your email</h1>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-sm text-muted">
               If an account exists for that address, we've sent a password-reset link.
             </p>
             <Link to="/login" className="mt-6 inline-block text-sm text-primary hover:underline">
@@ -35,7 +35,7 @@ export function ForgotPasswordPage() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-6 shadow-sm">
             <h1 className="text-xl font-semibold">Reset your password</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted">
               Enter the email address on your account. We'll send you a reset link.
             </p>
 
@@ -65,6 +65,6 @@ export function ForgotPasswordPage() {
           </form>
         )}
       </main>
-    </ChurchThemeLayout>
+    </SystemThemeLayout>
   );
 }

@@ -48,15 +48,15 @@ export function ProfilePage() {
             <h2 className="text-lg font-semibold">Account details</h2>
             <dl className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Name</dt>
+                <dt className="text-xs uppercase tracking-wide text-muted">Name</dt>
                 <dd className="mt-1 text-sm">{user.displayName}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Email</dt>
+                <dt className="text-xs uppercase tracking-wide text-muted">Email</dt>
                 <dd className="mt-1 text-sm">{user.email}</dd>
               </div>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Roles</dt>
+                <dt className="text-xs uppercase tracking-wide text-muted">Roles</dt>
                 <dd className="mt-1 text-sm">{user.roles.join(", ") || "Member"}</dd>
               </div>
             </dl>
@@ -64,21 +64,21 @@ export function ProfilePage() {
 
           <section className="mt-8 rounded-lg border bg-card p-6 shadow-sm">
             <h2 className="text-lg font-semibold">My calendar feed</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-sm text-muted">
               Subscribe to upcoming events (including members-only) from any
               calendar app.
             </p>
             <a href="/profile/calendar-feed"
-              className="mt-3 inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted">
+              className="mt-3 inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt">
               Manage feed URL →
             </a>
           </section>
 
           <section className="mt-8 rounded-lg border bg-card p-6 shadow-sm">
             <h2 className="text-lg font-semibold">My event registrations</h2>
-            <p className="mt-2 text-sm text-muted-foreground">View or cancel your upcoming registrations.</p>
+            <p className="mt-2 text-sm text-muted">View or cancel your upcoming registrations.</p>
             <a href="/profile/registrations"
-              className="mt-3 inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted">
+              className="mt-3 inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt">
               View registrations →
             </a>
           </section>
@@ -87,7 +87,7 @@ export function ProfilePage() {
             <h2 className="text-lg font-semibold">Change password</h2>
             <form onSubmit={handlePasswordChange} className="mt-4 space-y-4">
               {errors.length > 0 && (
-                <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
                   <ul className="list-disc pl-5">
                     {errors.map((err) => <li key={err}>{err}</li>)}
                   </ul>

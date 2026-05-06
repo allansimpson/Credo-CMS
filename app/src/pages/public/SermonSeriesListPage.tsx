@@ -24,9 +24,9 @@ export function SermonSeriesListPublicPage() {
         description="Browse our sermon series." />
       <h1 className="text-3xl font-bold sm:text-4xl">Sermon Series</h1>
 
-      {loading && <p className="mt-6 text-muted-foreground">Loading…</p>}
+      {loading && <p className="mt-6 text-muted">Loading…</p>}
       {!loading && items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">No sermon series have been published yet.</p>
+        <p className="mt-6 text-muted">No sermon series have been published yet.</p>
       )}
 
       <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,11 +40,11 @@ export function SermonSeriesListPublicPage() {
                     className="aspect-video w-full object-cover" />
                 </picture>
               ) : (
-                <div className="aspect-video w-full bg-muted" />
+                <div className="aspect-video w-full bg-panel-alt" />
               )}
               <div className="p-4">
                 <h2 className="font-semibold hover:underline">{s.title}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-muted">
                   {s.startDate}{s.endDate ? ` – ${s.endDate}` : " – ongoing"}
                 </p>
               </div>

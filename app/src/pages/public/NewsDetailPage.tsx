@@ -30,7 +30,7 @@ export function NewsDetailPage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>;
   if (notFound || !item) return <NotFoundPage />;
 
   const description = item.metaDescription ?? item.excerpt ?? settings?.churchName ?? null;
@@ -64,11 +64,11 @@ export function NewsDetailPage() {
       )}
 
       <h1 className="text-3xl font-bold sm:text-4xl">{item.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm text-muted">
         Published {new Date(item.publishedAt).toLocaleDateString()}
         {item.calendarDate && ` · Date ${new Date(item.calendarDate).toLocaleDateString()}`}
       </p>
-      {item.excerpt && <p className="mt-3 text-lg text-muted-foreground">{item.excerpt}</p>}
+      {item.excerpt && <p className="mt-3 text-lg text-muted">{item.excerpt}</p>}
 
       <div className="mt-8">
         <TipTapReadOnly json={item.bodyJson} />

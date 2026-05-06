@@ -39,9 +39,9 @@ export function PublicLeadersPage() {
         description={`Meet the leaders of ${settings?.churchName ?? "the church"}.`} />
       <h1 className="text-3xl font-bold sm:text-4xl">{label}</h1>
 
-      {loading && <p className="mt-6 text-muted-foreground">Loading…</p>}
+      {loading && <p className="mt-6 text-muted">Loading…</p>}
       {!loading && items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">Leaders haven't been published yet.</p>
+        <p className="mt-6 text-muted">Leaders haven't been published yet.</p>
       )}
 
       <div className="mt-6 space-y-8">
@@ -59,10 +59,10 @@ export function PublicLeadersPage() {
                           className="mx-auto h-24 w-24 rounded-full object-cover" />
                       </picture>
                     ) : (
-                      <div className="mx-auto h-24 w-24 rounded-full bg-muted" />
+                      <div className="mx-auto h-24 w-24 rounded-full bg-panel-alt" />
                     )}
                     <p className="mt-3 text-center font-semibold">{l.fullName}</p>
-                    {l.title && <p className="text-center text-xs text-muted-foreground">{l.title}</p>}
+                    {l.title && <p className="text-center text-xs text-muted">{l.title}</p>}
                   </Link>
                 </li>
               ))}

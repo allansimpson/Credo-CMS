@@ -40,7 +40,7 @@ export function CalendarPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-3xl font-bold sm:text-4xl">Calendar</h1>
         <div className="flex items-center gap-3">
-          {loading && <span className="text-xs text-muted-foreground">Loading…</span>}
+          {loading && <span className="text-xs text-muted">Loading…</span>}
           <a href="/calendar/feed.ics"
             className="text-sm text-primary hover:underline">Subscribe (iCal) ↗</a>
         </div>
@@ -66,7 +66,7 @@ export function CalendarPage() {
       <style>{`
         .fc-credo .fc { font-family: inherit; }
         .fc-credo .fc-event { cursor: pointer; }
-        .fc-credo .fc-event.credo-news { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); border: 0; }
+        .fc-credo .fc-event.credo-news { background: hsl(var(--muted)); color: hsl(var(--muted)); border: 0; }
         .fc-credo .fc-event.credo-members { box-shadow: inset 0 0 0 2px hsl(var(--accent, 47 95% 50%)); }
       `}</style>
     </article>

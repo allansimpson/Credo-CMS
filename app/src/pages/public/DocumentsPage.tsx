@@ -35,9 +35,9 @@ export function PublicDocumentsListPage() {
         description="Documents and resources." />
       <h1 className="text-3xl font-bold sm:text-4xl">Documents</h1>
 
-      {loading && <p className="mt-6 text-muted-foreground">Loading…</p>}
+      {loading && <p className="mt-6 text-muted">Loading…</p>}
       {!loading && items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">No documents have been published yet.</p>
+        <p className="mt-6 text-muted">No documents have been published yet.</p>
       )}
 
       <div className="mt-6 space-y-6">
@@ -49,8 +49,8 @@ export function PublicDocumentsListPage() {
                 <li key={d.id} className="p-4">
                   <Link to={`/documents/${d.id}`} className="block hover:underline">
                     <p className="font-semibold">{d.title}</p>
-                    {d.description && <p className="mt-1 text-sm text-muted-foreground">{d.description}</p>}
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    {d.description && <p className="mt-1 text-sm text-muted">{d.description}</p>}
+                    <p className="mt-1 text-xs text-muted">
                       {Math.round(d.sizeBytes / 1024)} KB
                       {d.isMembersOnly && " · Members only"}
                     </p>

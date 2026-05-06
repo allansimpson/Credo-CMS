@@ -30,13 +30,13 @@ export function EventsCalendarOverviewPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold">Events calendar</h1>
         <div className="flex items-center gap-3">
-          {loading && <span className="text-xs text-muted-foreground">Loading…</span>}
+          {loading && <span className="text-xs text-muted">Loading…</span>}
           <Link to="/admin/events" className="text-sm text-primary hover:underline">
             ← Back to events list
           </Link>
         </div>
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-sm text-muted">
         Click an occurrence to open the event editor.
       </p>
 

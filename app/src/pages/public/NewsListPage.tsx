@@ -27,9 +27,9 @@ export function PublicNewsListPage() {
       <SeoTags title={title} description={`Latest news from ${settings?.churchName ?? "the church"}.`} />
       <h1 className="text-3xl font-bold sm:text-4xl">News</h1>
 
-      {loading && <p className="mt-6 text-muted-foreground">Loading…</p>}
+      {loading && <p className="mt-6 text-muted">Loading…</p>}
       {!loading && data && data.items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">No news to show yet.</p>
+        <p className="mt-6 text-muted">No news to show yet.</p>
       )}
 
       <ul className="mt-6 space-y-4">
@@ -46,12 +46,12 @@ export function PublicNewsListPage() {
                 )}
                 <div className="flex-1">
                   <h2 className="text-xl font-semibold hover:underline">{n.title}</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted">
                     {new Date(n.publishedAt).toLocaleDateString()}
                     {n.calendarDate && ` · ${new Date(n.calendarDate).toLocaleDateString()}`}
                     {n.isMembersOnly && " · Members only"}
                   </p>
-                  {n.excerpt && <p className="mt-2 text-sm text-muted-foreground">{n.excerpt}</p>}
+                  {n.excerpt && <p className="mt-2 text-sm text-muted">{n.excerpt}</p>}
                 </div>
               </div>
             </Link>
@@ -65,16 +65,16 @@ export function PublicNewsListPage() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-md border bg-card px-3 py-1.5 hover:bg-muted disabled:opacity-50"
+            className="rounded-md border bg-card px-3 py-1.5 hover:bg-panel-alt disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="text-muted-foreground">Page {page} of {data.totalPages}</span>
+          <span className="text-muted">Page {page} of {data.totalPages}</span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
             disabled={page >= data.totalPages}
-            className="rounded-md border bg-card px-3 py-1.5 hover:bg-muted disabled:opacity-50"
+            className="rounded-md border bg-card px-3 py-1.5 hover:bg-panel-alt disabled:opacity-50"
           >
             Next
           </button>

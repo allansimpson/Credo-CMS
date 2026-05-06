@@ -42,14 +42,18 @@ export default {
           DEFAULT: "hsl(var(--secondary) / <alpha-value>)",
           foreground: "hsl(var(--secondary-foreground) / <alpha-value>)",
         },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive) / <alpha-value>)",
-          foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
+        // Renamed from `destructive` per Claude Design clarification #1.
+        // Tailwind utilities: text-danger, bg-danger, border-danger,
+        // text-danger-foreground, bg-danger/10, etc.
+        danger: {
+          DEFAULT: "hsl(var(--danger) / <alpha-value>)",
+          foreground: "hsl(var(--danger-foreground) / <alpha-value>)",
         },
-        muted: {
-          DEFAULT: "hsl(var(--muted) / <alpha-value>)",
-          foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
-        },
+        // Renamed from `muted-foreground` per Claude Design clarification #1.
+        // `--muted` is now the tertiary text token (used by `text-muted`).
+        // Sites that previously used `bg-muted` (subtle surface) should use
+        // `bg-panel-alt` — same value, more semantic name.
+        muted: "hsl(var(--muted) / <alpha-value>)",
         card: {
           DEFAULT: "hsl(var(--card) / <alpha-value>)",
           foreground: "hsl(var(--card-foreground) / <alpha-value>)",

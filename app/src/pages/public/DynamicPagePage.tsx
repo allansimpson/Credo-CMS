@@ -32,7 +32,7 @@ export function DynamicPagePage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>;
   if (notFound || !page) return <NotFoundPage />;
 
   const description =
@@ -74,7 +74,7 @@ export function DynamicPagePage() {
       )}
 
       <h1 className="text-3xl font-bold sm:text-4xl">{page.title}</h1>
-      {page.excerpt && <p className="mt-3 text-lg text-muted-foreground">{page.excerpt}</p>}
+      {page.excerpt && <p className="mt-3 text-lg text-muted">{page.excerpt}</p>}
 
       <div className="mt-8">
         <TipTapReadOnly json={page.bodyJson} />

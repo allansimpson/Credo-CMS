@@ -37,7 +37,7 @@ export function SermonDetailPage() {
     return () => { cancelled = true; };
   }, [slug]);
 
-  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted-foreground">Loading…</p>;
+  if (loading) return <p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>;
   if (notFound || !sermon) return <NotFoundPage />;
 
   const orgName = settings?.churchName ?? null;
@@ -78,7 +78,7 @@ export function SermonDetailPage() {
       </div>
 
       <h1 className="mt-6 text-3xl font-bold sm:text-4xl">{sermon.title}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm text-muted">
         {sermon.speakerLeaderId ? (
           <Link to={`/leaders/${sermon.speakerLeaderId}`} className="text-primary hover:underline">
             {sermon.speakerName}
@@ -98,7 +98,7 @@ export function SermonDetailPage() {
       )}
 
       {sermon.scriptureReferences.length > 0 && (
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-sm text-muted">
           {sermon.scriptureReferences.map((r, i) => {
             const info = getBookInfo(r.book);
             const linkPath = info ? `/sermons/by-book/${info.slug}` : "#";
@@ -119,7 +119,7 @@ export function SermonDetailPage() {
           {sermon.tags.map((t) => (
             <li key={t.id}>
               <Link to={`/sermons?tag=${t.slug}`}
-                className="border bg-muted px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground">
+                className="border bg-panel-alt px-2 py-0.5 text-xs text-muted hover:text-foreground">
                 {t.name}
               </Link>
             </li>
@@ -156,7 +156,7 @@ export function SermonDetailPage() {
             {showTranscript ? "▼ Hide transcript" : "▶ Show transcript"}
           </button>
           {showTranscript && (
-            <div className="mt-3 max-h-96 overflow-y-auto border bg-muted p-4 text-sm leading-relaxed">
+            <div className="mt-3 max-h-96 overflow-y-auto border bg-panel-alt p-4 text-sm leading-relaxed">
               {highlight ? (
                 <HighlightedText text={sermon.transcript} term={highlight} />
               ) : (

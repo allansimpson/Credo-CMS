@@ -80,7 +80,7 @@ export function TagAutocomplete({
               {t.name}
               <button type="button" aria-label={`Remove ${t.name}`}
                 onClick={() => removeTag(t.name)}
-                className="text-muted-foreground hover:text-destructive">×</button>
+                className="text-muted hover:text-danger">×</button>
             </li>
           ))}
         </ul>
@@ -103,9 +103,9 @@ export function TagAutocomplete({
               <li key={s.id}>
                 <button type="button"
                   onClick={() => addTag({ id: s.id, name: s.name })}
-                  className="flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-muted">
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-left text-sm hover:bg-panel-alt">
                   <span>{s.name}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted">
                     {s.usageCount} use{s.usageCount === 1 ? "" : "s"}
                   </span>
                 </button>
@@ -115,7 +115,7 @@ export function TagAutocomplete({
               <li>
                 <button type="button"
                   onClick={() => addTag({ id: null, name: query.trim() })}
-                  className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-muted">
+                  className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-panel-alt">
                   Create tag: <strong className="ml-1">{query.trim()}</strong>
                 </button>
               </li>

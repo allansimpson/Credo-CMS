@@ -43,18 +43,18 @@ export function AnnouncementPage() {
     }
   };
 
-  if (loading) return <p className="text-muted-foreground">Loading…</p>;
-  if (!banner) return <p className="text-destructive">{errors.join(" ")}</p>;
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!banner) return <p className="text-danger">{errors.join(" ")}</p>;
 
   return (
     <form onSubmit={submit} className="max-w-2xl space-y-4">
       <h1 className="text-2xl font-bold">Announcement banner</h1>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-muted">
         A site-wide banner shown above the public nav. Dismissable per-session by visitors.
       </p>
 
       {errors.length > 0 && (
-        <div role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-disc pl-5">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
         </div>
       )}
@@ -137,10 +137,10 @@ function Field({ label, required, hint, children }: { label: string; required?: 
   return (
     <label className="block text-sm">
       <span className="mb-1 block font-medium">
-        {label}{required && <span className="text-destructive"> *</span>}
+        {label}{required && <span className="text-danger"> *</span>}
       </span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

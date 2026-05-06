@@ -56,9 +56,9 @@ export function PublicServiceTimesPage() {
       />
       <h1 className="text-3xl font-bold sm:text-4xl">Service Times</h1>
 
-      {loading && <p className="mt-6 text-muted-foreground">Loading…</p>}
+      {loading && <p className="mt-6 text-muted">Loading…</p>}
       {!loading && items.length === 0 && (
-        <p className="mt-6 text-muted-foreground">Service times haven't been published yet.</p>
+        <p className="mt-6 text-muted">Service times haven't been published yet.</p>
       )}
 
       <div className="mt-6 space-y-6">
@@ -69,7 +69,7 @@ export function PublicServiceTimesPage() {
               {g.items.map((s) => (
                 <li key={`${s.dayOfWeek}-${s.displayOrder}-${s.name}`} className="p-4">
                   <p className="font-semibold">{s.name}</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted">
                     {s.startTime.slice(0, 5)}{s.endTime && ` – ${s.endTime.slice(0, 5)}`}
                     {s.location && ` · ${s.location}`}
                   </p>

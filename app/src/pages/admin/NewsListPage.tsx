@@ -48,10 +48,10 @@ export function NewsListPage() {
       </div>
 
       <div className="mt-4">
-        {loading && <p className="text-muted-foreground">Loading…</p>}
-        {!loading && error && <p className="text-destructive">{error}</p>}
+        {loading && <p className="text-muted">Loading…</p>}
+        {!loading && error && <p className="text-danger">{error}</p>}
         {!loading && !error && data && data.items.length === 0 && (
-          <p className="text-muted-foreground">No news items found.</p>
+          <p className="text-muted">No news items found.</p>
         )}
         {!loading && !error && data && data.items.length > 0 && (
           <ul className="divide-y rounded-lg border bg-card">
@@ -68,7 +68,7 @@ export function NewsListPage() {
                   >
                     {n.title}
                   </button>
-                  <p className="text-xs text-muted-foreground">/news/{n.slug}</p>
+                  <p className="text-xs text-muted">/news/{n.slug}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   {n.isPublished
@@ -79,7 +79,7 @@ export function NewsListPage() {
                     <Badge color="muted">Expired</Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground sm:w-40 sm:text-right">
+                <p className="text-xs text-muted sm:w-40 sm:text-right">
                   {new Date(n.publishedAt ?? n.modifiedAt).toLocaleString()}
                 </p>
               </li>
@@ -101,7 +101,7 @@ function Tab({ current, value, label, onSelect }: { current: string; value: "act
         "h-10 px-4 text-sm transition-colors " +
         (active
           ? "border-b-2 border-accent text-foreground font-semibold"
-          : "text-muted-foreground hover:text-foreground")
+          : "text-muted hover:text-foreground")
       }
     >
       {label}
@@ -114,7 +114,7 @@ function Badge({ color, children }: { color: "emerald" | "amber" | "indigo" | "m
     emerald: "bg-emerald-100 text-emerald-800 border-emerald-200",
     amber: "bg-amber-100 text-amber-800 border-amber-200",
     indigo: "bg-indigo-100 text-indigo-800 border-indigo-200",
-    muted: "bg-muted text-muted-foreground border-border",
+    muted: "bg-panel-alt text-muted border-border",
   };
   return (
     <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${palette[color]}`}>

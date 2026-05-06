@@ -50,23 +50,23 @@ export function EventRegistrationsAdminPage() {
 
   useEffect(() => { reload(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [eventId, statusFilter]);
 
-  if (loading && !evt) return <p className="text-muted-foreground">Loading…</p>;
-  if (err) return <p className="text-destructive">{err}</p>;
+  if (loading && !evt) return <p className="text-muted">Loading…</p>;
+  if (err) return <p className="text-danger">{err}</p>;
   if (!evt) return null;
 
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <Link to={`/admin/events/${eventId}`} className="text-xs text-muted-foreground hover:underline">
+          <Link to={`/admin/events/${eventId}`} className="text-xs text-muted hover:underline">
             ← Back to event
           </Link>
           <h1 className="text-2xl font-bold">{evt.title}</h1>
-          <p className="text-sm text-muted-foreground">Registration management</p>
+          <p className="text-sm text-muted">Registration management</p>
         </div>
         <a
           href={eventRegistrationApi.csvExportUrl(eventId)}
-          className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted"
+          className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt"
           download
         >
           Export CSV
@@ -107,7 +107,7 @@ function FieldsManager({
       </header>
 
       {fields.length === 0 && editingId !== "new" && (
-        <p className="p-3 text-sm text-muted-foreground">No custom fields yet — name, email, phone are always collected.</p>
+        <p className="p-3 text-sm text-muted">No custom fields yet — name, email, phone are always collected.</p>
       )}
 
       <ul className="divide-y">
@@ -124,8 +124,8 @@ function FieldsManager({
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-sm font-medium">{f.label} {f.required && <span className="text-destructive">*</span>}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium">{f.label} {f.required && <span className="text-danger">*</span>}</p>
+                  <p className="text-xs text-muted">
                     {FIELD_TYPE_LABELS[f.fieldType]}{f.options?.length ? ` · ${f.options.length} options` : ""}
                   </p>
                 </div>
@@ -138,7 +138,7 @@ function FieldsManager({
                       await eventRegistrationApi.removeField(eventId, f.id);
                       onChanged();
                     }}
-                    className="text-xs text-destructive hover:underline">Remove</button>
+                    className="text-xs text-danger hover:underline">Remove</button>
                 </div>
               </div>
             )}
@@ -213,7 +213,7 @@ function FieldForm({
 
   return (
     <form onSubmit={save} className="space-y-2">
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label className="block text-sm">
           <span className="block text-xs font-medium">Label</span>
@@ -279,7 +279,7 @@ function FieldForm({
           {submitting ? "Saving…" : "Save field"}
         </button>
         <button type="button" onClick={onCancel}
-          className="inline-flex h-8 items-center justify-center border bg-card px-3 text-xs hover:bg-muted">
+          className="inline-flex h-8 items-center justify-center border bg-card px-3 text-xs hover:bg-panel-alt">
           Cancel
         </button>
       </div>
@@ -304,7 +304,7 @@ function RegistrationsList({
       <header className="flex flex-wrap items-center justify-between gap-2 border-b p-3">
         <h2 className="text-sm font-semibold">Registrations ({registrations.length})</h2>
         <label className="text-sm">
-          <span className="mr-1 text-xs text-muted-foreground">Status:</span>
+          <span className="mr-1 text-xs text-muted">Status:</span>
           <select value={statusFilter}
             onChange={(e) => onStatusFilter(e.target.value === "" ? "" : Number(e.target.value) as 0 | 1 | 2)}
             className="h-8 border bg-background px-2 text-sm">
@@ -317,15 +317,15 @@ function RegistrationsList({
       </header>
 
       {registrations.length === 0 ? (
-        <p className="p-3 text-sm text-muted-foreground">No registrations yet.</p>
+        <p className="p-3 text-sm text-muted">No registrations yet.</p>
       ) : (
         <ul className="divide-y">
           {registrations.map((r) => (
             <li key={r.id} className="p-3 text-sm">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <p className="font-medium">{r.submitterName} <span className="text-muted-foreground">· {r.submitterEmail}</span></p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-medium">{r.submitterName} <span className="text-muted">· {r.submitterEmail}</span></p>
+                  <p className="text-xs text-muted">
                     {STATUS_LABELS[r.status]} · {new Date(r.submittedAt).toLocaleString()}
                     {r.submitterPhone && ` · ${r.submitterPhone}`}
                   </p>
@@ -339,7 +339,7 @@ function RegistrationsList({
                         await eventRegistrationApi.cancelRegistration(eventId, r.id, reason);
                         onChanged();
                       }}
-                      className="text-destructive hover:underline">Cancel</button>
+                      className="text-danger hover:underline">Cancel</button>
                   )}
                   {r.status === 0 && (
                     <button type="button"
@@ -359,7 +359,7 @@ function RegistrationsList({
                     const display = Array.isArray(v) ? v.join(", ") : String(v);
                     return (
                       <div key={fid}>
-                        <dt className="text-muted-foreground">{f.label}</dt>
+                        <dt className="text-muted">{f.label}</dt>
                         <dd>{display}</dd>
                       </div>
                     );

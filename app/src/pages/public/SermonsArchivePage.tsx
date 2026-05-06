@@ -56,16 +56,16 @@ export function SermonsArchivePage() {
           </button>
         </form>
         {tagSlug && (
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-muted">
             Filtered by tag: <strong>{tagSlug}</strong>{" "}
             <Link to="/sermons" className="text-primary hover:underline">clear</Link>
           </p>
         )}
       </header>
 
-      {loading && <p className="text-muted-foreground">Loading…</p>}
+      {loading && <p className="text-muted">Loading…</p>}
       {!loading && data && data.items.length === 0 && (
-        <p className="text-muted-foreground">No sermons found.</p>
+        <p className="text-muted">No sermons found.</p>
       )}
 
       <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -78,15 +78,15 @@ export function SermonsArchivePage() {
                   <img src={s.thumbnailBlobUrl} alt="" className="aspect-video w-full object-cover" />
                 </picture>
               ) : (
-                <div className="aspect-video w-full bg-muted" />
+                <div className="aspect-video w-full bg-panel-alt" />
               )}
               <div className="p-4">
                 <h2 className="font-semibold hover:underline">{s.title}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-muted">
                   {s.speakerName ?? "—"}
                   {s.sermonSeriesTitle && ` · ${s.sermonSeriesTitle}`}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted">
                   {new Date(s.publishedAt).toLocaleDateString()}
                   {s.isMembersOnly && " · Members only"}
                 </p>
@@ -100,7 +100,7 @@ export function SermonsArchivePage() {
         <div className="mt-6 flex items-center justify-center">
           <button type="button" onClick={() => setPage((p) => p + 1)}
             disabled={page >= data.totalPages}
-            className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-muted disabled:opacity-50">
+            className="inline-flex h-10 items-center justify-center border bg-card px-4 text-sm hover:bg-panel-alt disabled:opacity-50">
             Load more
           </button>
         </div>
