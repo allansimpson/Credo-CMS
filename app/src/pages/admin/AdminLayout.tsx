@@ -20,6 +20,7 @@ import {
   Calendar,
   Users as UsersIcon,
   GraduationCap,
+  HandHelping,
 } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/admin/events", label: "Events", icon: Calendar },
   { to: "/admin/groups", label: "Groups", icon: UsersIcon },
   { to: "/admin/class-slots", label: "Classes", icon: GraduationCap, requiredRoles: ["Administrator"] },
+  { to: "/admin/prayer-requests", label: "Prayer", icon: HandHelping },
   { to: "/admin/users", label: "Users", icon: Users, requiredRoles: ["Administrator"] },
   { to: "/admin/audit-log", label: "Audit Log", icon: ScrollText, requiredRoles: ["Administrator"] },
   { to: "/admin/settings", label: "Site Settings", icon: Settings, requiredRoles: ["Administrator"] },

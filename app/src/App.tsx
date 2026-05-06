@@ -179,6 +179,21 @@ const ClassOfferingsListPage = lazy(() =>
 const ClassOfferingEditorPage = lazy(() =>
   import("@/pages/admin/ClassOfferingEditorPage").then((m) => ({ default: m.ClassOfferingEditorPage }))
 );
+const PrayerRequestsListPage = lazy(() =>
+  import("@/pages/PrayerRequestsListPage").then((m) => ({ default: m.PrayerRequestsListPage }))
+);
+const PrayerRequestSubmitPage = lazy(() =>
+  import("@/pages/PrayerRequestSubmitPage").then((m) => ({ default: m.PrayerRequestSubmitPage }))
+);
+const PrayerRequestDetailPage = lazy(() =>
+  import("@/pages/PrayerRequestDetailPage").then((m) => ({ default: m.PrayerRequestDetailPage }))
+);
+const PrayerRequestEditPage = lazy(() =>
+  import("@/pages/PrayerRequestEditPage").then((m) => ({ default: m.PrayerRequestEditPage }))
+);
+const AdminPrayerRequestsPage = lazy(() =>
+  import("@/pages/admin/AdminPrayerRequestsPage").then((m) => ({ default: m.AdminPrayerRequestsPage }))
+);
 
 export default function App() {
   return (
@@ -469,6 +484,46 @@ export default function App() {
               </Suspense>
             }
           />
+          <Route
+            path="prayer-requests"
+            element={
+              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                  <PrayerRequestsListPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="prayer-requests/new"
+            element={
+              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
+                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>}>
+                  <PrayerRequestSubmitPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="prayer-requests/:id"
+            element={
+              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
+                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
+                  <PrayerRequestDetailPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="prayer-requests/:id/edit"
+            element={
+              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
+                <Suspense fallback={<p className="mx-auto max-w-2xl p-8 text-muted">Loading…</p>}>
+                  <PrayerRequestEditPage />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Admin shell (system-themed). Wrapped in admin-mode covert-404 gate. */}
           <Route
@@ -662,6 +717,14 @@ export default function App() {
                     <ClassOfferingEditorPage />
                   </Suspense>
                 </ProtectedRoute>
+              }
+            />
+            <Route
+              path="prayer-requests"
+              element={
+                <Suspense fallback={<p className="text-muted">Loading…</p>}>
+                  <AdminPrayerRequestsPage />
+                </Suspense>
               }
             />
             <Route
