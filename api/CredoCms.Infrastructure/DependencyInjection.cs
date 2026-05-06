@@ -201,6 +201,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailTemplateRenderer, EmailTemplateRenderer>();
         services.AddScoped<IRecipientResolver, RecipientResolver>();
         services.AddScoped<IEmailBroadcastService, EmailBroadcastService>();
+        services.AddScoped<IEmailOnPublishService, EmailOnPublishService>();
         services.AddHostedService<BroadcastSendWorker>();
 
         services.AddScoped<DataSeeder>();

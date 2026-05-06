@@ -1,4 +1,5 @@
 using CredoCms.Application.Common;
+using CredoCms.Application.Email;
 using CredoCms.Application.Pages;
 using CredoCms.Application.Search;
 using CredoCms.Domain.News;
@@ -13,19 +14,22 @@ public sealed class NewsService : INewsService
     private readonly ISearchIndexer? _search;
     private readonly IValidator<CreateNewsItemRequest> _createValidator;
     private readonly IValidator<UpdateNewsItemRequest> _updateValidator;
+    private readonly IEmailOnPublishService? _emailOnPublish;
 
     public NewsService(
         INewsRepository repo,
         IAuditLogger audit,
         IValidator<CreateNewsItemRequest> createValidator,
         IValidator<UpdateNewsItemRequest> updateValidator,
-        ISearchIndexer? search = null)
+        ISearchIndexer? search = null,
+        IEmailOnPublishService? emailOnPublish = null)
     {
         _repo = repo;
         _audit = audit;
         _search = search;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _emailOnPublish = emailOnPublish;
     }
 
     private async Task IndexAsync(NewsItem n, CancellationToken ct)
@@ -37,6 +41,21 @@ public sealed class NewsService : INewsService
             BodyText: PageService.AutoExcerpt(n.BodyJson, 8000) + " " + (n.Excerpt ?? ""),
             Url: "/news/" + n.Slug,
             IsPublished: n.IsPublished, IsMembersOnly: n.IsMembersOnly), ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Phase 5: when an item transitions to published with the
+    /// SendEmailOnPublish flag set, queue an EmailBroadcast and clear the
+    /// flag inside the same transaction so a re-publish does not re-fire
+    /// unless the editor explicitly re-enables it.</summary>
+    private async Task TriggerEmailOnPublishAsync(NewsItem item, bool wasPublished, CancellationToken ct)
+    {
+        if (_emailOnPublish is null) return;
+        if (!item.SendEmailOnPublish || !item.IsPublished) return;
+        if (wasPublished) return; // Only fire on the false → true transition.
+        var broadcastId = await _emailOnPublish.OnNewsPublishedAsync(item, ct).ConfigureAwait(false);
+        if (broadcastId is null) return;
+        item.SendEmailOnPublish = false;
+        await _repo.UpdateAsync(item, ct).ConfigureAwait(false);
     }
 
     public Task<PagedResult<NewsListItemDto>> ListAsync(NewsListQuery query, CancellationToken ct = default)
@@ -90,12 +109,15 @@ public sealed class NewsService : INewsService
             IsMembersOnly = request.IsMembersOnly,
             ExpiresAt = request.ExpiresAt,
             CalendarDate = request.CalendarDate,
+            ScheduledPublishAt = request.ScheduledPublishAt,
+            SendEmailOnPublish = request.SendEmailOnPublish,
             CreatedAt = now,
             ModifiedAt = now,
             PublishedAt = request.IsPublished ? now : null,
         };
         await _repo.AddAsync(item, ct).ConfigureAwait(false);
         await IndexAsync(item, ct).ConfigureAwait(false);
+        await TriggerEmailOnPublishAsync(item, wasPublished: false, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.Created", nameof(NewsItem), item.Id.ToString(),
             details: new { item.Slug, item.Title, item.IsPublished, item.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
@@ -118,6 +140,7 @@ public sealed class NewsService : INewsService
             return new NewsOperationResult(false, new[] { $"Slug '{request.Slug}' is already in use." }, null);
         }
 
+        var wasPublished = item.IsPublished;
         item.Slug = request.Slug;
         item.Title = request.Title;
         item.BodyJson = request.BodyJson;
@@ -130,11 +153,14 @@ public sealed class NewsService : INewsService
         item.IsMembersOnly = request.IsMembersOnly;
         item.ExpiresAt = request.ExpiresAt;
         item.CalendarDate = request.CalendarDate;
+        item.ScheduledPublishAt = request.ScheduledPublishAt;
+        item.SendEmailOnPublish = request.SendEmailOnPublish;
         item.ModifiedAt = DateTimeOffset.UtcNow;
         if (request.IsPublished && item.PublishedAt is null) item.PublishedAt = item.ModifiedAt;
 
         await _repo.UpdateAsync(item, ct).ConfigureAwait(false);
         await IndexAsync(item, ct).ConfigureAwait(false);
+        await TriggerEmailOnPublishAsync(item, wasPublished, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.Updated", nameof(NewsItem), id.ToString(),
             details: new { item.Slug, item.Title, item.IsPublished, item.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);

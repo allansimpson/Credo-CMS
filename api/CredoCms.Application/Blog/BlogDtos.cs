@@ -57,7 +57,8 @@ public sealed record CreateBlogPostRequest(
     DateTimeOffset? PublishedAt,
     DateTimeOffset? ScheduledPublishAt,
     string? MetaDescription,
-    IReadOnlyList<string>? Tags);
+    IReadOnlyList<string>? Tags,
+    bool SendEmailOnPublish = false);
 
 public sealed record UpdateBlogPostRequest(
     string Slug,
@@ -75,7 +76,8 @@ public sealed record UpdateBlogPostRequest(
     DateTimeOffset? PublishedAt,
     DateTimeOffset? ScheduledPublishAt,
     string? MetaDescription,
-    IReadOnlyList<string>? Tags);
+    IReadOnlyList<string>? Tags,
+    bool SendEmailOnPublish = false);
 
 public sealed record BlogMutationResult(
     bool Succeeded,

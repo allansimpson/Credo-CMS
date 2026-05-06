@@ -1,5 +1,6 @@
 using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
+using CredoCms.Application.Email;
 using CredoCms.Application.Search;
 using CredoCms.Application.Tags;
 using CredoCms.Domain.Blog;
@@ -22,6 +23,7 @@ public sealed class BlogService : IBlogService
     private readonly ISearchIndexer? _search;
     private readonly IValidator<CreateBlogPostRequest> _createValidator;
     private readonly IValidator<UpdateBlogPostRequest> _updateValidator;
+    private readonly IEmailOnPublishService? _emailOnPublish;
 
     public BlogService(
         IBlogRepository repo,
@@ -33,7 +35,8 @@ public sealed class BlogService : IBlogService
         IOutputCacheInvalidator cache,
         IValidator<CreateBlogPostRequest> createValidator,
         IValidator<UpdateBlogPostRequest> updateValidator,
-        ISearchIndexer? search = null)
+        ISearchIndexer? search = null,
+        IEmailOnPublishService? emailOnPublish = null)
     {
         _repo = repo;
         _users = users;
@@ -45,6 +48,18 @@ public sealed class BlogService : IBlogService
         _search = search;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _emailOnPublish = emailOnPublish;
+    }
+
+    private async Task TriggerEmailOnPublishAsync(BlogPost post, bool wasPublished, CancellationToken ct)
+    {
+        if (_emailOnPublish is null) return;
+        if (!post.SendEmailOnPublish || !post.IsPublished) return;
+        if (wasPublished) return;
+        var broadcastId = await _emailOnPublish.OnBlogPublishedAsync(post, ct).ConfigureAwait(false);
+        if (broadcastId is null) return;
+        post.SendEmailOnPublish = false;
+        await _repo.UpdateAsync(post, Array.Empty<Guid>(), ct).ConfigureAwait(false);
     }
 
     private async Task IndexAsync(BlogPost p, CancellationToken ct)
@@ -163,6 +178,7 @@ public sealed class BlogService : IBlogService
             IsPinned = request.IsPinned,
             PublishedAt = request.IsPublished ? (request.PublishedAt ?? now) : request.PublishedAt,
             ScheduledPublishAt = request.ScheduledPublishAt,
+            SendEmailOnPublish = request.SendEmailOnPublish,
             ReadingTimeMinutes = ComputeReadingMinutes(request.BodyJson),
             MetaDescription = request.MetaDescription,
             CreatedAt = now,
@@ -172,6 +188,7 @@ public sealed class BlogService : IBlogService
 
         var tagIds = await ResolveTagIdsAsync(request.Tags, ct).ConfigureAwait(false);
         await _repo.AddAsync(entity, tagIds, ct).ConfigureAwait(false);
+        await TriggerEmailOnPublishAsync(entity, wasPublished: false, ct).ConfigureAwait(false);
 
         await _audit.WriteAsync("BlogPost.Created", nameof(BlogPost), entity.Id.ToString(),
             new { entity.Slug, entity.Title, entity.IsPublished }, ct).ConfigureAwait(false);
@@ -224,6 +241,7 @@ public sealed class BlogService : IBlogService
             entity.PublishedAt = request.PublishedAt;
         }
         entity.ScheduledPublishAt = request.ScheduledPublishAt;
+        entity.SendEmailOnPublish = request.SendEmailOnPublish;
         entity.ReadingTimeMinutes = ComputeReadingMinutes(request.BodyJson);
         entity.MetaDescription = request.MetaDescription;
         entity.ModifiedAt = now;
@@ -231,6 +249,7 @@ public sealed class BlogService : IBlogService
 
         var tagIds = await ResolveTagIdsAsync(request.Tags, ct).ConfigureAwait(false);
         await _repo.UpdateAsync(entity, tagIds, ct).ConfigureAwait(false);
+        await TriggerEmailOnPublishAsync(entity, wasPublished, ct).ConfigureAwait(false);
 
         await _audit.WriteAsync("BlogPost.Updated", nameof(BlogPost), entity.Id.ToString(),
             new { entity.Slug, entity.Title, entity.IsPublished }, ct).ConfigureAwait(false);

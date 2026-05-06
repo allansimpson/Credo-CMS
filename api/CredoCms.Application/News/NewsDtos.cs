@@ -70,7 +70,9 @@ public sealed record CreateNewsItemRequest(
     bool IsPublished,
     bool IsMembersOnly,
     DateTimeOffset? ExpiresAt,
-    DateTimeOffset? CalendarDate);
+    DateTimeOffset? CalendarDate,
+    DateTimeOffset? ScheduledPublishAt = null,
+    bool SendEmailOnPublish = false);
 
 public sealed record UpdateNewsItemRequest(
     string Slug,
@@ -84,7 +86,9 @@ public sealed record UpdateNewsItemRequest(
     bool IsPublished,
     bool IsMembersOnly,
     DateTimeOffset? ExpiresAt,
-    DateTimeOffset? CalendarDate);
+    DateTimeOffset? CalendarDate,
+    DateTimeOffset? ScheduledPublishAt = null,
+    bool SendEmailOnPublish = false);
 
 public sealed record NewsListQuery(
     string? Search = null,
