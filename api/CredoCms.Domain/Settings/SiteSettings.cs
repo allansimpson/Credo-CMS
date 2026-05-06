@@ -292,6 +292,31 @@ public class SiteSettings
     [MaxLength(50)]
     public string? TwilioFromNumber { get; set; }
 
+    // -- Phase 6: Analytics + cookie consent ------------------------------
+
+    /// <summary>Selects the analytics provider. <c>Ga4</c> triggers the
+    /// SPA's cookie consent banner; tracking only loads after Accept.</summary>
+    public AnalyticsProvider AnalyticsProvider { get; set; } = AnalyticsProvider.None;
+
+    /// <summary>GA4 measurement ID, format "G-XXXXXXXXXX". Only used when
+    /// <see cref="AnalyticsProvider"/> is <see cref="AnalyticsProvider.Ga4"/>.</summary>
+    [MaxLength(50)]
+    public string? Ga4MeasurementId { get; set; }
+
+    /// <summary>Whether to render the cookie consent banner. When the
+    /// provider is <see cref="AnalyticsProvider.Ga4"/> and this is false,
+    /// tracking is silently disabled (forces consent dialog suppression).
+    /// Default true.</summary>
+    public bool Ga4ConsentBannerEnabled { get; set; } = true;
+
+    /// <summary>Where the consent banner appears.</summary>
+    public ConsentBannerPosition Ga4ConsentBannerPosition { get; set; } = ConsentBannerPosition.BottomRight;
+
+    /// <summary>Optional cookie-policy page link. The banner copy renders
+    /// "See our Cookie Policy" only when set. Resolved to a slug
+    /// server-side before public exposure.</summary>
+    public Guid? CookiePolicyPageId { get; set; }
+
     // -----------------------------------------------------------------------
 
     public DateTimeOffset CreatedAt { get; set; }

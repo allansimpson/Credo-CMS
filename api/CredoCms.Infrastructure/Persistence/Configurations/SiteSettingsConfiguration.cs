@@ -32,5 +32,9 @@ internal sealed class SiteSettingsConfiguration : IEntityTypeConfiguration<SiteS
         builder.Property(x => x.SmsProvider).HasConversion<int>();
         builder.Property(x => x.NewsEmailTargetGroupIdsJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.BlogEmailTargetGroupIdsJson).HasColumnType("nvarchar(max)");
+
+        // Phase 6
+        builder.Property(x => x.AnalyticsProvider).HasConversion<int>();
+        builder.Property(x => x.Ga4ConsentBannerPosition).HasConversion<int>();
     }
 }

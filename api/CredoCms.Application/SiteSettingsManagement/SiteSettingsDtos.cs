@@ -1,4 +1,5 @@
 using CredoCms.Domain.Email;
+using CredoCms.Domain.Settings;
 
 namespace CredoCms.Application.SiteSettingsManagement;
 
@@ -27,7 +28,17 @@ public sealed record PublicSiteSettingsDto(
     string HomepageHeroCtaLink,
     /// <summary>Drives whether the SPA shows the "Continue with Facebook"
     /// button on /login. Phase 4 Q15 introduced the toggle.</summary>
-    bool FacebookLoginEnabled);
+    bool FacebookLoginEnabled,
+    // Phase 6 — analytics + cookie consent surface for the SPA bootstrap.
+    /// <summary>Analytics provider. <c>None</c> hides the cookie banner.</summary>
+    AnalyticsProvider AnalyticsProvider,
+    /// <summary>GA4 measurement ID. The SPA only reads this after consent.</summary>
+    string? Ga4MeasurementId,
+    bool Ga4ConsentBannerEnabled,
+    ConsentBannerPosition Ga4ConsentBannerPosition,
+    /// <summary>Resolved Page slug for the consent banner's "Cookie Policy"
+    /// link. Null when no page is configured.</summary>
+    string? CookiePolicyPageSlug);
 
 /// <summary>Full settings DTO returned to admins.</summary>
 public sealed record SiteSettingsDto(
@@ -110,6 +121,12 @@ public sealed record SiteSettingsDto(
     /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
     string? TwilioAuthToken,
     string? TwilioFromNumber,
+    // ---- Phase 6 admin-side fields ---------------------------------------
+    AnalyticsProvider AnalyticsProvider,
+    string? Ga4MeasurementId,
+    bool Ga4ConsentBannerEnabled,
+    ConsentBannerPosition Ga4ConsentBannerPosition,
+    Guid? CookiePolicyPageId,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
     Guid? ModifiedByUserId,
@@ -189,4 +206,10 @@ public sealed record UpdateSiteSettingsRequest(
     string? TwilioAccountSid,
     string? TwilioAuthToken,
     string? TwilioFromNumber,
+    // ---- Phase 6 admin-side fields ---------------------------------------
+    AnalyticsProvider AnalyticsProvider,
+    string? Ga4MeasurementId,
+    bool Ga4ConsentBannerEnabled,
+    ConsentBannerPosition Ga4ConsentBannerPosition,
+    Guid? CookiePolicyPageId,
     string RowVersion);

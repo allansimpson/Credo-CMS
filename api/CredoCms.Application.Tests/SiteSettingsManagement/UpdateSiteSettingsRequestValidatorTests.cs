@@ -1,5 +1,6 @@
 using CredoCms.Application.SiteSettingsManagement;
 using CredoCms.Domain.Email;
+using CredoCms.Domain.Settings;
 using FluentValidation.TestHelper;
 
 namespace CredoCms.Application.Tests.SiteSettingsManagement;
@@ -82,6 +83,12 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         TwilioAccountSid: null,
         TwilioAuthToken: null,
         TwilioFromNumber: null,
+        // Phase 6 fields — defaults match SiteSettings entity defaults.
+        AnalyticsProvider: AnalyticsProvider.None,
+        Ga4MeasurementId: null,
+        Ga4ConsentBannerEnabled: true,
+        Ga4ConsentBannerPosition: ConsentBannerPosition.BottomRight,
+        CookiePolicyPageId: null,
         RowVersion: "AAAAAAAAB9E=");
 
     [Fact]

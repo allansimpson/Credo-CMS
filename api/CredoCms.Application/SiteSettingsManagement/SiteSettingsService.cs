@@ -1,4 +1,5 @@
 using CredoCms.Application.Common;
+using CredoCms.Application.Pages;
 using CredoCms.Domain.Settings;
 
 namespace CredoCms.Application.SiteSettingsManagement;
@@ -14,23 +15,39 @@ public sealed class SiteSettingsService : ISiteSettingsService
 {
     private readonly ISiteSettingsRepository _repo;
     private readonly IAuditLogger _audit;
+    private readonly IPageRepository? _pages;
 
-    public SiteSettingsService(ISiteSettingsRepository repo, IAuditLogger audit)
+    public SiteSettingsService(ISiteSettingsRepository repo, IAuditLogger audit, IPageRepository? pages = null)
     {
         _repo = repo;
         _audit = audit;
+        _pages = pages;
     }
 
     public async Task<PublicSiteSettingsDto> GetPublicAsync(CancellationToken ct = default)
     {
         var s = await _repo.GetAsync(ct);
+
+        // Resolve cookie-policy page slug server-side so the SPA's banner
+        // gets a ready link instead of a Page id.
+        string? cookiePolicySlug = null;
+        if (s.CookiePolicyPageId is { } pid && _pages is not null)
+        {
+            var page = await _pages.GetByIdAsync(pid, includeDeleted: false, ct).ConfigureAwait(false);
+            cookiePolicySlug = page?.IsPublished == true ? page.Slug : null;
+        }
+
         return new PublicSiteSettingsDto(
             s.ChurchName, s.Tagline, s.LogoUrl, s.PrimaryColor, s.AccentColor,
             s.ContactEmail, s.ContactPhone, s.ContactAddress,
             s.FacebookUrl, s.InstagramUrl, s.YouTubeUrl, s.XUrl, s.TikTokUrl,
             s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText,
             s.LeadersPageLabel, s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink,
-            s.FacebookLoginEnabled);
+            s.FacebookLoginEnabled,
+            // Phase 6
+            s.AnalyticsProvider, s.Ga4MeasurementId,
+            s.Ga4ConsentBannerEnabled, s.Ga4ConsentBannerPosition,
+            cookiePolicySlug);
     }
 
     public async Task<SiteSettingsDto> GetAsync(CancellationToken ct = default)
@@ -122,6 +139,13 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.TwilioAuthToken = request.TwilioAuthToken;
         s.TwilioFromNumber = request.TwilioFromNumber;
 
+        // Phase 6
+        s.AnalyticsProvider = request.AnalyticsProvider;
+        s.Ga4MeasurementId = request.Ga4MeasurementId;
+        s.Ga4ConsentBannerEnabled = request.Ga4ConsentBannerEnabled;
+        s.Ga4ConsentBannerPosition = request.Ga4ConsentBannerPosition;
+        s.CookiePolicyPageId = request.CookiePolicyPageId;
+
         s.ModifiedAt = DateTimeOffset.UtcNow;
         s.RowVersion = Convert.FromBase64String(request.RowVersion);
 
@@ -179,6 +203,9 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.EmailSubjectPrefixNews, s.EmailSubjectPrefixBlog,
         s.AdminNotificationFrequency,
         s.SmsProvider, s.TwilioAccountSid, s.TwilioAuthToken, s.TwilioFromNumber,
+        // Phase 6
+        s.AnalyticsProvider, s.Ga4MeasurementId,
+        s.Ga4ConsentBannerEnabled, s.Ga4ConsentBannerPosition, s.CookiePolicyPageId,
         s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
         Convert.ToBase64String(s.RowVersion));
 }

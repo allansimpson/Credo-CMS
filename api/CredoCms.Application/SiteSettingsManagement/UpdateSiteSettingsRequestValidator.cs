@@ -97,6 +97,14 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
         RuleFor(x => x.TwilioAuthToken).MaximumLength(500);
         RuleFor(x => x.TwilioFromNumber).MaximumLength(50);
 
+        // ---- Phase 6 fields -----------------------------------------------
+
+        RuleFor(x => x.Ga4MeasurementId)
+            .Matches(@"^G-[A-Z0-9]{8,12}$")
+            .When(x => !string.IsNullOrWhiteSpace(x.Ga4MeasurementId))
+            .WithMessage("GA4 measurement ID must look like 'G-XXXXXXXXXX'.")
+            .MaximumLength(50);
+
         // -------------------------------------------------------------------
 
         RuleFor(x => x.RowVersion).NotEmpty();
