@@ -37,4 +37,8 @@ public static class OutputCacheTags
     public const string Groups = "groups";
     public const string Classes = "classes";
     public const string Blog = "blog";
+    // Phase 5 — broadcast-stats are short-cached (30s) so the admin
+    // detail page reflects webhook-driven counters without re-querying
+    // the DB on every refresh. Webhook events evict by tag.
+    public static string BroadcastStats(Guid broadcastId) => $"broadcast-{broadcastId:N}-stats";
 }

@@ -1,6 +1,7 @@
 using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Blog;
 using CredoCms.Domain.Common;
+using CredoCms.Domain.Email;
 using CredoCms.Domain.Events;
 using CredoCms.Domain.Groups;
 using CredoCms.Domain.Identity;
@@ -8,6 +9,7 @@ using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
 using CredoCms.Domain.Pages;
 using CredoCms.Domain.Sermons;
+using CredoCms.Domain.Volunteers;
 using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using CredoCms.Infrastructure.Configuration;
@@ -62,6 +64,10 @@ public sealed class DataSeeder
         await SeedSampleEventsAsync(ct).ConfigureAwait(false);
         await SeedSampleGroupsAsync(ct).ConfigureAwait(false);
         await SeedSampleBlogPostsAsync(ct).ConfigureAwait(false);
+        // Phase 5
+        await SeedEmailTemplatesAsync(ct).ConfigureAwait(false);
+        await SeedSampleBroadcastAsync(ct).ConfigureAwait(false);
+        await SeedSampleVolunteerRolesAsync(ct).ConfigureAwait(false);
     }
 
     private async Task SeedRolesAsync(CancellationToken ct)
@@ -549,5 +555,177 @@ public sealed class DataSeeder
         _db.BlogPosts.Add(welcome);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample blog post (welcome).");
+    }
+
+    // ---- Phase 5 seeds ---------------------------------------------------
+
+    private async Task SeedEmailTemplatesAsync(CancellationToken ct)
+    {
+        if (await _db.EmailTemplates.AnyAsync(ct).ConfigureAwait(false)) return;
+
+        var now = DateTimeOffset.UtcNow;
+        var seeds = new (string Key, string Subject, string Html, string Description, string[] Vars)[]
+        {
+            ("InvitationEmail", "You're invited to {{churchName}}",
+             "<p>Hi {{firstName}},</p><p>You've been invited to join {{churchName}}'s online community.</p><p><a href=\"{{invitationLink}}\">Accept your invitation</a></p>",
+             "Sent when an admin creates a user account.",
+             new[] { "firstName", "lastName", "invitationLink" }),
+
+            ("PasswordReset", "Reset your password — {{churchName}}",
+             "<p>Hi {{firstName}},</p><p>A password reset was requested. <a href=\"{{resetLink}}\">Choose a new password</a>.</p><p>If you didn't request this, no action is needed.</p>",
+             "Sent when a user requests a password reset.",
+             new[] { "firstName", "resetLink" }),
+
+            ("AccountActivated", "Welcome to {{churchName}}",
+             "<p>Hi {{firstName}},</p><p>Your account is active. You can now sign in to {{churchName}}.</p>",
+             "Sent when a user accepts an invitation.",
+             new[] { "firstName" }),
+
+            ("ConnectCardAcknowledgment", "Thanks for connecting with {{churchName}}",
+             "<p>Hi {{firstName}},</p><p>Thanks for filling out our connect card. We'll be in touch soon.</p>",
+             "Sent to connect-card submitters.",
+             new[] { "firstName" }),
+
+            ("GroupJoinApproved", "You're in: {{groupName}}",
+             "<p>Hi {{firstName}},</p><p>Your request to join <strong>{{groupName}}</strong> was approved. Welcome!</p>",
+             "Sent when a group join request is approved.",
+             new[] { "firstName", "groupName" }),
+
+            ("GroupJoinDeclined", "About your request to join {{groupName}}",
+             "<p>Hi {{firstName}},</p><p>Your request to join {{groupName}} was not approved at this time.</p>",
+             "Sent when a group join request is declined.",
+             new[] { "firstName", "groupName" }),
+
+            ("EventRegistrationConfirmation", "Registered for {{eventTitle}}",
+             "<p>Hi {{firstName}},</p><p>You're registered for <strong>{{eventTitle}}</strong> on {{eventDate}}.</p>",
+             "Sent on event registration.",
+             new[] { "firstName", "eventTitle", "eventDate" }),
+
+            ("EventRegistrationCancellation", "Cancellation: {{eventTitle}}",
+             "<p>Hi {{firstName}},</p><p>Your registration for {{eventTitle}} has been canceled.</p>",
+             "Sent when an event registration is canceled.",
+             new[] { "firstName", "eventTitle" }),
+
+            ("EventRegistrationWaitlistPromotion", "You're off the waitlist: {{eventTitle}}",
+             "<p>Hi {{firstName}},</p><p>A spot opened up for <strong>{{eventTitle}}</strong> and you're now confirmed.</p>",
+             "Sent when a waitlisted entry is promoted.",
+             new[] { "firstName", "eventTitle" }),
+
+            ("EventRegistrationReminder", "Reminder: {{eventTitle}} on {{eventDate}}",
+             "<p>Hi {{firstName}},</p><p>This is a reminder that you're registered for <strong>{{eventTitle}}</strong> on {{eventDate}}.</p>",
+             "Sent 24-48h before an event.",
+             new[] { "firstName", "eventTitle", "eventDate" }),
+
+            ("BroadcastUnsubscribeConfirmation", "You've unsubscribed from {{churchName}} emails",
+             "<p>Hi {{firstName}},</p><p>You've been unsubscribed from {{categoryLabel}} emails. You can re-enable preferences any time at <a href=\"{{preferencesLink}}\">your account</a>.</p>",
+             "Sent after a one-click unsubscribe.",
+             new[] { "firstName", "categoryLabel", "preferencesLink" }),
+
+            ("EventVolunteerSignupConfirmation", "Thanks for volunteering at {{eventTitle}}",
+             "<p>Hi {{firstName}},</p><p>You're signed up to volunteer as <strong>{{roleName}}</strong> for {{eventTitle}} on {{occurrenceDate}}.</p>",
+             "Sent on volunteer signup.",
+             new[] { "firstName", "roleName", "eventTitle", "occurrenceDate" }),
+
+            ("EventVolunteerCancellation", "Volunteer slot canceled",
+             "<p>Hi {{firstName}},</p><p>Your volunteer commitment for {{eventTitle}} on {{occurrenceDate}} has been canceled.</p>",
+             "Sent when a volunteer signup is canceled.",
+             new[] { "firstName", "eventTitle", "occurrenceDate" }),
+
+            ("EventVolunteerReminder", "Volunteer reminder: {{roleName}} on {{occurrenceDate}}",
+             "<p>Hi {{firstName}},</p><p>You're scheduled to serve as <strong>{{roleName}}</strong> at {{eventTitle}} on {{occurrenceDate}}.</p>",
+             "24-48h volunteer reminder.",
+             new[] { "firstName", "roleName", "eventTitle", "occurrenceDate" }),
+
+            ("ConnectCardDigest", "{{count}} new connect card{{plural}}",
+             "<p>Hi {{firstName}},</p><p>You have {{count}} new connect card submission{{plural}} to review.</p><p><a href=\"/admin/connect-cards\">View in admin</a></p>",
+             "Admin digest for new connect cards.",
+             new[] { "firstName", "count", "plural" }),
+
+            ("GroupJoinRequestDigest", "{{count}} new group join request{{plural}}",
+             "<p>Hi {{firstName}},</p><p>You have {{count}} new group join request{{plural}} to review.</p><p><a href=\"/admin/groups\">View in admin</a></p>",
+             "Admin digest for new group join requests.",
+             new[] { "firstName", "count", "plural" }),
+        };
+
+        foreach (var (key, subject, html, desc, vars) in seeds)
+        {
+            _db.EmailTemplates.Add(new EmailTemplate
+            {
+                Id = Guid.NewGuid(),
+                TemplateKey = key,
+                Subject = subject,
+                HtmlBody = html,
+                AvailableMergeFieldsJson = System.Text.Json.JsonSerializer.Serialize(vars),
+                IsSystemTemplate = true,
+                Description = desc,
+                CreatedAt = now,
+                ModifiedAt = now,
+            });
+        }
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded {Count} system email templates.", seeds.Length);
+    }
+
+    private async Task SeedSampleBroadcastAsync(CancellationToken ct)
+    {
+        if (await _db.EmailBroadcasts.AnyAsync(ct).ConfigureAwait(false)) return;
+        var admin = await _userManager.FindByEmailAsync(_identitySeed.DefaultAdminEmail).ConfigureAwait(false);
+        if (admin is null) return;
+
+        var sentAt = DateTimeOffset.UtcNow.AddDays(-3);
+        var sample = new EmailBroadcast
+        {
+            Id = Guid.NewGuid(),
+            Subject = "Welcome to your church communications",
+            Body = "<p>Welcome! You're now subscribed to broadcasts from our church. We'll send a few updates a month.</p>",
+            PlainTextBody = "Welcome! You're now subscribed to broadcasts from our church.",
+            TargetMode = BroadcastTargetMode.AllMembers,
+            SendMode = BroadcastSendMode.SendNow,
+            Status = BroadcastStatus.Sent,
+            Category = EmailCategory.Broadcast,
+            SentAt = sentAt,
+            RecipientCountAtSend = 3,
+            DeliveredCount = 3,
+            CreatedAt = sentAt,
+            ModifiedAt = sentAt,
+            ModifiedByUserId = admin.Id,
+        };
+        _db.EmailBroadcasts.Add(sample);
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample broadcast.");
+    }
+
+    private async Task SeedSampleVolunteerRolesAsync(CancellationToken ct)
+    {
+        if (await _db.EventVolunteerRoles.AnyAsync(ct).ConfigureAwait(false)) return;
+        // Pick the first seeded event (small group / Sunday gathering) and
+        // attach a couple of roles to it.
+        var firstEvent = await _db.Events.AsNoTracking().OrderBy(e => e.StartsAt).FirstOrDefaultAsync(ct).ConfigureAwait(false);
+        if (firstEvent is null) return;
+
+        var now = DateTimeOffset.UtcNow;
+        _db.EventVolunteerRoles.AddRange(
+            new EventVolunteerRole
+            {
+                Id = Guid.NewGuid(),
+                EventId = firstEvent.Id,
+                RoleName = "Setup Crew",
+                Description = "Arrive 30 minutes early to set up chairs, tables, and refreshments.",
+                SlotsNeeded = 2,
+                DisplayOrder = 0,
+                CreatedAt = now, ModifiedAt = now,
+            },
+            new EventVolunteerRole
+            {
+                Id = Guid.NewGuid(),
+                EventId = firstEvent.Id,
+                RoleName = "Greeter",
+                Description = "Welcome attendees, hand out nametags.",
+                SlotsNeeded = 2,
+                DisplayOrder = 1,
+                CreatedAt = now, ModifiedAt = now,
+            });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample volunteer roles on event {Id}.", firstEvent.Id);
     }
 }
