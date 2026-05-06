@@ -145,6 +145,22 @@ try
                     Window = TimeSpan.FromMinutes(10),
                     QueueLimit = 0,
                 }));
+
+        // Connect card: 5 submissions per IP per hour. Sliding window so a
+        // burst right before the hour boundary doesn't reset cleanly. Plus
+        // Turnstile + honeypot + 5s time-to-submit at the service layer.
+        options.AddPolicy(
+            CredoCms.Api.Controllers.PublicConnectCardController.RateLimitPolicy,
+            httpContext =>
+                RateLimitPartition.GetSlidingWindowLimiter(
+                    partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    factory: _ => new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromHours(1),
+                        SegmentsPerWindow = 6,
+                        QueueLimit = 0,
+                    }));
     });
 
     // -- MVC + Validation -----------------------------------------------------

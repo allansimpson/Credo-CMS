@@ -5,6 +5,7 @@ using CredoCms.Application.Auth;
 using CredoCms.Application.Caching;
 using CredoCms.Application.Classes;
 using CredoCms.Application.Common;
+using CredoCms.Application.ConnectCard;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Events;
 using CredoCms.Application.Groups;
@@ -35,6 +36,7 @@ using CredoCms.Infrastructure.Announcements;
 using CredoCms.Infrastructure.Caching;
 using CredoCms.Infrastructure.Calendar;
 using CredoCms.Infrastructure.Classes;
+using CredoCms.Infrastructure.ConnectCard;
 using CredoCms.Infrastructure.Documents;
 using CredoCms.Infrastructure.Events;
 using CredoCms.Infrastructure.Groups;
@@ -141,6 +143,12 @@ public static class DependencyInjection
         services.AddScoped<IClassOfferingRepository, ClassOfferingRepository>();
         services.AddScoped<IPrayerRequestRepository, PrayerRequestRepository>();
         services.AddScoped<IProfanityCheckService, ProfanityCheckService>();
+        services.AddScoped<IConnectCardRepository, ConnectCardRepository>();
+        services.AddHttpClient(TurnstileValidationService.HttpClientName, c =>
+        {
+            c.Timeout = TimeSpan.FromSeconds(10);
+        });
+        services.AddTransient<ITurnstileValidationService, TurnstileValidationService>();
         services.AddSingleton<IIcalFeedBuilder, IcalFeedBuilder>();
         services.AddScoped<ICalendarQueryService, CalendarQueryService>();
         services.AddScoped<ICalendarFeedTokenService, CalendarFeedTokenService>();

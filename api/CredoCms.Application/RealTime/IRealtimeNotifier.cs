@@ -17,6 +17,15 @@ public sealed record PrayerRequestEventMessage(
     string Title,
     int? PrayedForCount = null);
 
+/// <summary>Connect-card submission summary. Sent to <c>admins</c> on every
+/// successful submit so admin shells get a real-time toast.</summary>
+public sealed record ConnectCardSummaryMessage(
+    Guid Id,
+    string Name,
+    string? Email,
+    string? Phone,
+    DateTimeOffset SubmittedAt);
+
 public interface IRealtimeNotifier
 {
     Task NotifyContentChangedAsync(ContentChangedMessage message, CancellationToken ct = default);
@@ -38,4 +47,7 @@ public interface IRealtimeNotifier
     /// The same channel powers the member list page and the admin moderation
     /// queue.</summary>
     Task NotifyPrayerRequestEventAsync(PrayerRequestEventMessage message, CancellationToken ct = default);
+
+    /// <summary>Notify the admin shell of a new connect-card submission.</summary>
+    Task NotifyConnectCardSubmittedAsync(ConnectCardSummaryMessage message, CancellationToken ct = default);
 }
