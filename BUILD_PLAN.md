@@ -2109,3 +2109,442 @@ deliverables stay intact throughout. Email deliverability rigor (suppression
 list checks, RFC 2369 + RFC 8058 unsubscribe headers, immediate one-click
 response, transactional/broadcast separation) is treated as a hard
 correctness constraint, not a nice-to-have.
+
+---
+
+# Phase 6 Build Plan — Polish and Production-Ready
+
+**Status:** Plan drafted; awaiting review. No Phase 6 implementation has started.
+
+---
+
+## S-0. Confirmation of Understanding
+
+I have read all 17 sections of the Phase 6 prompt plus Out-of-Scope and Final
+Checklist. My understanding:
+
+- **Production deployability is the highest-priority deliverable.** The
+  application must be operatable by a non-developer following the docs.
+  Documentation that's incomplete or inaccurate is a hard fail; "works on my
+  machine" is a hard fail; an Astro docs site that 404s is a hard fail. This
+  supersedes any "polish later" impulse.
+- **Phase 6 is intentionally cross-cutting.** Accessibility fixes touch
+  Phase 1 admin shell components. SEO/meta-tag refinements touch Phase 2-5
+  page templates. Footer social links polish touches Phase 1's footer.
+  Touching prior-phase code is expected; the constraint is that no
+  Phase 1–5 functionality regresses (tests stay green, smoke paths still
+  work).
+- **Twelve feature slabs:** Astro docs site, Pagefind search, GA4 +
+  cookie consent, RSS feeds, footer polish, accessibility audit,
+  mobile responsive audit, SEO + meta-tag audit, operator
+  documentation, deployment dry-run, performance pass, ROADMAP review.
+  Plus three smaller items: LICENSE placeholder, IMPLEMENTATION_NOTES
+  cleanup, license decision flag.
+- **`/docs/*` auth pattern matches `/admin/*`:** Editor + Administrator
+  roles only. Anonymous requests get the church-themed 404 (the covert
+  routing pattern from Phase 1) — never a redirect that reveals the
+  docs subtree exists.
+- **Phase 5 carry-forwards stay carry-forwards.** Existing transactional
+  caller refactor to templates, per-recipient `List-Unsubscribe-URL`
+  header, dedicated Email tab in Settings, broadcast composer RTE,
+  recipient CSV export are explicitly NOT in Phase 6 scope per
+  ROADMAP. They land post-v1.
+
+---
+
+## S-1. Phase 5 Inheritance — Things Phase 6 Touches
+
+| Touch point | Change |
+|---|---|
+| `SiteSettings` | Adds Phase 6 keys: `AnalyticsProvider`, `Ga4MeasurementId`, `Ga4ConsentBannerEnabled`, `Ga4ConsentBannerPosition`, `CookiePolicyPageId`. |
+| `SiteSettingsDto` + `UpdateSiteSettingsRequest` + validator | Round-trip the new keys. |
+| Public site-config endpoint | Surface `analyticsProvider` + `ga4MeasurementId` (when consent given) so the SPA can decide whether to render the banner and whether to load gtag. |
+| Footer (Phase 1/2) | Verify all configured social URLs render, polish to brand-icon variants, audit aria-labels and tab order. |
+| Public page `<head>` (Phase 2) | Add RSS auto-discovery `<link rel="alternate">` to Blog/News/Sermon pages. |
+| Sitemap.xml (Phase 2) | Verify it includes new entity types added in Phases 3/4 (Sermon Series, Events, Blog, Classes, Leaders). |
+| Robots.txt (Phase 2) | Verify disallow list includes `/docs/`, `/profile`, `/members/`, `/documents/`, `/prayer-requests/`. |
+| Privacy Policy seed (Phase 2) | Update boilerplate to reference cookie consent + GA4 cookies + auth/session cookies. |
+| Various components | Accessibility fixes: aria-labels on icon-only buttons, focus-visible outlines, semantic HTML on layout primitives, modal focus traps, validation announcements, skip-to-main-content link. |
+| Various pages | SEO fixes: missing OG tags, missing JSON-LD, missing canonical URLs. |
+| Various pages | Mobile fixes per the 375px audit. |
+| `/docs/*` route in API | New `DocsController` (or middleware) serving `wwwroot/docs/` with auth gate. |
+
+---
+
+## S-2. Clarifications to Surface Before Starting
+
+Where I list a default, that's exactly what I'll do unless overridden.
+
+1. **Astro version.** **Default:** Astro 5.x (current major) with TypeScript
+   strict + Tailwind v4 integration. If you want Astro 4 for lower-risk
+   tooling, say so.
+
+2. **Tailwind token sharing across SPA + Astro.** **Default:** extract the
+   system-theme tokens to a small `tailwind.system-theme.cjs` at the repo
+   root that both projects' Tailwind configs `require()`/import. Tailwind v4
+   uses CSS-first configuration; a JS-style shared module is the most
+   compatible approach for a v3-friendly fallback. If you prefer pure CSS
+   sharing (a `system-theme.css` with `@theme` directives), say so — adds a
+   minor build-pipeline tweak.
+
+3. **Cookie banner button set.** Spec says "Customize is optional in v1; if
+   simpler, render only Accept and Decline." **Default:** render only
+   Accept + Decline + Cookie Preferences (the always-visible footer link
+   is the customize/revoke surface). Documented in IMPLEMENTATION_NOTES.
+
+4. **GA4 measurement ID delivery to the SPA.** **Default:** new public
+   endpoint `GET /api/public/site-config` returns
+   `{ analyticsProvider, ga4MeasurementId, ga4ConsentBannerPosition,
+   cookiePolicyPageSlug }`. Existing `PublicSiteSettingsDto` is for the
+   bootstrap call already; we add a parallel slim endpoint for analytics-
+   adjacent values that public visitors need pre-consent.
+
+5. **RSS construction.** **Default:** hand-rolled `XmlWriter` building, no
+   extra NuGet. RSS 2.0 with the Atom self-link namespace. 50-item cap
+   per feed (hardcoded; no SiteSettings knob until an operator asks).
+
+6. **Docs site auth.** **Default:** new `DocsController` with
+   `[Authorize(Policy = AdminShell)]` that serves files from
+   `wwwroot/docs/` via `PhysicalFileProvider`. Anonymous requests get the
+   church 404 page (matches Phase 1's covert routing). MIME-type whitelist
+   for `.html / .css / .js / .svg / .png / .webp / .json / .map /
+   .pagefind`. Reading `wwwroot/docs/index.html` for `/docs` and `/docs/`.
+   **An alternative considered:** `UseStaticFiles` with conditional
+   middleware, but the controller pattern is cleaner for the auth path
+   and keeps the covert-404 behavior consistent.
+
+7. **Pagefind invocation.** **Default:** `npx pagefind --site dist` runs
+   in `docs/` after `astro build`. Output lands in `dist/pagefind/`. The
+   docs `BaseLayout.astro` includes `<link rel="stylesheet" href="/docs/
+   pagefind/pagefind-ui.css">` and a small client-side script that calls
+   `new PagefindUI(...)` against the index.
+
+8. **`<Screenshot>` placeholder rendering.** **Default:** when the `src`
+   prop starts with `placeholder://`, the component renders a bordered
+   box with a neutral background, the alt text inside, and a small
+   "placeholder" pill in the corner. Real screenshots (post-deployment
+   work) just swap `placeholder://` to a real URL.
+
+9. **axe-core test integration.** **Default:** `vitest-axe` (the
+   peer-dep-friendly Vitest matcher) over `@axe-core/react`. Five
+   representative pages tested: homepage, sermon archive, event detail,
+   profile (Personal Info tab), broadcast composer.
+
+10. **Real Azure deployment dry-run.** **Default:** I don't have an Azure
+    subscription in this build environment. I'll document the dry-run as
+    a required pre-launch acceptance test in `README.md` (with a
+    detailed step-by-step that an operator can follow) and provide a
+    local-deployment alternative via `docker-compose.yml` against
+    SQL Server in a container. The Bicep template is unchanged; only
+    the test-harness is local. Marked clearly in IMPLEMENTATION_NOTES as
+    a deferred validation step that the project owner runs before
+    going live.
+
+11. **Lighthouse audit numbers.** **Default:** I'll run Lighthouse in
+    headless Chrome locally against the dev SPA build, document scores
+    in IMPLEMENTATION_NOTES under a "Phase 6 Performance" section. If
+    targets aren't met, document the gap + the remediation needed.
+
+12. **Accessibility skip-to-main-content link.** **Default:** added at
+    the top of the `AppShell` (public) and `AdminLayout` (admin) so
+    every page benefits. Visible only on focus. `<a href="#main-content"
+    className="sr-only focus:not-sr-only ...">` pattern.
+
+13. **`<KeyboardShortcut>` keys prop.** **Default:** accept either a
+    string (`"Ctrl+S"`) or a string-array (`["Cmd","Shift","P"]`); both
+    render with `<kbd>`-styled chips. The string form splits on `+`.
+
+14. **`<RoleNote>` roles prop.** **Default:** accept a single string
+    (`"Administrator"`) or comma-separated (`"Administrator,Editor"`);
+    both render as small chips with the role name and a brief inline
+    explanation. Used liberally on Site Settings pages.
+
+15. **Sitemap.xml refresh cadence.** Phase 2's sitemap is already
+    materialized on demand. **Default:** verify it includes Sermon
+    Series + Events + Blog + Classes + Leaders + ServiceTimes from
+    Phases 3/4; add the missing entity types if absent. Public-only
+    filter unchanged.
+
+16. **License placeholder.** **Default:** drop a `LICENSE` file at repo
+    root with the TODO copy from the spec verbatim. Surface in
+    IMPLEMENTATION_NOTES as an open project decision.
+
+---
+
+## S-3. Ordered Implementation Stages
+
+Effort key: **S** = small (<2h), **M** = medium (2-4h), **L** = large (4-6h), **XL** = extra large (6h+).
+
+### Stage S0 — Site Settings extensions (analytics + cookie policy)
+
+| # | Step | Effort |
+|---|---|---|
+| S0.1 | Domain enum + `SiteSettings` fields: `AnalyticsProvider` (None/Ga4), `Ga4MeasurementId`, `Ga4ConsentBannerEnabled`, `Ga4ConsentBannerPosition` (BottomRight/BottomFull), `CookiePolicyPageId`. EF config + migration `Phase6_AnalyticsAndCookieConsent`. | M |
+| S0.2 | `SiteSettingsDto` + `UpdateSiteSettingsRequest` + validator round-trip. Existing test fixture extended with new defaults. | M |
+| S0.3 | `PublicSiteSettingsDto` extended with `analyticsProvider`, `ga4MeasurementId`, `cookiePolicyPageSlug` (resolved server-side from `CookiePolicyPageId`). | S |
+
+### Stage S1 — RSS feeds (Blog, News, Sermons)
+
+| # | Step | Effort |
+|---|---|---|
+| S1.1 | `IRssFeedBuilder` (Application) + `XmlWriter`-backed `RssFeedBuilder` (Infrastructure). Hand-rolled RSS 2.0 with Atom self-link namespace. RFC 822 dates. CDATA-wrapped descriptions. Up to 50 items per feed. Hero-image enclosures when present. | L |
+| S1.2 | `BlogRssController`, `NewsRssController`, `SermonsRssController` — each `GET /{type}/rss.xml` returning `application/rss+xml; charset=utf-8`. Output-cached 15 min with the entity's existing tag. | M |
+| S1.3 | Public-only filter: members-only entries excluded from each feed. | S |
+| S1.4 | RSS auto-discovery `<link rel="alternate" type="application/rss+xml" ...>` on `/blog`, `/blog/{slug}`, `/news`, `/news/{slug}`, `/sermons`, `/sermons/{slug}`. | S |
+| S1.5 | Tests: feed XML well-formed; members-only items absent; pubDate is RFC 822; enclosure URL matches hero image. | M |
+
+### Stage S2 — Site config endpoint (analytics-aware)
+
+| # | Step | Effort |
+|---|---|---|
+| S2.1 | `GET /api/public/site-config` (anonymous) returning analytics shape + cookie-policy slug. | M |
+| S2.2 | SPA `siteConfigApi` + `useSiteConfig` hook. Fetched once on app mount; cached in context. | S |
+
+### Stage S3 — Cookie consent banner + GA4 loader
+
+| # | Step | Effort |
+|---|---|---|
+| S3.1 | `<CookieConsentBanner>` SPA component. Renders only when `analyticsProvider=Ga4` AND `cms_consent` cookie absent. Accept / Decline buttons; position from settings. | M |
+| S3.2 | GA4 loader: dynamically inject `gtag.js` after Accept; init `gtag('config', ...)`; hook React Router location changes for `page_view` events. Skipped on Decline. | M |
+| S3.3 | Footer "Cookie Preferences" link (always visible). Modal shows current consent + Revoke. Revoke clears cookie + reloads. | S |
+| S3.4 | Privacy Policy seed updated to reference cookie consent + GA4 + auth/session cookies. | S |
+| S3.5 | Tests: banner renders only when GA4 enabled and no cookie; Accept sets cookie + injects script; Decline sets cookie + does not inject; Revoke clears cookie. | M |
+
+### Stage S4 — Footer social links polish
+
+| # | Step | Effort |
+|---|---|---|
+| S4.1 | Audit current footer; replace generic icons with Lucide brand icons (`Facebook`, `Instagram`, `Youtube`, `Twitter`, fallback for TikTok). | S |
+| S4.2 | Aria-labels: "{ChurchName} on Facebook" etc. New tab + `rel="noopener noreferrer"`. Skip rendering when URL blank. | S |
+| S4.3 | Mobile audit at 375px / 768px / 1280px. | S |
+
+### Stage S5 — Astro docs site bootstrap
+
+| # | Step | Effort |
+|---|---|---|
+| S5.1 | `docs/` Astro project init (TS strict + Tailwind). `astro.config.mjs` static output to `docs/dist/`, base URL `/docs/`. | M |
+| S5.2 | Shared Tailwind tokens: extract SPA's system-theme tokens to `tailwind.system-theme.cjs` at repo root; both Tailwind configs import. Verify SPA still builds clean. | M |
+| S5.3 | `lucide-astro` for icons matching SPA's Lucide usage. | S |
+
+### Stage S6 — Astro layouts + custom components
+
+| # | Step | Effort |
+|---|---|---|
+| S6.1 | `BaseLayout.astro` — header, left sidebar, main, right TOC. Mobile drawer below 768px. | L |
+| S6.2 | `SectionLayout.astro` — category landing layout. | M |
+| S6.3 | Five custom components: `<Callout>`, `<Steps>`+`<Step>`, `<Screenshot>` (with `placeholder://` rendering), `<KeyboardShortcut>`, `<RoleNote>`. | L |
+| S6.4 | `<SearchBar>` placeholder until S8 wires Pagefind. | S |
+
+### Stage S7 — Astro docs content (initial pages)
+
+| # | Step | Effort |
+|---|---|---|
+| S7.1 | `index.astro` (welcome) + `getting-started/*` (4 pages). | M |
+| S7.2 | `content-management/*` (11 pages). | XL |
+| S7.3 | `members-and-groups/*` (6 pages). | L |
+| S7.4 | `communications/*` (8 pages). | L |
+| S7.5 | `integrations/*` (6 pages). | L |
+| S7.6 | `administration/*` (8 pages). | L |
+| S7.7 | `troubleshooting/*` (4 pages). | M |
+
+### Stage S8 — Pagefind integration
+
+| # | Step | Effort |
+|---|---|---|
+| S8.1 | `npx pagefind --site dist` post-build step wired into `docs/package.json`. Verify `dist/pagefind/` produced. | S |
+| S8.2 | `<SearchBar>` upgraded: load `pagefind/pagefind-ui.js` client-side; mount `PagefindUI` against the index. | M |
+
+### Stage S9 — API gating for /docs/*
+
+| # | Step | Effort |
+|---|---|---|
+| S9.1 | `DocsController` serving `wwwroot/docs/` under `AdminShell` policy. Anonymous → church 404 (covert). MIME whitelist. `index.html` fallback. Path-traversal guard. | L |
+| S9.2 | Build pipeline: GH Actions step builds Astro, copies `docs/dist/*` to `api/CredoCms.Api/wwwroot/docs/`. Local-dev `docs/build-and-copy.sh`. | M |
+| S9.3 | Tests: anonymous → church 404; Editor/Admin → 200. | M |
+
+### Stage S10 — Accessibility audit + fixes (cross-cutting)
+
+| # | Step | Effort |
+|---|---|---|
+| S10.1 | Skip-to-main-content link in `AppShell` and `AdminLayout`. | S |
+| S10.2 | Public surface audit: keyboard tab order, aria-labels, semantic HTML, heading hierarchy, focus-visible, contrast. Fixes inline. | XL |
+| S10.3 | Admin surface audit: same set. Fixes inline. | XL |
+| S10.4 | Modal focus trap + Esc-close + restore-focus. Audit every modal site-wide. | L |
+| S10.5 | Form-field accessibility audit: labels, required indicators, validation announcements. | L |
+| S10.6 | TipTap accessibility audit: keyboard shortcuts, toolbar labels, semantic output. | M |
+| S10.7 | FullCalendar accessibility audit: keyboard navigation, event-cell announcements. | M |
+| S10.8 | `vitest-axe` automated tests for 5 representative pages. | L |
+| S10.9 | `ACCESSIBILITY.md` at repo root. | M |
+
+### Stage S11 — Mobile responsive audit + fixes
+
+| # | Step | Effort |
+|---|---|---|
+| S11.1 | Public pages at 375px: 25+ pages. Document issues; fix critical. | XL |
+| S11.2 | Admin pages at 375px: 25+ pages. Same. | XL |
+| S11.3 | Astro docs site at 375px (sidebar drawer + main readable). | M |
+| S11.4 | Cookie consent banner at 375px. | S |
+
+### Stage S12 — SEO + meta-tag audit
+
+| # | Step | Effort |
+|---|---|---|
+| S12.1 | Verify every public page has unique `<title>`, meta description, og:*, twitter:*, canonical. Add missing tags. | L |
+| S12.2 | JSON-LD structured data: `Organization`/`Church`, `Article` (Pages with date / News / Blog), `VideoObject` (Sermons), `Event`, `Person` (Leaders), `Schedule` (Service Times). | L |
+| S12.3 | Sitemap.xml audit: includes new entity types from Phases 3/4; lastmod accurate; members-only excluded. | M |
+| S12.4 | Robots.txt audit: disallow list complete; sitemap referenced. | S |
+| S12.5 | Lighthouse SEO audit on representative pages; document scores. | S |
+
+### Stage S13 — Performance pass + image optimization
+
+| # | Step | Effort |
+|---|---|---|
+| S13.1 | Lighthouse Performance + Best Practices on homepage, sermon archive, sermon detail, event detail, blog detail. Document scores. | M |
+| S13.2 | Verify Phase 2 WebP via `<picture>` with WebP source + JPEG fallback. | M |
+| S13.3 | Verify lazy loading on below-the-fold images. | S |
+| S13.4 | SPA bundle analysis: dynamic-import audit for FullCalendar (calendar route only) and TipTap (editor routes only). | M |
+| S13.5 | API response time spot-check under output cache. | S |
+
+### Stage S14 — Tests (Phase 6 additions)
+
+| # | Step | Effort |
+|---|---|---|
+| S14.1 | Cookie consent banner tests (consolidates S3.5). | M |
+| S14.2 | RSS feed tests (consolidates S1.5). | M |
+| S14.3 | Docs gating tests (consolidates S9.3). | M |
+| S14.4 | Site config endpoint test: anonymous returns 200; provider=None hides ga4MeasurementId. | S |
+| S14.5 | RSS auto-discovery `<link>` tag presence tests. | S |
+| S14.6 | Skip-to-main-content link visibility-on-focus test. | S |
+
+### Stage S15 — Operator README expansion
+
+| # | Step | Effort |
+|---|---|---|
+| S15.1 | Quick Start (Developer): prereqs, clone, configure, migrate, run, default credentials, first steps. | M |
+| S15.2 | Architecture Overview: ASCII diagram + reference docs. | M |
+| S15.3 | Configuration Reference: every appsetting documented. | M |
+| S15.4 | Deployment Guide (Production): Azure resources, Bicep, custom domain + TLS, DNS, App Insights, Key Vault, first-deploy checklist, cost estimate. | XL |
+| S15.5 | Operations Runbook: backup/restore, migration rollout, suppression list, member removal, prayer urgency, Connect Card spam, search rebuild, YouTube manual sync, admin add/remove, forgotten admin password. | XL |
+| S15.6 | Operator Documentation (non-developer) section pointing to `/docs/*`. | S |
+| S15.7 | Troubleshooting Common Issues: 5+ scenarios. | M |
+| S15.8 | Multi-Tenancy Roadmap pointer. | S |
+| S15.9 | Contributing section: branch strategy, PR process, code style. | S |
+
+### Stage S16 — IMPLEMENTATION_NOTES cleanup + ARCHITECTURE.md
+
+| # | Step | Effort |
+|---|---|---|
+| S16.1 | Review IMPLEMENTATION_NOTES end-to-end. Remove transient notes. | M |
+| S16.2 | Promote durable architectural decisions to `ARCHITECTURE.md` (new file at repo root). | L |
+| S16.3 | Final cleanup. | M |
+
+### Stage S17 — ROADMAP review
+
+| # | Step | Effort |
+|---|---|---|
+| S17.1 | Pass through every existing item; tag as `[v1.x]` / `[v2]` / `[out-of-scope]`. | M |
+| S17.2 | Add Phase 5 carry-forwards + Phase 6 carry-forwards (real screenshots, real Azure dry-run). | M |
+| S17.3 | Add the categorized v1.x / v2 / out-of-scope items from Section 11 of the prompt. | M |
+
+### Stage S18 — LICENSE placeholder
+
+| # | Step | Effort |
+|---|---|---|
+| S18.1 | `LICENSE` file at repo root with the TODO copy from the spec. IMPLEMENTATION_NOTES entry flagging the open decision. | S |
+
+### Stage S19 — Deployment dry-run
+
+| # | Step | Effort |
+|---|---|---|
+| S19.1 | If real Azure available: full Bicep + GH Actions + smoke test. Document time-to-first-public-page. | XL |
+| S19.2 | If not: document required deployment validation as pre-launch acceptance test in README. Provide local Docker Compose alternative. Mark Azure dry-run as required pre-launch. | XL |
+
+### Stage S20 — Final verification
+
+| # | Step | Effort |
+|---|---|---|
+| S20.1 | `dotnet build` clean, `dotnet test` green, `npm run build` clean, `npm test` green, docs build clean, Pagefind index built. | M |
+| S20.2 | Smoke check end-to-end. | L |
+| S20.3 | Final IMPLEMENTATION_NOTES entry: end-of-Phase-6 / end-of-v1 state. | M |
+
+---
+
+## S-4. Dependencies & Critical-Path Notes
+
+- **S0 → S2 → S3** Settings keys → public endpoint → SPA banner.
+- **S5 → S6 → S7 → S8** Astro project → layouts/components → content → search index. Cannot meaningfully parallelize.
+- **S5/S6 → S9** API gating tested against actual built docs.
+- **S10 (a11y) and S11 (mobile)** independent of docs. Sequence: S10 first because semantic-HTML changes can affect mobile rendering; S11 picks up afterwards.
+- **S12 (SEO)** parallelizable with S10/S11 — different file types.
+- **S15 (README)** depends on everything else being settled.
+- **S16 (notes cleanup)** depends on having all Phase 6 entries.
+- **S17 (ROADMAP)** late-stage; reflects everything deferred.
+- **S19 (deployment dry-run)** ideally last — validates everything in concert.
+- **S20** final.
+
+Critical path: **S0 → S5 → S6 → S7 → S9 → S15 → S19 → S20.**
+S1–S3 parallelizable after S0. S10/S11/S12 parallelizable after S6.
+S13/S14 late but small. S16/S17/S18 trivial.
+
+---
+
+## S-5. Risks
+
+| Risk | Mitigation |
+|---|---|
+| Astro 5 + Tailwind v4 + SPA's Tailwind v3 disagree about token sharing. | Default approach (CJS file at repo root) is most compatible. If v4 forces CSS-first, document migration in IMPLEMENTATION_NOTES. |
+| Pagefind misses content because docs use unusual HTML structure. | Astro defaults produce conventional HTML; Pagefind defaults work. If a page is missed, add `data-pagefind-body` to scope. |
+| Accessibility audit on Phase 1 admin shell uncovers gaps too deep to fix without regressions. | Document gap in ACCESSIBILITY.md as known limitation with v1.x target. Don't refactor production code paths solely for axe-core score. |
+| Cookie banner renders before GA4 measurement ID is available (race condition). | Banner waits on `useSiteConfig` to resolve. State held in context gated on `analyticsProvider === "Ga4"`. |
+| `/docs/*` static-file serving leaks files outside `wwwroot/docs/`. | `PhysicalFileProvider` rooted at docs subdirectory; MIME whitelist; reject paths containing `..`. |
+| RSS feed exposure of members-only items via slug enumeration. | Hard filter `IsMembersOnly=false` in queries; tests verify. |
+| Real Azure deployment dry-run not feasible in this build environment. | Document required pre-launch acceptance test in README. Provide local Docker Compose alternative exercising same code paths. Owner runs actual Azure run. |
+| Lighthouse Performance target (≥85 mobile) blocked by FullCalendar bundle size. | Dynamic-import FullCalendar so it loads only on calendar routes. If still blocked, document gap. |
+| TipTap and FullCalendar accessibility limitations are upstream-bound. | Document in ACCESSIBILITY.md; flag v1.x improvements via library updates. |
+| `/docs/*` covert-404 breaks if SPA's catch-all route runs first. | Order matters: `MapControllers()` before `MapFallbackToFile("index.html")`. Verify and comment in Program.cs. |
+| Skip-to-main-content link interferes with sticky header layout. | Position absolutely so it doesn't shift the header on focus. Tested at 375px and 1280px. |
+
+---
+
+## S-6. What I Will NOT Do in Phase 6
+
+- No SMS implementation (Phase 5 stub stays). v1.5.
+- No real-time photo galleries. ROADMAP.
+- No member-to-member messaging. ROADMAP.
+- No class signup/RSVP. ROADMAP.
+- No prayer-request comments by members. ROADMAP.
+- No blog comments. ROADMAP.
+- No multi-tenant architecture changes. v2.
+- No multilingual content (i18n). Permanently out.
+- No multi-campus support. v2.
+- No mobile native app. ROADMAP.
+- No real screenshots in docs (placeholder model).
+- No Phase 5 carry-forward refactors. Tracked in ROADMAP.
+- No deep refactors to TipTap or FullCalendar accessibility — limitations documented.
+
+If during implementation I find myself drawn into any of the above, I will stop and ask.
+
+---
+
+## S-7. Awaiting Review
+
+This Phase 6 plan is the only deliverable until you approve it. Once approved
+(with or without adjustments), I'll execute S0 through S20 in order, updating
+`IMPLEMENTATION_NOTES.md` as I go and surfacing genuine ambiguities via
+`// TODO:` comments rather than guessing silently. Phases 1, 2, 3, 4, and 5
+deliverables stay intact throughout.
+
+Phase 6 is intentionally cross-cutting: accessibility fixes, SEO refinements,
+mobile polish, and the footer audit will touch code in earlier phases. That's
+expected and acceptable as long as no Phase 1–5 functionality regresses (the
+test suite stays green; the public + admin smoke paths still work). The
+real-Azure-deployment dry-run is documented as a required pre-launch
+acceptance test that the project owner runs against their actual subscription;
+Phase 6 ships everything that makes that dry-run executable, plus a local
+Docker Compose alternative for the same code paths.
+
+The single most important Phase 6 deliverable is the documentation: the
+README + Astro `/docs/*` site + ACCESSIBILITY.md + IMPLEMENTATION_NOTES
+final cleanup. A non-developer must be able to set up, deploy, and operate
+the site by following them. Documentation that's incomplete or inaccurate
+is a hard fail.
