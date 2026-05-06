@@ -649,3 +649,102 @@ changes (only `CalendarFeedToken` in Q14).
   Infrastructure 13, Api 10).
 - `npm run build` clean.
 - `npm test` — 21 passing.
+
+
+---
+
+## Phase 4 — Members and Community
+
+Phase 4 lands the members + community feature set across 21 stages
+(Q0–Q20). Branch: `claude/credo-cms-phase-1-06gIY`.
+
+### What shipped
+
+- **Q0–Q1** — 10 new domain entities (Group, GroupMembership, ClassSlot,
+  ClassOffering, BlogPost + tag link, PrayerRequest + Update +
+  PrayedFor, ConnectCardSubmission); EF migration
+  `AddPhase4MembersAndCommunity`.
+- **Q2–Q3** — `ProfileService` + `/api/profile` + 4-tab SPA profile
+  page (Personal info, Directory, Notifications, Account); admin
+  user-profile-fields + reset-notifications + admin-notes endpoints.
+- **Q4** — Members directory (`/api/members`, `/members`, `/members/{id}`)
+  with two-layer privacy (DB-level opt-in gate + service-level
+  field-level filter).
+- **Q5–Q6** — Groups end-to-end. Visibility (Public/MembersOnly/Hidden),
+  joinability (Open/InviteOnly/Closed), required-message-on-join,
+  roster visibility (LeadersOnly/AllGroupMembers). SignalR
+  `GroupJoinRequestSubmitted` to admins + each leader's per-user channel
+  (NotificationHub auto-joins per-user channel on connect).
+- **Q7–Q8** — Classes. Two distinct DTO shapes (`PublicClassSlot` vs
+  `MemberClassSlot`) so the privacy contract is compile-time enforced.
+  Public list grouped by audience age group with filter chips; member-
+  augmented response surfaces teacher / room / weekly schedule.
+- **Q9–Q10** — Prayer requests. `IProfanityCheckService` ships an in-
+  process implementation (NuGet `ProfanityFilter` was unreachable in
+  this build env; surface unchanged so the package can drop in later).
+  Anonymous-display rule hides submitter from non-privileged viewers but
+  keeps it visible to admins/editors/the submitter. SignalR
+  `PrayerRequest{Created,Updated,StatusChanged,PrayedForCountChanged,
+  UpdateAdded}` on the new "members" SignalR group; `useNotificationHub`
+  auto-joins authenticated members on connect.
+- **Q11–Q12** — Connect card. Anti-bot ladder: honeypot →
+  5-second time-to-submit → Cloudflare Turnstile siteverify → field
+  validation. Sliding-window rate limit `5/hour` per IP. SignalR
+  `ConnectCardSubmitted` toast in admin shell.
+- **Q13–Q14** — Blog. Reading-time computed from body word count on
+  every save (max(1, ceil(words/250))); excerpt auto-derived from body
+  text when blank; tags via existing `ITagService`; PublishedAt auto-
+  stamped on first publish.
+- **Q15** — Facebook OAuth linking. NuGet
+  `Microsoft.AspNetCore.Authentication.Facebook` installed. Sign-in
+  rejects unknown Facebook profiles (no account creation path); members
+  link from /profile, then sign in via the new "Continue with Facebook"
+  button on /login. `/api/profile/facebook-status` powers the SPA's
+  Linked/Unlinked badge.
+- **Q16** — Site settings UI wiring. New "Members & Community" and
+  "Integrations" tabs in `/admin/settings` cover all Phase 4 fields
+  (page labels, class audience age groups, blog categories,
+  prayer-archive lookback, connect-card interests + ack message,
+  profanity wordlist + allowlist, Cloudflare Turnstile site/secret
+  keys, Facebook OAuth app id/secret + Login-enabled toggle).
+- **Q17** — Blog wired into `ISearchIndexer`: upsert on create/update,
+  remove on soft-delete; future-dated posts excluded from `IsPublished`
+  flag in the index.
+- **Q18** — Sample seed data: two groups (public Youth Group +
+  members-only Men's Bible Study) and one pinned welcome blog post.
+  Other Phase 4 domains intentionally start empty so admins
+  populate them with real content.
+- **Q19** — Tests. 198 backend (Domain 15, Application 127,
+  Infrastructure 13, Api 43) + 21 SPA. Coverage added per stage:
+  permission gates, privacy filters, anti-bot rules, SignalR emission.
+- **Q20** — Documentation + final verification (this section).
+
+### Editorial design refresh
+
+In parallel with the backend work, the admin shell got the Editorial
+visual refresh per `DESIGN_HANDOFF.md` + `CredoCMS Admin Refresh
+_standalone_.html`. All 10 admin screens (sign-in, dashboard, settings,
+pages list, page editor, news list, sermons, events, users & roles,
+audit log) plus the Phase 4 admin pages (groups, classes,
+connect-cards, prayer requests, blog) use the shared editorial
+primitives in `app/src/components/shared/admin/EditorialPrimitives.tsx`.
+
+### Verification
+
+- API: `dotnet test` — 198/198 passing.
+- SPA: `npm test` — 21/21 passing.
+- API build: `dotnet build CredoCms.slnx` — 0 warnings.
+- SPA build: `npx vite build` — clean (chunk-size warning is the
+  vendor bundle, not a regression).
+
+### Known carry-forwards
+
+- Profanity check uses an in-process implementation; swap in NuGet
+  `ProfanityFilter` package when env reachability allows.
+- Scheduled-publish on blog posts captures the date but doesn't run
+  automation (Phase 5 ships the background job).
+- Email acknowledgment for connect cards uses
+  `LoggingEmailService` (Phase 5 wires SendGrid).
+- `IConnectCardService.DeleteAsync` performs a soft-erase (status →
+  NotLegit) rather than a hard DELETE; flip later if a true GDPR
+  erasure path is needed.
