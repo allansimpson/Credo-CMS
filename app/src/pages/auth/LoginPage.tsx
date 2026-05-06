@@ -1,8 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Church } from "lucide-react";
 import { SystemThemeLayout } from "@/themes/SystemThemeLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
+import {
+  Btn,
+  Field,
+  MetaLabel,
+} from "@/components/shared/admin/EditorialPrimitives";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -29,63 +35,142 @@ export function LoginPage() {
     }
   }
 
+  // TODO: wire endpoint — pull current sermon pull-quote from
+  // GET /api/admin/dashboard/this-sunday once Phase 4 dashboard endpoints land.
+  const pullQuote = {
+    quote: "Faith is the substance of things hoped for, the evidence of things not seen.",
+    attribution: "Hebrews 11:1 · This Sunday",
+  };
+
   return (
     <SystemThemeLayout>
-      <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center bg-background px-4 py-12 text-foreground">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold">{settings?.churchName ?? "Credo CMS"}</h1>
-          <p className="text-muted">Member sign-in</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-card p-6 shadow-sm">
-          {errors.length > 0 && (
-            <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
-              <ul className="list-disc pl-5">
-                {errors.map((err) => <li key={err}>{err}</li>)}
-              </ul>
+      <main className="grid min-h-screen bg-background text-foreground lg:grid-cols-2">
+        {/* Left column — dark sidebar bg with pull-quote */}
+        <aside className="relative hidden flex-col justify-between bg-sidebar p-10 text-background lg:flex">
+          {/* Logo lockup */}
+          <div className="flex items-center gap-3">
+            {settings?.logoUrl ? (
+              <img
+                src={settings.logoUrl}
+                alt=""
+                className="h-8 w-8 object-cover"
+              />
+            ) : (
+              <span
+                aria-hidden
+                className="grid h-8 w-8 place-items-center bg-accent text-accent-foreground"
+              >
+                <Church className="h-4 w-4" />
+              </span>
+            )}
+            <div className="leading-tight">
+              <div className="font-heading text-base font-semibold text-background">
+                {settings?.churchName ?? "Credo CMS"}
+              </div>
+              <div className="text-[11px] uppercase tracking-[0.18em] text-background/60">
+                Credo Workbench
+              </div>
             </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium">Email</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
           </div>
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
+          {/* Pull-quote */}
+          <blockquote className="max-w-md">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+              This week's pull-quote
+            </p>
+            <p className="mt-4 font-heading text-[28px] font-semibold leading-tight tracking-tight text-background">
+              "{pullQuote.quote}"
+            </p>
+            <footer className="mt-3 text-sm text-background/70">
+              {pullQuote.attribution}
+            </footer>
+          </blockquote>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex h-10 w-full items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-          >
-            {submitting ? "Signing in…" : "Sign in"}
-          </button>
-
-          <div className="text-center text-sm">
-            <Link to="/forgot-password" className="text-primary hover:underline">Forgot password?</Link>
+          {/* Footer row */}
+          <div className="flex items-center justify-between font-mono text-[11px] text-background/60">
+            <span>v1.0 · admin</span>
+            <span>{settings?.churchName ?? "credo-cms"}</span>
           </div>
-        </form>
+        </aside>
+
+        {/* Right column — form */}
+        <section className="flex flex-col justify-center bg-panel px-6 py-12">
+          <div className="mx-auto w-full max-w-[360px]">
+            <MetaLabel>Member sign-in</MetaLabel>
+            <h1 className="mt-3 font-heading text-[42px] font-bold leading-none tracking-[-0.025em]">
+              Welcome back.
+            </h1>
+            <p className="mt-3 text-sm text-fg-soft">
+              Sign in to manage your church's content. If you don't have an
+              account, an administrator will invite you by email.
+            </p>
+
+            <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+              {errors.length > 0 && (
+                <div
+                  role="alert"
+                  className="border border-danger/30 bg-danger/10 p-3 text-sm text-danger"
+                >
+                  <ul className="list-disc pl-5">
+                    {errors.map((err) => <li key={err}>{err}</li>)}
+                  </ul>
+                </div>
+              )}
+
+              <Field label="Email" htmlFor="email" required>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-10 w-full border border-border bg-background px-3 text-sm focus-visible:border-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                />
+              </Field>
+
+              <Field
+                label="Password"
+                htmlFor="password"
+                required
+                hint={
+                  <Link
+                    to="/forgot-password"
+                    className="text-accent hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                }
+              >
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="h-10 w-full border border-border bg-background px-3 text-sm focus-visible:border-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                />
+              </Field>
+
+              <Btn
+                type="submit"
+                variant="accent"
+                size="lg"
+                disabled={submitting}
+                className="w-full"
+              >
+                {submitting ? "Signing in…" : "Sign in"}
+              </Btn>
+            </form>
+
+            <p className="mt-8 border-t border-border-soft pt-5 text-xs text-muted">
+              Need an account? Administrators invite you by email.
+            </p>
+          </div>
+        </section>
       </main>
     </SystemThemeLayout>
   );

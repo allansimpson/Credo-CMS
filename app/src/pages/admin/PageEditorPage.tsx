@@ -1,10 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Eye, Globe, History } from "lucide-react";
 import { pagesApi } from "@/lib/api/pages";
 import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import { TipTapFullEditor } from "@/components/shared/TipTapFullEditor";
 import type { CreatePageRequest, PageDetail, UpdatePageRequest } from "@/types/api";
+import {
+  Btn,
+  Chip,
+  Field,
+  MetaLabel,
+  SectionHead,
+  SwitchFlat,
+} from "@/components/shared/admin/EditorialPrimitives";
 
 interface FormState {
   slug: string;
@@ -43,8 +52,7 @@ export function PageEditorPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
-
-  // Auto-generate slug from title when creating, until the user edits the slug.
+  const [dirty, setDirty] = useState(false);
   const [slugAutoGen, setSlugAutoGen] = useState(isNew);
 
   useEffect(() => {
@@ -66,6 +74,7 @@ export function PageEditorPage() {
         isMembersOnly: p.isMembersOnly,
       });
       setSlugAutoGen(false);
+      setDirty(false);
       setLoading(false);
     }).catch(() => {
       if (cancelled) return;
@@ -75,37 +84,39 @@ export function PageEditorPage() {
     return () => { cancelled = true; };
   }, [id, isNew]);
 
-  const handleTitleChange = (next: string) => {
-    setForm((f) => ({
-      ...f,
-      title: next,
-      slug: slugAutoGen ? slugify(next) : f.slug,
-    }));
+  const update = (patch: Partial<FormState>) => {
+    setForm((f) => ({ ...f, ...patch }));
+    setDirty(true);
+    setSuccess(false);
   };
+
+  const handleTitleChange = (next: string) =>
+    update({ title: next, ...(slugAutoGen ? { slug: slugify(next) } : {}) });
 
   const handleSlugChange = (next: string) => {
     setSlugAutoGen(false);
-    setForm((f) => ({ ...f, slug: next }));
+    update({ slug: next });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const buildBody = (): CreatePageRequest | UpdatePageRequest => ({
+    slug: form.slug,
+    title: form.title,
+    bodyJson: form.bodyJson ?? "",
+    excerpt: form.excerpt || null,
+    heroImageUrl: form.heroImageUrl,
+    heroImageWebpUrl: form.heroImageWebpUrl,
+    heroImageAlt: form.heroImageAlt,
+    metaDescription: form.metaDescription || null,
+    isPublished: form.isPublished,
+    isMembersOnly: form.isMembersOnly,
+  });
+
+  const submit = async (publish?: boolean) => {
     setSubmitting(true);
     setErrors([]);
     setSuccess(false);
-
-    const body: CreatePageRequest | UpdatePageRequest = {
-      slug: form.slug,
-      title: form.title,
-      bodyJson: form.bodyJson ?? "",
-      excerpt: form.excerpt || null,
-      heroImageUrl: form.heroImageUrl,
-      heroImageWebpUrl: form.heroImageWebpUrl,
-      heroImageAlt: form.heroImageAlt,
-      metaDescription: form.metaDescription || null,
-      isPublished: form.isPublished,
-      isMembersOnly: form.isMembersOnly,
-    };
+    const body = buildBody();
+    if (typeof publish === "boolean") body.isPublished = publish;
 
     try {
       if (isNew) {
@@ -114,7 +125,9 @@ export function PageEditorPage() {
       } else {
         const updated = await pagesApi.update(id!, body);
         setOriginal(updated);
+        setForm((f) => ({ ...f, isPublished: updated.isPublished }));
         setSuccess(true);
+        setDirty(false);
       }
     } catch (err) {
       const messages =
@@ -142,172 +155,266 @@ export function PageEditorPage() {
     setForm((f) => ({ ...f, slug: fresh.slug }));
   };
 
+  const wordCount = useMemo(() => approxWordCount(form.bodyJson), [form.bodyJson]);
+  const readMin = Math.max(1, Math.round(wordCount / 220));
+
   if (loading) return <p className="text-muted">Loading…</p>;
 
+  const lastSavedLabel = original
+    ? new Date(original.modifiedAt).toLocaleString()
+    : "never";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{isNew ? "New page" : "Edit page"}</h1>
-        {original && original.isSystemPage && (
-          <span className="rounded-full border bg-panel-alt px-3 py-1 text-xs text-muted">
-            System page — slug locked
+    <form
+      onSubmit={(e) => { e.preventDefault(); void submit(); }}
+      className="space-y-6"
+    >
+      {/* Editor command bar */}
+      <header className="relative flex flex-wrap items-center gap-4 border border-border bg-panel px-5 py-3">
+        <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-accent" />
+        <div className="min-w-0 flex-1">
+          <MetaLabel>
+            {isNew ? "Editing · new page" : `Editing · ${original?.slug ?? "—"}`}
+          </MetaLabel>
+          <p className="mt-1 truncate font-heading text-base font-semibold">
+            {form.title || "Untitled page"}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {dirty && <Chip tone="warn" dot>Unsaved changes</Chip>}
+          {success && <Chip tone="success" dot>Saved</Chip>}
+          <span className="font-mono text-[11px] text-muted">
+            Last saved · {lastSavedLabel}
           </span>
-        )}
-      </div>
+          <Btn iconLeft={<History className="h-3.5 w-3.5" />}>History</Btn>
+          {!isNew && (
+            <Btn
+              iconLeft={<Eye className="h-3.5 w-3.5" />}
+              onClick={() => window.open(`/${form.slug}`, "_blank")}
+            >
+              Preview
+            </Btn>
+          )}
+          <Btn
+            type="submit"
+            disabled={submitting}
+            onClick={() => void submit(false)}
+          >
+            {submitting ? "Saving…" : "Save draft"}
+          </Btn>
+          <Btn
+            type="button"
+            variant="accent"
+            disabled={submitting}
+            onClick={() => void submit(true)}
+          >
+            Publish
+          </Btn>
+        </div>
+      </header>
 
       {errors.length > 0 && (
-        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+        <div role="alert" className="border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-disc pl-5">
             {errors.map((e) => <li key={e}>{e}</li>)}
           </ul>
         </div>
       )}
-      {success && (
-        <div role="status" className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Saved.
-        </div>
-      )}
       {original?.isDeleted && (
-        <div role="status" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-          This page is in the deleted tab. <button type="button" onClick={handleRestore} className="font-semibold underline">Restore</button> to make it editable.
+        <div role="status" className="border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
+          This page is in the deleted tab.{" "}
+          <button type="button" onClick={handleRestore} className="font-semibold underline">
+            Restore
+          </button>{" "}
+          to make it editable.
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Title" required>
-          <input
-            value={form.title}
-            required
-            onChange={(e) => handleTitleChange(e.target.value)}
-            className="input"
-          />
-        </Field>
-        <Field
-          label="Slug"
-          required
-          hint={slugAutoGen ? "Auto-generating from title; edit to lock." : (original ? "Changing the slug breaks any external links." : undefined)}
-        >
-          <input
-            value={form.slug}
-            required
-            disabled={original?.isSystemPage ?? false}
-            onChange={(e) => handleSlugChange(e.target.value)}
-            className="input"
-          />
-        </Field>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Left column */}
+        <div className="space-y-6">
+          <div>
+            <MetaLabel>
+              Public page · /{form.slug || "new"}
+            </MetaLabel>
+            <input
+              value={form.title}
+              required
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Untitled page"
+              className="mt-3 w-full border-0 border-b border-transparent bg-transparent font-heading text-[40px] font-semibold leading-tight tracking-[-0.025em] focus-visible:border-accent focus-visible:outline-none"
+            />
+            <div className="mt-3 flex items-center gap-3 border-t border-border-soft pt-3">
+              <Globe className="h-4 w-4 text-muted" />
+              <span className="font-mono text-sm text-fg-soft">/{form.slug}</span>
+              <button
+                type="button"
+                onClick={() => setSlugAutoGen((v) => !v)}
+                disabled={original?.isSystemPage ?? false}
+                className="text-xs text-accent hover:underline disabled:opacity-50"
+              >
+                {slugAutoGen ? "Lock slug" : "Edit slug"}
+              </button>
+              {!slugAutoGen && (
+                <input
+                  value={form.slug}
+                  required
+                  disabled={original?.isSystemPage ?? false}
+                  onChange={(e) => handleSlugChange(e.target.value)}
+                  className="ml-auto h-7 w-56 border border-border bg-background px-2 font-mono text-xs focus-visible:border-accent focus-visible:outline-none"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Hero */}
+          <section className="space-y-3">
+            <SectionHead number="01" title="Hero image" />
+            <ImageUpload
+              ariaLabel="Hero image"
+              value={{
+                url: form.heroImageUrl,
+                webpUrl: form.heroImageWebpUrl,
+                alt: form.heroImageAlt,
+              }}
+              onChange={(next) =>
+                update({
+                  heroImageUrl: next.url,
+                  heroImageWebpUrl: next.webpUrl,
+                  heroImageAlt: next.alt,
+                })
+              }
+            />
+          </section>
+
+          {/* Body */}
+          <section className="space-y-3">
+            <SectionHead number="02" title="Body" />
+            <div className="border border-border bg-panel">
+              <TipTapFullEditor
+                ariaLabel="Page body"
+                valueJson={form.bodyJson}
+                onChangeJson={(json) => update({ bodyJson: json })}
+                placeholder="Write the page body here…"
+              />
+              <footer
+                className="flex items-center justify-between border-t border-border-soft px-4 py-2 font-mono text-[11px] text-muted"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                <span>{wordCount} words</span>
+                <span>{readMin}m {Math.round((wordCount / 220 - readMin) * 60)}s read</span>
+              </footer>
+            </div>
+          </section>
+
+          {/* SEO */}
+          <section className="space-y-3">
+            <SectionHead number="03" title="SEO & summary" />
+            <Field label="Excerpt" hint="Optional. Auto-generated from the body's text if left blank.">
+              <textarea
+                value={form.excerpt}
+                maxLength={500}
+                onChange={(e) => update({ excerpt: e.target.value })}
+                className="min-h-20 w-full border border-border bg-background p-2 text-sm focus-visible:border-accent focus-visible:outline-none"
+              />
+            </Field>
+            <Field label="Meta description" hint="Used for search-engine snippets. Up to 300 chars.">
+              <textarea
+                value={form.metaDescription}
+                maxLength={300}
+                onChange={(e) => update({ metaDescription: e.target.value })}
+                className="min-h-16 w-full border border-border bg-background p-2 text-sm focus-visible:border-accent focus-visible:outline-none"
+              />
+            </Field>
+          </section>
+        </div>
+
+        {/* Right aside */}
+        <aside className="space-y-6 lg:sticky lg:top-4 lg:self-start">
+          <section className="border border-border bg-panel">
+            <header className="border-b border-border-soft px-5 py-3">
+              <h3 className="font-heading text-sm font-semibold">Publishing</h3>
+            </header>
+            <div className="space-y-4 p-5 text-sm">
+              <div className="flex items-center justify-between">
+                <span>Status</span>
+                {form.isPublished
+                  ? <Chip tone="success" dot>Published</Chip>
+                  : <Chip tone="warn" dot>Draft</Chip>}
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Members only</span>
+                <SwitchFlat
+                  label="Members only"
+                  checked={form.isMembersOnly}
+                  onChange={(v) => update({ isMembersOnly: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Published</span>
+                <SwitchFlat
+                  label="Published"
+                  checked={form.isPublished}
+                  onChange={(v) => update({ isPublished: v })}
+                />
+              </div>
+              {original?.isSystemPage && (
+                <p className="border-t border-border-soft pt-3 text-xs text-muted">
+                  System page — slug locked
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="border border-border bg-panel">
+            <header className="border-b border-border-soft px-5 py-3">
+              <h3 className="font-heading text-sm font-semibold">Schedule</h3>
+            </header>
+            <div className="space-y-3 p-5 text-sm">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted">Last saved</p>
+                <p className="font-mono text-xs">{lastSavedLabel}</p>
+              </div>
+            </div>
+          </section>
+
+          {!isNew && original && !original.isDeleted && !original.isSystemPage && (
+            <Btn
+              type="button"
+              variant="danger"
+              size="lg"
+              onClick={handleSoftDelete}
+              className="w-full"
+            >
+              Delete page
+            </Btn>
+          )}
+        </aside>
       </div>
-
-      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
-        <legend className="px-2 text-sm font-semibold">Hero image</legend>
-        <ImageUpload
-          ariaLabel="Hero image"
-          value={{
-            url: form.heroImageUrl,
-            webpUrl: form.heroImageWebpUrl,
-            alt: form.heroImageAlt,
-          }}
-          onChange={(next) => setForm((f) => ({
-            ...f,
-            heroImageUrl: next.url,
-            heroImageWebpUrl: next.webpUrl,
-            heroImageAlt: next.alt,
-          }))}
-        />
-      </fieldset>
-
-      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
-        <legend className="px-2 text-sm font-semibold">Body</legend>
-        <TipTapFullEditor
-          ariaLabel="Page body"
-          valueJson={form.bodyJson}
-          onChangeJson={(json) => setForm((f) => ({ ...f, bodyJson: json }))}
-          placeholder="Write the page body here…"
-        />
-      </fieldset>
-
-      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
-        <legend className="px-2 text-sm font-semibold">SEO & summary</legend>
-        <Field label="Excerpt" hint="Optional. Auto-generated from the body's text if left blank.">
-          <textarea
-            value={form.excerpt}
-            maxLength={500}
-            onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
-            className="input min-h-20 py-2"
-          />
-        </Field>
-        <Field label="Meta description" hint="Used for search-engine snippets. Up to 300 chars.">
-          <textarea
-            value={form.metaDescription}
-            maxLength={300}
-            onChange={(e) => setForm((f) => ({ ...f, metaDescription: e.target.value }))}
-            className="input min-h-16 py-2"
-          />
-        </Field>
-      </fieldset>
-
-      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
-        <legend className="px-2 text-sm font-semibold">Visibility</legend>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.isPublished}
-            onChange={(e) => setForm((f) => ({ ...f, isPublished: e.target.checked }))}
-          />
-          Published
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={form.isMembersOnly}
-            onChange={(e) => setForm((f) => ({ ...f, isMembersOnly: e.target.checked }))}
-          />
-          Members only — anonymous visitors will see a 404
-        </label>
-      </fieldset>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {submitting ? "Saving…" : isNew ? "Create page" : "Save changes"}
-        </button>
-        {!isNew && original && !original.isDeleted && !original.isSystemPage && (
-          <button
-            type="button"
-            onClick={handleSoftDelete}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-danger/30 bg-card px-4 text-sm text-danger hover:bg-danger/10"
-          >
-            Delete
-          </button>
-        )}
-      </div>
-
-      <style>{`
-        .input {
-          height: 2.5rem;
-          width: 100%;
-          border-radius: 0.375rem;
-          border: 1px solid hsl(var(--input));
-          background: hsl(var(--background));
-          padding: 0 0.75rem;
-          font-size: 0.875rem;
-        }
-        textarea.input { height: auto; }
-      `}</style>
     </form>
   );
 }
 
-function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm font-medium">
-        {label}{required && <span className="text-danger"> *</span>}
-      </span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
-    </label>
-  );
+function approxWordCount(json: string | null): number {
+  if (!json) return 0;
+  try {
+    const parsed = JSON.parse(json);
+    return countTextWords(parsed);
+  } catch {
+    return 0;
+  }
+}
+
+function countTextWords(node: unknown): number {
+  if (!node) return 0;
+  if (typeof node !== "object") return 0;
+  const n = node as { text?: string; content?: unknown[] };
+  let total = 0;
+  if (typeof n.text === "string") {
+    total += n.text.split(/\s+/).filter(Boolean).length;
+  }
+  if (Array.isArray(n.content)) {
+    for (const child of n.content) total += countTextWords(child);
+  }
+  return total;
 }

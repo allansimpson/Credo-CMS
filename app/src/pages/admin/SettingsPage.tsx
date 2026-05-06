@@ -4,6 +4,13 @@ import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import type { SiteSettings, UpdateSiteSettingsRequest } from "@/types/api";
 import { TipTapEditor } from "@/components/shared/TipTapEditor";
 import { ImageUpload } from "@/components/shared/ImageUpload";
+import {
+  Btn,
+  MetaLabel,
+  PageHeader,
+  SectionHead,
+} from "@/components/shared/admin/EditorialPrimitives";
+import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "branding", label: "Branding" },
@@ -20,36 +27,40 @@ export function SettingsPage() {
   const [active, setActive] = useState<TabId>("branding");
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Site Settings</h1>
+    <div className="space-y-8">
+      <PageHeader title="Site Settings" subtitle="Configure branding, content, and integrations." />
 
-      <div className="mt-4 border-b">
-        <div className="flex flex-wrap gap-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActive(t.id)}
-              className={
-                "h-10 px-4 text-sm transition-colors " +
-                (active === t.id
-                  ? "border-b-2 border-accent text-foreground font-semibold"
-                  : "text-muted hover:text-foreground")
-              }
-            >
-              {t.label}
-            </button>
-          ))}
+      <div className="grid gap-8 lg:grid-cols-[200px_minmax(0,720px)]">
+        <nav aria-label="Settings sections" className="space-y-2">
+          <MetaLabel>Sections</MetaLabel>
+          <ul className="mt-3 space-y-px">
+            {TABS.map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  onClick={() => setActive(t.id)}
+                  className={cn(
+                    "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
+                    active === t.id
+                      ? "border-accent bg-panel-alt font-semibold text-foreground"
+                      : "border-transparent text-fg-soft hover:bg-panel-alt hover:text-foreground",
+                  )}
+                >
+                  {t.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="min-w-0">
+          {active === "branding" && <BrandingTab />}
+          {active === "content" && <ContentTab />}
+          {active === "email" && <PlaceholderTab name="Email & Notifications" phase="Phase 5" />}
+          {active === "integrations" && <PlaceholderTab name="Integrations" phase="Phase 3+" />}
+          {active === "privacy" && <PlaceholderTab name="Privacy & Security" phase="future phase" />}
+          {active === "advanced" && <AdvancedTab />}
         </div>
-      </div>
-
-      <div className="mt-6">
-        {active === "branding" && <BrandingTab />}
-        {active === "content" && <ContentTab />}
-        {active === "email" && <PlaceholderTab name="Email & Notifications" phase="Phase 5" />}
-        {active === "integrations" && <PlaceholderTab name="Integrations" phase="Phase 3+" />}
-        {active === "privacy" && <PlaceholderTab name="Privacy & Security" phase="future phase" />}
-        {active === "advanced" && <AdvancedTab />}
       </div>
     </div>
   );
@@ -198,7 +209,7 @@ function BrandingTab() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <FormBanner errors={errors} success={success} />
 
-      <Section title="Identity">
+      <Section number="01" title="Identity">
         <Field label="Church name" required>
           <input value={settings.churchName} required onChange={(e) => setSettings({ ...settings, churchName: e.target.value })} className="input" />
         </Field>
@@ -217,7 +228,7 @@ function BrandingTab() {
         />
       </fieldset>
 
-      <Section title="Colors">
+      <Section number="03" title="Palette">
         <Field label="Primary color">
           <div className="flex items-center gap-2">
             <input type="color" value={settings.primaryColor} onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })} className="h-10 w-12 rounded border" />
@@ -232,13 +243,13 @@ function BrandingTab() {
         </Field>
       </Section>
 
-      <Section title="Contact">
+      <Section number="04" title="Contact">
         <Field label="Email"><input type="email" value={settings.contactEmail ?? ""} onChange={(e) => setSettings({ ...settings, contactEmail: e.target.value })} className="input" /></Field>
         <Field label="Phone"><input value={settings.contactPhone ?? ""} onChange={(e) => setSettings({ ...settings, contactPhone: e.target.value })} className="input" /></Field>
         <Field label="Address"><input value={settings.contactAddress ?? ""} onChange={(e) => setSettings({ ...settings, contactAddress: e.target.value })} className="input" /></Field>
       </Section>
 
-      <Section title="Social links">
+      <Section number="05" title="Social links">
         <Field label="Facebook"><input value={settings.facebookUrl ?? ""} onChange={(e) => setSettings({ ...settings, facebookUrl: e.target.value })} className="input" /></Field>
         <Field label="Instagram"><input value={settings.instagramUrl ?? ""} onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })} className="input" /></Field>
         <Field label="YouTube"><input value={settings.youTubeUrl ?? ""} onChange={(e) => setSettings({ ...settings, youTubeUrl: e.target.value })} className="input" /></Field>
@@ -248,11 +259,11 @@ function BrandingTab() {
         <Field label="Other (URL)"><input value={settings.otherSocialUrl ?? ""} onChange={(e) => setSettings({ ...settings, otherSocialUrl: e.target.value })} className="input" /></Field>
       </Section>
 
-      <Section title="Footer">
+      <Section number="06" title="Footer">
         <Field label="Footer text"><input value={settings.footerText ?? ""} onChange={(e) => setSettings({ ...settings, footerText: e.target.value })} className="input" /></Field>
       </Section>
 
-      <Section title="Versioning">
+      <Section number="07" title="Versioning">
         <Field label="Default retention (5–50)">
           <input
             type="number"
@@ -291,7 +302,7 @@ function ContentTab() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <FormBanner errors={errors} success={success} />
 
-      <Section title="Homepage hero">
+      <Section number="01" title="Homepage hero">
         <Field label="CTA button label" required>
           <input
             value={settings.homepageHeroCtaLabel}
@@ -312,7 +323,7 @@ function ContentTab() {
         </Field>
       </Section>
 
-      <Section title="Leaders page">
+      <Section number="02" title="Leaders page">
         <Field label="Page label" required hint='Public label, e.g. "Our Leaders" or "Elders".'>
           <input
             value={settings.leadersPageLabel}
@@ -327,7 +338,7 @@ function ContentTab() {
         </Field>
       </Section>
 
-      <Section title="Documents">
+      <Section number="03" title="Documents">
         <Field label="Document categories" hint="Drives admin filtering and public grouping on /documents.">
           <CategoryListEditor values={docCats} onChange={setDocCats} />
         </Field>
@@ -377,7 +388,7 @@ function AdvancedTab() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <FormBanner errors={errors} success={success} />
 
-      <Section title="Image uploads">
+      <Section number="01" title="Image uploads">
         <Field label="Max width (px)" hint="Wider images are resized down on upload. Range: 800–5000.">
           <input
             type="number"
@@ -412,7 +423,7 @@ function AdvancedTab() {
         </Field>
       </Section>
 
-      <Section title="Document uploads">
+      <Section number="02" title="Document uploads">
         <Field label="Max document size (MB)" hint="1–200 MB. Limits PDF uploads under /admin/documents.">
           <input
             type="number"
@@ -427,7 +438,7 @@ function AdvancedTab() {
         </Field>
       </Section>
 
-      <Section title="SEO">
+      <Section number="03" title="SEO">
         <Field label="Default meta description" hint="Used when an entity has no description and no excerpt to fall back on. Up to 300 chars.">
           <textarea
             value={settings.defaultMetaDescription ?? ""}
@@ -521,12 +532,20 @@ function parseCategories(json: string): string[] {
   }
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <fieldset className="space-y-4 rounded-lg border bg-card p-4">
-      <legend className="px-2 text-sm font-semibold">{title}</legend>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{children}</div>
-    </fieldset>
+    <section className="space-y-4 pt-2">
+      <SectionHead number={number} title={title} />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
+    </section>
   );
 }
 
