@@ -3,6 +3,7 @@ using CredoCms.Application.Auditing;
 using CredoCms.Application.Homepage;
 using CredoCms.Application.Documents;
 using CredoCms.Application.Events;
+using CredoCms.Application.Groups;
 using CredoCms.Application.Leaders;
 using CredoCms.Application.Members;
 using CredoCms.Application.News;
@@ -46,6 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<IEventOccurrenceExpander, EventOccurrenceExpander>();
         services.AddScoped<IEventService, EventService>();
         services.AddScoped<IEventRegistrationService, EventRegistrationService>();
+        services.AddScoped<IGroupService, GroupService>();
         // RegistrationTokenSigner + options bound from configuration in
         // CredoCms.Infrastructure.DependencyInjection (IConfiguration lives there).
 

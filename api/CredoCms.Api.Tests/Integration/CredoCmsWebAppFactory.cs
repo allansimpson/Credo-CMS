@@ -23,9 +23,17 @@ public sealed class CredoCmsWebAppFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // Replace the SqlServer DbContext with an in-memory one.
-            var dbDescriptor = services.Single(s => s.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-            services.Remove(dbDescriptor);
+            // Replace the SqlServer DbContext with an in-memory one. Both the
+            // options descriptor AND the SqlServer provider's internal service
+            // registration must be removed, otherwise EF Core throws
+            // "multiple database providers registered" the first time the
+            // context is materialized.
+            services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
+            services.RemoveAll<DbContextOptions>();
+            var efServiceDescriptors = services
+                .Where(s => s.ServiceType.FullName?.StartsWith("Microsoft.EntityFrameworkCore.", StringComparison.Ordinal) == true)
+                .ToList();
+            foreach (var d in efServiceDescriptors) services.Remove(d);
 
             services.AddDbContext<ApplicationDbContext>(opt =>
                 opt.UseInMemoryDatabase(_databaseName));
