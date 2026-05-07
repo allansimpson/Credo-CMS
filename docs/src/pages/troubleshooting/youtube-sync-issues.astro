@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="YouTube sync hasn't run">
+  <h1>YouTube sync hasn't run</h1>
+
+  <p>If new YouTube videos aren't showing up as draft sermons:</p>
+  <ol>
+    <li><strong>Check channel id + API key</strong> — Site Settings → Integrations → YouTube. Verify the channel id matches the actual YouTube channel URL slug.</li>
+    <li><strong>Check API quota</strong> — Google Cloud Console → APIs &amp; Services → YouTube Data API v3 → Quotas. Hourly polling uses ~3 units per call (~75/day); the default daily limit is 10,000.</li>
+    <li><strong>Check the worker is running</strong> — Application Insights logs for <code>YouTubeSyncService</code>. The worker logs each tick.</li>
+    <li><strong>Force a sync</strong> — Site Settings → Integrations → YouTube → "Sync now" button bypasses the schedule.</li>
+  </ol>
+</BaseLayout>

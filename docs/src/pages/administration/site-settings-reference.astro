@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Site Settings reference">
+  <h1>Site Settings reference</h1>
+
+  <p>Quick reference of every Site Settings tab. See <a href="/docs/getting-started/site-settings">Site Settings tour</a> for the friendly walkthrough.</p>
+  <h2>Tabs</h2>
+  <ul>
+    <li><strong>Branding</strong> — church name, tagline, colors, logo.</li>
+    <li><strong>Contact</strong> — address, phone, email, social URLs.</li>
+    <li><strong>Content</strong> — image quality, version retention, document/leader categories.</li>
+    <li><strong>Members &amp; Community</strong> — Phase 4 fields: profanity, prayer-request defaults, connect-card interests, blog categories.</li>
+    <li><strong>Email &amp; Notifications</strong> — provider, kill switch, broadcast targets, admin-digest frequency.</li>
+    <li><strong>Integrations</strong> — YouTube, Facebook OAuth, Tithe.ly URL.</li>
+    <li><strong>Privacy &amp; Security</strong> — Cloudflare Turnstile, GA4 + cookie consent, cookie-policy page link.</li>
+  </ul>
+  <h2>Concurrency</h2>
+  <p>Site Settings has a RowVersion concurrency token. If two admins edit simultaneously, the second save returns 409 with a "reload and try again" message.</p>
+</BaseLayout>

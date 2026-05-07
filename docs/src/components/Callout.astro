@@ -1,0 +1,29 @@
+---
+export interface Props {
+  type?: "info" | "warning" | "tip" | "danger";
+  title?: string;
+}
+const { type = "info", title } = Astro.props;
+
+const styles: Record<string, { bg: string; border: string; icon: string; label: string }> = {
+  info:    { bg: "bg-info/5",    border: "border-info",    icon: "ⓘ", label: "Info" },
+  tip:     { bg: "bg-success/5", border: "border-success", icon: "★", label: "Tip" },
+  warning: { bg: "bg-warning/5", border: "border-warning", icon: "⚠", label: "Warning" },
+  danger:  { bg: "bg-danger/5",  border: "border-danger",  icon: "⚠", label: "Danger" },
+};
+const s = styles[type];
+const heading = title ?? s.label;
+---
+<aside
+  class={`my-4 border-l-4 ${s.border} ${s.bg} p-4 not-prose`}
+  role={type === "danger" || type === "warning" ? "alert" : "note"}
+  aria-label={heading}
+>
+  <p class="text-sm font-semibold flex items-center gap-2">
+    <span aria-hidden="true">{s.icon}</span>
+    {heading}
+  </p>
+  <div class="mt-1 text-sm leading-6">
+    <slot />
+  </div>
+</aside>

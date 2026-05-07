@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Audit log">
+  <h1>Audit log</h1>
+
+  <p>Every cross-cutting mutation writes an audit entry: User.Created, User.HardDeleted, SiteSettings.Updated, EmailBroadcast.SendStarted, EventVolunteerRole.Created, etc.</p>
+  <h2>Where</h2>
+  <p><code>/admin/audit-log</code> (Administrator only). Filter by action, entity type, user, date range.</p>
+  <h2>Detail</h2>
+  <p>Each entry captures action, entityType, entityId, the acting user's display name + IP at the time, structured details payload (JSON), and timestamp.</p>
+  <h2>Retention</h2>
+  <p>Indefinite. Log entries are not deleted on user hard-delete (the user's display name is captured at the time, so the audit row remains meaningful).</p>
+</BaseLayout>

@@ -1,0 +1,17 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Email isn't sending">
+  <h1>Email isn't sending</h1>
+
+  <p>If email isn't arriving, work through this checklist in order.</p>
+  <ol>
+    <li><strong>Check EmailEnabled</strong> — Site Settings → Email. If false, the system is logging instead of sending. This is the production-safe default.</li>
+    <li><strong>Check provider</strong> — EmailProvider must be SendGrid or SMTP (not None).</li>
+    <li><strong>Check credentials</strong> — SendGridApiKey or SmtpHost+Username+Password set.</li>
+    <li><strong>Run Test Send</strong> — Site Settings → "Send test email". If this fails, the error message is the actual problem.</li>
+    <li><strong>Check suppression list</strong> — the recipient may have been added (hard bounce, spam report, unsubscribe). Site Settings → Suppression list.</li>
+    <li><strong>Check user preferences</strong> — for non-transactional categories (News, Blog, Broadcast), the recipient may have opted out.</li>
+    <li><strong>Check logs</strong> — Serilog shows every send attempt. Application Insights captures failures.</li>
+  </ol>
+</BaseLayout>

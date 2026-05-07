@@ -1,0 +1,29 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Callout from "../../components/Callout.astro";
+import Steps from "../../components/Steps.astro";
+import Step from "../../components/Step.astro";
+import RoleNote from "../../components/RoleNote.astro";
+---
+<BaseLayout title="First login">
+  <h1>First login</h1>
+  <RoleNote roles="Administrator">Required to perform first-time setup.</RoleNote>
+  <p>The seeded administrator account is created on first deploy with a password configured via the <code>Identity:DefaultAdminPassword</code> application setting (or the default value in <code>appsettings.template.json</code>, which is intentionally weak).</p>
+  <Steps>
+    <Step title="Visit the login page" number={1}>
+      Navigate to <code>/login</code> in your browser. The default admin email is configured at <code>Identity:DefaultAdminEmail</code> in your appsettings.
+    </Step>
+    <Step title="Sign in" number={2}>
+      Enter the email and seeded password.
+    </Step>
+    <Step title="Change the password immediately" number={3}>
+      The first action after login should be Profile → Account → Change Password. The seeded password is intentionally weak so the operator can sign in once; pick a strong one and store it in your password manager.
+    </Step>
+    <Step title="Verify the account is active" number={4}>
+      Navigate to /admin/users, find your account, confirm it's marked Active and has the Administrator role.
+    </Step>
+  </Steps>
+  <Callout type="warning" title="Forgotten admin password">
+    The default admin user is excluded from the password-reset flow for security. If you lose the password, see <a href="/docs/administration/user-management">User management</a> for the database-recovery procedure.
+  </Callout>
+</BaseLayout>

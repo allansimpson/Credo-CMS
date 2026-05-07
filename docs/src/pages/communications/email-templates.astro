@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Email templates">
+  <h1>Email templates</h1>
+
+  <p>16 system templates ship seeded. Each has a stable <em>TemplateKey</em>, editable subject + HTML body + plain-text body, and documented merge fields.</p>
+  <h2>Editing</h2>
+  <p>Site Settings → Email Templates → click the template. Subject + body are editable. The TemplateKey is immutable (code paths look up by key).</p>
+  <h2>Merge fields</h2>
+  <p>Use <code>{{firstName}}</code>, <code>{{churchName}}</code>, <code>{{currentYear}}</code>, etc. Strict-mode rendering: missing variables throw at send time so a literal "{{resetLink}}" never lands in an inbox.</p>
+  <h2>Auto-injected commons</h2>
+  <p><em>churchName</em>, <em>currentYear</em>, <em>unsubscribeLink</em> are injected on every render. Caller-provided values override.</p>
+</BaseLayout>

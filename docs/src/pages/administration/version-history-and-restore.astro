@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Version history & restore">
+  <h1>Version history & restore</h1>
+
+  <p>Versioned entities (Pages, News, Blog, Sermons, Documents, Leaders, Events, etc.) have temporal-table history. Every save creates a snapshot.</p>
+  <h2>Viewing history</h2>
+  <p>From any versioned entity's edit page, click "Version history". A list of snapshots with timestamps + the modifying user appears. Click any to see the full snapshot or compare with the current version.</p>
+  <h2>Restoring</h2>
+  <p>From the snapshot view, click "Restore". This creates a new version with the snapshot's content (it does NOT delete intervening versions). The current version becomes a snapshot itself.</p>
+  <h2>Retention</h2>
+  <p>Default: keep latest 20 versions per entity. Configurable via Site Settings → Content → DefaultVersionRetentionCount. Older snapshots periodically pruned by VersioningTrimBackgroundService.</p>
+</BaseLayout>

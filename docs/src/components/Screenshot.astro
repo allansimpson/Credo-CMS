@@ -1,0 +1,24 @@
+---
+export interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+}
+const { src, alt, caption } = Astro.props;
+const isPlaceholder = src.startsWith("placeholder://");
+---
+<figure class="my-6 not-prose">
+  {isPlaceholder ? (
+    <div class="border border-border bg-bg-alt p-8 relative">
+      <span class="absolute top-2 right-2 text-xs uppercase tracking-wider bg-warning/20 text-warning px-2 py-0.5">
+        placeholder
+      </span>
+      <p class="text-sm text-muted font-mono">[ {alt} ]</p>
+    </div>
+  ) : (
+    <img src={src} alt={alt} class="border border-border w-full" />
+  )}
+  {caption && (
+    <figcaption class="mt-2 text-xs text-muted">{caption}</figcaption>
+  )}
+</figure>

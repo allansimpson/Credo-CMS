@@ -1,0 +1,23 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import RoleNote from "../../components/RoleNote.astro";
+---
+<BaseLayout title="Site Settings tour">
+  <h1>Site Settings tour</h1>
+  <RoleNote roles="Administrator">Site Settings is Administrator-only.</RoleNote>
+  <p>Every Credo CMS configuration that isn't a per-entity field lives in Site Settings (<code>/admin/settings</code>). Tabs:</p>
+  <h2>Branding</h2>
+  <p>Church name, tagline, logo URL, primary + accent colors. The colors drive the public site theme via Tailwind CSS variables.</p>
+  <h2>Contact</h2>
+  <p>Address, phone, email, social URLs. Phase 6's footer renders Lucide brand icons for each configured social URL.</p>
+  <h2>Content</h2>
+  <p>Document categories, leader categories, image quality + max width, version retention defaults. Affects all entities that use those tools.</p>
+  <h2>Members &amp; Community</h2>
+  <p>Page labels, profanity wordlist, prayer-request defaults, connect-card interests, blog categories. Phase 4 added these.</p>
+  <h2>Email &amp; Notifications</h2>
+  <p>SendGrid / SMTP provider, From / Reply-To, master EmailEnabled kill switch, broadcast targets, admin-digest frequency. See <a href="/docs/communications/email-providers">Email providers</a> for setup.</p>
+  <h2>Integrations</h2>
+  <p>YouTube channel + API key, Cloudflare Turnstile, Facebook OAuth, Google Analytics. See the <a href="/docs/integrations/">Integrations</a> section.</p>
+  <h2>Privacy &amp; Security</h2>
+  <p>Cookie consent banner toggles, cookie-policy page link, Turnstile secrets.</p>
+</BaseLayout>

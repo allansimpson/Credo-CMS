@@ -1,0 +1,17 @@
+---
+export interface Props {
+  roles: string;
+}
+const { roles } = Astro.props;
+const arr = roles.split(",").map((r) => r.trim()).filter(Boolean);
+---
+<div class="my-3 flex flex-wrap items-center gap-2 text-sm not-prose">
+  {arr.map((role) => (
+    <span class="inline-flex items-center px-2 py-0.5 text-xs uppercase tracking-wider bg-accent/10 text-accent border border-accent/30">
+      {role}
+    </span>
+  ))}
+  <span class="text-muted text-sm">
+    <slot />
+  </span>
+</div>

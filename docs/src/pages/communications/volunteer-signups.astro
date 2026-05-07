@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Volunteer signups">
+  <h1>Volunteer signups</h1>
+
+  <p>Lightweight volunteer signup model. Define roles per Event (e.g., "Setup Crew × 2", "Greeters × 2"); members sign up via the event detail page; reminders fire 24-48h before the occurrence date.</p>
+  <h2>Defining roles</h2>
+  <p>From <code>/admin/events/{id}/volunteer-roles</code>. Roles apply across all occurrences of recurring events (no per-occurrence overrides in v1).</p>
+  <h2>Member signup</h2>
+  <p>Members visit the event detail, pick an occurrence date (recurring events) and a role with available slots, click Sign Up. The slot reserves immediately.</p>
+  <h2>v1 limitations</h2>
+  <p>No substitute requests, no skill tracking, no automated scheduling. Cancellations free the slot for re-claim. ROADMAP tracks deferred features.</p>
+</BaseLayout>

@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Pages">
+  <h1>Pages</h1>
+
+  <p>Pages are the workhorse of the public site: long-form content with a slug, body (rich text), hero image, optional excerpt, and an <em>IsPublished</em> toggle.</p>
+  <h2>Versioning</h2>
+  <p>Every save creates a temporal-table snapshot. From any page detail in <code>/admin/pages/:id</code> you can open Version History and restore an earlier draft.</p>
+  <h2>System Pages</h2>
+  <p>Privacy Policy and Terms of Service are pre-seeded as <em>system pages</em> — they cannot be deleted, only edited. The seeded boilerplate references cookies and authentication; verify the language matches your jurisdiction before going live.</p>
+  <h2>Members-only pages</h2>
+  <p>Toggle <em>Members only</em> to restrict to authenticated visitors. The page becomes invisible to anonymous visitors AND excluded from sitemap.xml + RSS feeds.</p>
+</BaseLayout>

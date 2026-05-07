@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Phase 6 docs — system-theme baseline. Square corners (Editorial design
+ * system convention from Phase 4); kbd-styled chips for KeyboardShortcut. */
+
+body {
+  @apply bg-bg text-fg;
+  font-feature-settings: "kern", "liga";
+}
+
+kbd {
+  @apply inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-mono;
+  @apply border border-border bg-bg-alt;
+  min-width: 1.5rem;
+}
+
+article h1 { @apply text-3xl font-semibold mt-2 mb-6; }
+article h2 { @apply text-2xl font-semibold mt-10 mb-4 pb-2 border-b border-border; }
+article h3 { @apply text-xl font-semibold mt-8 mb-3; }
+article h4 { @apply text-base font-semibold mt-6 mb-2; }
+article p { @apply leading-7 mb-4; }
+article ul { @apply list-disc list-inside leading-7 mb-4 ml-2; }
+article ol { @apply list-decimal list-inside leading-7 mb-4 ml-2; }
+article a { @apply text-primary underline underline-offset-2; }
+article a:hover { @apply text-primary/80; }
+article code { @apply font-mono text-sm bg-bg-alt px-1 py-0.5; }
+article pre { @apply font-mono text-sm bg-bg-alt p-3 my-4 overflow-x-auto; }
+article pre code { @apply bg-transparent p-0; }

@@ -1,0 +1,18 @@
+---
+export interface Props {
+  title: string;
+  number?: number;
+}
+const { title, number } = Astro.props;
+---
+<li class="flex gap-3 not-prose">
+  <span class="flex-none w-7 h-7 bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold">
+    {number ?? "•"}
+  </span>
+  <div class="flex-1">
+    <p class="font-semibold mb-1">{title}</p>
+    <div class="text-sm leading-6">
+      <slot />
+    </div>
+  </div>
+</li>

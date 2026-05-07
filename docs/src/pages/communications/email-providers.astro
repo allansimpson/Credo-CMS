@@ -1,0 +1,18 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Email providers">
+  <h1>Email providers</h1>
+
+  <p>Three providers ship with Credo CMS. Site Settings → Email &amp; Notifications → <em>EmailProvider</em>.</p>
+  <h2>None (default)</h2>
+  <p><code>LoggingEmailService</code> writes every send to Serilog; nothing leaves the server. Use this until provider config is verified.</p>
+  <h2>SendGrid</h2>
+  <p>Recommended. Free tier: 100/day. Set <em>SendGridApiKey</em> (full-access key with Mail Send + Inbound Parse permissions) and <em>SendGridWebhookSecret</em> (the ECDSA public key from SendGrid's Mail Settings → Event Webhook).</p>
+  <h2>SMTP</h2>
+  <p>Generic SMTP relay (Postmark, Mailgun, your ISP). Set <em>SmtpHost</em>, <em>SmtpPort</em> (587 STARTTLS, 465 SSL-on-connect), <em>SmtpUsername</em>, <em>SmtpPassword</em>, <em>SmtpUseSsl</em>.</p>
+  <h2>EmailEnabled kill switch</h2>
+  <p>After picking + saving, flip <em>EmailEnabled=true</em>. Until that flag is on, every send is a no-op (logs only). Production-safe default.</p>
+  <h2>Test send</h2>
+  <p>Site Settings → Email → "Send test email" dispatches a one-shot message via the in-flight (possibly unsaved) provider config to the current admin's address. Verify before flipping EmailEnabled on.</p>
+</BaseLayout>

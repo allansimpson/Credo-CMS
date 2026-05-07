@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="News">
+  <h1>News</h1>
+
+  <p>News items are short articles with optional event-date metadata. Defaults to <strong>members-only</strong>; flip the toggle on items you want public.</p>
+  <h2>Email on publish</h2>
+  <p>Each News item has a <em>Send email on publish</em> toggle (default on). When set, publishing the item auto-creates an EmailBroadcast targeted per Site Settings → News email config. The flag clears after send so re-publishing the same item does not re-fire.</p>
+  <h2>Scheduled publishing</h2>
+  <p>Set <em>ScheduledPublishAt</em> to a future date and save the item as draft. The scheduled-publishing background service (60-second tick) flips it to Published when the time arrives, then triggers email-on-publish if applicable.</p>
+  <h2>Expiry</h2>
+  <p>Set <em>ExpiresAt</em> to drop the item from public listings after a date (admin views still surface expired items so you can edit them).</p>
+</BaseLayout>

@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Broadcasts">
+  <h1>Broadcasts</h1>
+
+  <p>Compose, schedule, send, and track email broadcasts to all members or specific groups.</p>
+  <h2>Compose</h2>
+  <p><code>/admin/broadcasts/new</code>. Subject + body (HTML), target mode (All Members / Specific Groups), schedule or send now.</p>
+  <h2>Recipient resolution</h2>
+  <p>Recipients resolved at <em>send</em> time, not compose time, so group-membership changes between draft and dispatch are picked up. Suppression list applied automatically.</p>
+  <h2>Live stats</h2>
+  <p>SendGrid webhook events update Delivered / Bounced / Spam / Open counts in real time; the broadcast detail page subscribes to <em>BroadcastStatsUpdated</em> SignalR for live refresh.</p>
+  <h2>Per-recipient unsubscribe</h2>
+  <p>Each recipient gets an HMAC-signed unsubscribe URL injected as <code>{{unsubscribeUrl}}</code> in the body. RFC 8058 one-click compliance.</p>
+</BaseLayout>

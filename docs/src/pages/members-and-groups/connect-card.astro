@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Connect card">
+  <h1>Connect card</h1>
+
+  <p>The connect card is the public "I'm new, please get in touch" form. Found at <code>/connect</code>.</p>
+  <h2>Anti-bot</h2>
+  <p>Honeypot field + 5-second time-to-submit minimum + Cloudflare Turnstile + sliding-window rate limit (5/hour per IP). All four must pass before submission persists.</p>
+  <h2>Moderation</h2>
+  <p>Submissions land in <code>/admin/connect-cards</code> with status workflow: New → InReview → FollowedUp → Closed (or NotLegit for spam). Editors + Administrators can transition.</p>
+  <h2>Acknowledgment email</h2>
+  <p>Configurable acknowledgment message in Site Settings sends to the submitter on successful submit. Best-effort — email failures don't fail the submission.</p>
+</BaseLayout>
