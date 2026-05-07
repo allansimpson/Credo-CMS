@@ -214,6 +214,10 @@ public static class DependencyInjection
         // R12 — One-click unsubscribe.
         services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
 
+        // Phase 6 S1 — RSS feed builder.
+        services.AddSingleton<CredoCms.Application.Rss.IRssFeedBuilder,
+            CredoCms.Infrastructure.Rss.RssFeedBuilder>();
+
         // R13 — Volunteer signups.
         services.AddScoped<CredoCms.Application.Volunteers.IEventVolunteerRoleRepository,
             CredoCms.Infrastructure.Volunteers.EventVolunteerRoleRepository>();
