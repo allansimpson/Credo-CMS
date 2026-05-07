@@ -73,6 +73,13 @@ export function AdminLayout() {
 
   return (
     <SystemThemeLayout>
+      {/* Phase 6 — admin-side skip-to-main-content link. Visible on focus. */}
+      <a
+        href="#admin-main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
+      >
+        Skip to main content
+      </a>
       <div className="flex min-h-screen flex-col bg-background">
         {/* Top bar */}
         <header className="flex h-14 items-center justify-between border-b bg-background px-4">
@@ -176,7 +183,7 @@ export function AdminLayout() {
             </div>
           )}
 
-          <main className="flex-1 p-4 lg:p-8">
+          <main id="admin-main-content" className="flex-1 p-4 lg:p-8" tabIndex={-1}>
             <Outlet />
           </main>
         </div>

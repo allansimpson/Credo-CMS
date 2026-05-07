@@ -27,7 +27,18 @@ export function ChurchThemeLayout({ children }: { children: ReactNode }) {
 
   return (
     <div data-theme="church" className="min-h-full">
-      {children}
+      {/* Phase 6 — accessibility skip-to-main-content link. sr-only by
+          default; visible on keyboard focus. The public layout's <main>
+          carries id="main-content". */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
+      >
+        Skip to main content
+      </a>
+      <div id="main-content" tabIndex={-1}>
+        {children}
+      </div>
       {/* Phase 6 — cookie consent banner. Self-gates on
           settings.analyticsProvider === Ga4 + cms_consent absence. */}
       <CookieConsentBanner />
