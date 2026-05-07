@@ -195,3 +195,249 @@ API hosts four Phase 5 BackgroundServices:
 - `EventVolunteerReminderService` — 1h tick.
 
 Single-instance App Service is the v1 deployment target.
+
+---
+
+## Phase 6 — Operator runbook
+
+The Astro docs site at `/docs/*` (Editor / Administrator only) covers
+day-to-day operation in detail. This section is the engineer-facing
+runbook for tasks that touch infrastructure, the database, or
+production secrets.
+
+### Quick start (developer)
+
+Prerequisites:
+
+- .NET 10 SDK
+- Node 20+
+- SQL Server LocalDB or full instance
+- Azure CLI (for production deploy)
+
+```sh
+git clone <repo>
+cd Credo-CMS
+
+# Backend — restore + migrate + run
+cd api
+cp CredoCms.Api/appsettings.template.json CredoCms.Api/appsettings.Development.json
+# Edit the connection string in appsettings.Development.json
+dotnet ef database update --project CredoCms.Infrastructure --startup-project CredoCms.Api
+dotnet run --project CredoCms.Api
+
+# SPA (in another terminal)
+cd ../app
+npm install
+npm run dev
+
+# Astro docs site (optional)
+cd ../docs
+npm install
+npm run build
+```
+
+The seeded admin email + password is in `appsettings.Development.json`
+under `Identity:DefaultAdminEmail` / `DefaultAdminPassword`. Sign in,
+change password immediately.
+
+### Production deployment (Azure)
+
+The `/deploy/` folder ships Bicep templates. High-level:
+
+1. Create a resource group in your target Azure region.
+2. Deploy `deploy/main.bicep` with the parameter file:
+   ```sh
+   az deployment group create \
+     --resource-group <rg-name> \
+     --template-file deploy/main.bicep \
+     --parameters deploy/main.parameters.json
+   ```
+3. Resources provisioned: App Service (Linux, B1+), Azure SQL (S0+),
+   Storage (Blob, Hot tier), Application Insights, optionally
+   Key Vault.
+4. Configure App Service application settings (Connection Strings +
+   Identity + provider keys). See `appsettings.template.json` for the
+   full key list.
+5. Trigger the GitHub Actions deploy workflow (or push to main).
+6. On first boot, the API runs migrations + seeds idempotently.
+7. Sign in as the seeded admin, change password, configure Site Settings.
+
+**Cost estimate at default tiers:** ~$50-100/month (B1 App Service ~$15,
+SQL S0 ~$15, Storage ~$2, App Insights free tier, SendGrid free tier).
+
+A required pre-launch acceptance test: deploy to a staging Azure
+subscription end-to-end + smoke-test the deploy. See `deploy/README.md`.
+
+### Operations runbook
+
+#### Backup the database
+
+Azure SQL has automatic point-in-time restore (7-35 day retention). For
+off-site copies, run a monthly BACPAC export to Blob Storage:
+
+```sh
+az sql db export \
+  --resource-group <rg> \
+  --server <sql-server> \
+  --name <db> \
+  --storage-key <blob-key> \
+  --storage-key-type StorageAccessKey \
+  --storage-uri https://<storage>.blob.core.windows.net/backups/$(date +%Y%m%d).bacpac \
+  --admin-user <user> \
+  --admin-password <password>
+```
+
+#### Restore from backup
+
+Point-in-time restore creates a new database. Update the App Service's
+`ConnectionStrings__DefaultConnection` setting to point at the
+restored database, then restart the App Service. The migration set
+runs automatically on boot.
+
+#### Roll out a database migration
+
+```sh
+cd api
+dotnet ef migrations add <Name> --project CredoCms.Infrastructure --startup-project CredoCms.Api
+# Review the generated migration; commit
+# Push; the GH Actions deploy applies it automatically on first boot
+```
+
+For destructive migrations (column drops, NOT NULL additions on
+existing data), test against a staging restore first.
+
+#### Manage the suppression list
+
+Site Settings → Email & Notifications → Suppression list. Address +
+type (HardBounce / SpamComplaint / Unsubscribe / ManualSuppression) +
+reason + created date. Manual remove warns about CAN-SPAM compliance.
+
+#### Pastoral request to remove a member
+
+The standard flow:
+
+1. Confirm the request is from the member or an authorized representative.
+2. Site Settings → Users → find the member → Hard delete (requires
+   typing the display name to confirm).
+3. The hard-delete cascades: profile photo deleted from Blob,
+   `EmailBroadcastRecipient` rows have `UserId` nulled (snapshot fields
+   preserved for audit), audit-log entries retained.
+
+For data-removal requests under GDPR / CCPA scope: also manually
+purge audit-log entries referencing the member's email and any
+prayer-request submissions. Document the action in your operator log.
+
+#### Urgent removal of a prayer request
+
+Site Settings → Members & Community → Prayer Requests → find the
+request → Delete. Soft-deleted; reappears on the admin Deleted tab.
+
+For complete data erasure (rare, e.g., the request leaks PII), purge
+the temporal history table directly via SQL:
+
+```sql
+DELETE FROM PrayerRequestsHistory WHERE Id = '<id>';
+DELETE FROM PrayerRequests WHERE Id = '<id>';
+```
+
+#### Connect Card spam attack
+
+Symptoms: `/admin/connect-cards` filling with low-quality submissions.
+
+1. Configure Cloudflare Turnstile (Site Settings → Privacy & Security)
+   if not already.
+2. Tighten the rate limit: edit `Program.cs` `ConnectCardSubmit` policy
+   from 5/hr to 1/hr.
+3. Add common spam phrases to the profanity wordlist (Site Settings →
+   Members & Community → ProfanityWordlist) — they'll bounce
+   submissions automatically.
+
+#### Rebuild the search index
+
+```sh
+# Deletes all SearchIndexEntry rows; the SearchIndexBootstrapService
+# rebuilds on the next API boot (or you can wait for the daily refresh).
+sqlcmd -S <server> -d <db> -Q "TRUNCATE TABLE SearchIndex;"
+# Restart App Service
+```
+
+#### Manually trigger YouTube sync
+
+Site Settings → Integrations → YouTube → "Sync now" button. Bypasses
+the hourly tick.
+
+#### Add or remove an Administrator
+
+`/admin/users` → find user → Edit → toggle Administrator role → Save.
+No special procedure; the role-membership change takes effect on the
+user's next sign-in.
+
+#### Forgotten admin password
+
+The seeded admin is excluded from the password-reset flow. Recovery
+requires direct database access:
+
+```sql
+-- Generate a new password hash via the Identity user manager:
+-- (run this in a development environment with a connected DbContext)
+-- var hasher = new PasswordHasher<ApplicationUser>();
+-- var hash = hasher.HashPassword(user, "NewPassword!");
+
+UPDATE AspNetUsers
+SET PasswordHash = '<computed hash>',
+    SecurityStamp = NEWID()
+WHERE Email = '<seeded-admin-email>';
+```
+
+Then sign in with the new password and rotate.
+
+### Troubleshooting
+
+#### Email isn't sending
+
+Site Settings → Email → check `EmailEnabled=true`. Run "Send test email"
+and read the response. Most common cause: `EmailEnabled` was left
+false (the production-safe default).
+
+#### YouTube sync hasn't run
+
+App Insights logs for `YouTubeSyncService`. Common causes: API key
+missing, channel id wrong (use the slug, not the URL), daily quota
+exhausted (~10,000 units; hourly polls use ~75/day so this is rare).
+
+#### Members can't log in
+
+1. Site Settings → Email — confirm the password-reset email is
+   reaching the user (check suppression list).
+2. `/admin/users` — confirm the user is Active (not Inactive / Locked).
+3. Check Application Insights for failed sign-in attempts.
+
+#### Search isn't returning results
+
+Restart the App Service so `SearchIndexBootstrapService` reseeds the
+index. If the issue persists, run the index rebuild SQL above.
+
+#### Calendar feeds aren't updating
+
+Calendar feeds are output-cached for 5 minutes (via the feed
+controller's `[OutputCache]` attribute). After a write, allow 5 minutes
+or invalidate the `calendar` tag.
+
+### Multi-tenancy
+
+v1 is single-tenant. The migration path to multi-tenant SaaS is
+documented in [MULTI_TENANCY.md](./MULTI_TENANCY.md).
+
+### Contributing
+
+- Branch off `main` for feature work. Phase development used long-lived
+  feature branches (e.g., `claude/credo-cms-phase-1-06gIY`); v1.x
+  development can use `feat/<topic>` short-lived branches.
+- PR process: code review + green CI; rebase rather than merge for a
+  linear history.
+- Code style: enforced via `.editorconfig` and `.eslintrc`. Run
+  `dotnet format` + `npm run lint --fix` before pushing.
+- Tests live alongside code in the `Domain.Tests` / `Application.Tests`
+  / `Infrastructure.Tests` / `Api.Tests` projects (backend) and
+  `app/src/**/__tests__/` (SPA).
+
