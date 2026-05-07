@@ -16,6 +16,10 @@ public sealed class ForbiddenToNotFoundMiddleware
     [
         "/api/admin",
         "/api/docs",
+        // Note: /docs/* covert routing is handled inline in DocsController
+        // (returns NotFound directly rather than relying on auth-pipeline
+        // 401/403 conversion). Keeps the cookie-auth flow intact for the
+        // SPA's session-expiry detection on /api/admin XHRs.
     ];
 
     private readonly RequestDelegate _next;
