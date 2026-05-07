@@ -136,6 +136,12 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     facebookOAuthAppId: s.facebookOAuthAppId,
     facebookOAuthAppSecret: s.facebookOAuthAppSecret,
     facebookLoginEnabled: s.facebookLoginEnabled,
+    // Phase 6
+    analyticsProvider: s.analyticsProvider,
+    ga4MeasurementId: s.ga4MeasurementId,
+    ga4ConsentBannerEnabled: s.ga4ConsentBannerEnabled,
+    ga4ConsentBannerPosition: s.ga4ConsentBannerPosition,
+    cookiePolicyPageId: s.cookiePolicyPageId,
     rowVersion: s.rowVersion,
   };
 }

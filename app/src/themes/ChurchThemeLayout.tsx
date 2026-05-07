@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
+import { usePageViewTracking } from "@/lib/useAnalytics";
+import { CookieConsentBanner } from "@/components/shared/CookieConsentBanner";
 
 /**
  * Wraps any subtree in the church theme. Applies the church's configured primary
@@ -8,6 +10,7 @@ import { useSiteSettings } from "@/lib/SiteSettingsContext";
  * which the Tailwind config consumes via hsl(var(--primary) / ...) etc.
  */
 export function ChurchThemeLayout({ children }: { children: ReactNode }) {
+  usePageViewTracking();
   const { settings } = useSiteSettings();
 
   useEffect(() => {
@@ -25,6 +28,9 @@ export function ChurchThemeLayout({ children }: { children: ReactNode }) {
   return (
     <div data-theme="church" className="min-h-full">
       {children}
+      {/* Phase 6 — cookie consent banner. Self-gates on
+          settings.analyticsProvider === Ga4 + cms_consent absence. */}
+      <CookieConsentBanner />
     </div>
   );
 }

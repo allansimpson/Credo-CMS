@@ -6,6 +6,11 @@
 
 export type Role = "Administrator" | "Editor" | "Member";
 
+// Phase 6 — analytics + cookie consent enums (top-level so they can be
+// imported standalone by the consent banner / GA4 loader).
+export type AnalyticsProvider = 0 | 1; // None | Ga4
+export type ConsentBannerPosition = 0 | 1; // BottomRight | BottomFull
+
 export interface CurrentUser {
   id: string;
   email: string;
@@ -69,6 +74,12 @@ export interface PublicSiteSettings {
   homepageHeroCtaLabel: string;
   homepageHeroCtaLink: string;
   facebookLoginEnabled: boolean;
+  // Phase 6 — analytics + cookie consent
+  analyticsProvider: AnalyticsProvider;
+  ga4MeasurementId: string | null;
+  ga4ConsentBannerEnabled: boolean;
+  ga4ConsentBannerPosition: ConsentBannerPosition;
+  cookiePolicyPageSlug: string | null;
 }
 
 export interface SiteSettings extends PublicSiteSettings {
@@ -104,11 +115,15 @@ export interface SiteSettings extends PublicSiteSettings {
   modifiedAt: string;
   modifiedByUserId: string | null;
   rowVersion: string;
+  // Phase 6 — admin-side carries the page-id; the public DTO resolves the
+  // slug. Both coexist on this type; UpdateSiteSettingsRequest omits the
+  // resolved slug so admin saves go through with the id.
+  cookiePolicyPageId: string | null;
 }
 
 export type UpdateSiteSettingsRequest = Omit<
   SiteSettings,
-  "createdAt" | "modifiedAt" | "modifiedByUserId"
+  "createdAt" | "modifiedAt" | "modifiedByUserId" | "cookiePolicyPageSlug"
 >;
 
 export interface PagedResult<T> {
