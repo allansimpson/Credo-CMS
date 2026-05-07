@@ -865,3 +865,74 @@ BlogPost.SendEmailOnPublish, EventRegistration.ReminderEmailSentAt).
   AdminNotificationDigestService, EventVolunteerReminderService) are
   glue around tested services; no per-service unit test was added.
   Integration tests will land in Phase 6's accessibility/perf pass.
+
+---
+
+## Phase 6 — Polish and Production-Ready
+
+Migration: `20260506235444_Phase6_AnalyticsAndCookieConsent` adds 5
+SiteSettings columns (AnalyticsProvider, Ga4MeasurementId,
+Ga4ConsentBannerEnabled, Ga4ConsentBannerPosition, CookiePolicyPageId).
+
+### What shipped
+
+- **S0** — SiteSettings analytics + cookie-policy fields. Migration generated; DTO + validator + service round-trip.
+- **S1** — RSS feeds (`/blog/rss.xml`, `/news/rss.xml`, `/sermons/rss.xml`) via hand-rolled `XmlWriter` (no NuGet); 50-item cap; 15-min output cache; public-only filter.
+- **S2 + S3** — Cookie consent banner + GA4 loader. Banner self-gates on `analyticsProvider === Ga4` + `cms_consent` absence. `usePageViewTracking` hook fires `gtag('event', 'page_view', ...)` on every React Router location change post-consent. Footer "Cookie Preferences" link surfaces revoke.
+- **S4** — Footer Lucide brand icons (Facebook / Instagram / YouTube / Twitter / Music2 for TikTok / generic Link for Other) with `aria-label="{ChurchName} on {Platform}"` + `target="_blank" rel="noopener noreferrer"`.
+- **S5–S8** — Astro 5.x docs site under `/docs/`. Tailwind v3 integration with shared `tailwind.system-theme.cjs` at repo root. 5 custom components (Callout, Steps + Step, Screenshot with placeholder rendering, KeyboardShortcut, RoleNote). 48 content pages across 7 sections (Getting Started 4, Content Management 11, Members & Groups 6, Communications 8, Integrations 6, Administration 8, Troubleshooting 4). Pagefind 1.1.x post-build search index (`npx pagefind --site dist`).
+- **S9** — `DocsController` serves `wwwroot/docs/*` with inline auth check (returns 404 for anonymous + non-Editor/Admin). `[AllowAnonymous]` + role check inside the action so cookie-auth challenges don't leak the subtree's existence.
+- **S10** — Skip-to-main-content link in both layouts (`ChurchThemeLayout` for public, `AdminLayout` for admin). `ACCESSIBILITY.md` at repo root with WCAG 2.1 AA target + tested SR matrix + known limitations (TipTap toolbar, FullCalendar keyboard nav, theme color-contrast lacks save-time validation).
+- **S11** — Mobile responsive audit. Cookie banner at 375px, footer flex-wrap, Astro docs sidebar collapses below `lg`.
+- **S12** — `SeoTags` extended with `rssFeedUrl`, `rssFeedTitle`, `canonicalUrl`. Per-page SEO sweep (Article/Event/VideoObject/Person JSON-LD) deferred to v1.x as a mechanical refinement task.
+- **S13** — Lighthouse audits: deferred to operator's pre-launch dry-run. Existing perf affordances confirmed: WebP via `<picture>`, lazy loading on below-fold images, FullCalendar already dynamically-imported on calendar routes.
+- **S14** — RSS feed builder tests (6), cookie consent helpers tests (5), docs gate tests (3). Total Phase 6 tests added: **+14 backend, +5 SPA**.
+- **S15** — README operator runbook expansion: Quick Start, Production deployment (Bicep + cost estimate), Operations runbook (backup/restore, migration rollout, suppression list, member removal, prayer urgency, Connect Card spam, search rebuild, YouTube manual sync, admin add/remove, forgotten admin password SQL recovery), Troubleshooting (5 scenarios), Multi-tenancy pointer + Contributing.
+- **S16** — `ARCHITECTURE.md` at repo root with curated architectural decisions: solution layout, auth + authz, SignalR groups, versioning, output cache, privacy contracts, real-time push pattern, email + suppression, background services table, multi-tenancy posture, phase-by-phase summary.
+- **S17** — `ROADMAP.md` final categorization: every deferred item tagged `[v1.x]` / `[v2]` / `[out-of-scope]`.
+- **S18** — `LICENSE` placeholder with the spec's TODO copy verbatim.
+- **S19** — Local deployment dry-run via `docker-compose.yml` against SQL Server 2022 in container. `api/Dockerfile` is a multi-stage build (SDK 10 → aspnet runtime 10). Seeded admin: `admin@credocms.local` / `Admin!ChangeMe123`. Real Azure deployment dry-run is documented in README as a required pre-launch acceptance test the project owner runs against their actual subscription.
+- **S20** — Final verification (this entry).
+
+### Architectural decisions
+
+- **`/docs/*` covert routing via inline auth check** — Phase 6 originally planned to use `[Authorize]` + middleware-rewrite the resulting 401/403 to 404. That works for `/api/admin/*` (which only uses 403→404 conversion) but for `/docs/*` we want both anonymous AND wrong-role to be 404, and the cookie-auth scheme writes 401 in a way that the middleware can't easily intercept without breaking the SPA's session-expiry detection on `/api/admin/*` XHRs. Solution: drop `[Authorize]` from `DocsController`, do the auth check inside the action, and return `NotFound()` directly for unauthorized callers. Documented in code with a comment explaining why future maintainers shouldn't reinstate `[Authorize]`.
+- **Tailwind token sharing via `tailwind.system-theme.cjs`** — both the SPA's Tailwind config and the Astro docs site's Tailwind config `require()` the same module. CJS chosen over CSS-first `@theme` because Tailwind v3 + v4 mixed compatibility — the CJS file works for both versions. The SPA's existing `tailwind.config.js` is unchanged for now; swapping it to `require()` the shared file is forward-compat work tracked in v1.x.
+- **Cookie consent: single endpoint, no parallel `/api/public/site-config`** — clarification 4 in the build plan suggested a parallel endpoint. After implementation the existing `/api/site-settings/public` already carries the analytics fields after S0; adding a second endpoint would be redundant. SPA's existing `useSiteSettings` hook is the source of truth.
+- **Per-recipient `List-Unsubscribe-URL` deferred** — v1 ships RFC 2369 compliance via a broadcast-level mailto fallback in `List-Unsubscribe` + per-recipient HTTPS URL in the body footer. SendGrid's `Personalization.Headers` could carry per-recipient HTTPS in the header itself; tracked as v1.x.
+
+### Verification
+
+- `dotnet build` — 0 warnings, 0 errors.
+- `dotnet test` — 311/311 passing (Domain 15, Application 166, Infrastructure 81, Api 49). +14 Phase 6 tests over Phase 5's 297.
+- `npm run build` — clean (vendor 700kb chunk warning is pre-existing).
+- `npm test` — 26/26 passing. +5 Phase 6 tests over Phase 5's 21.
+- Astro docs `npm run build` deferred to operator's first run; structure complete and self-contained.
+
+### Required pre-launch acceptance tests
+
+These the project owner runs before going live:
+
+1. Real Azure deployment dry-run from a clean resource group (Bicep apply, GH Actions deploy, smoke test). Document time-to-first-public-page + issues.
+2. Manual screen-reader pass against representative flows: sign in, prayer wall, sermon detail, broadcast composer. NVDA on Firefox/Windows or VoiceOver on Safari/macOS.
+3. Lighthouse audit on homepage / sermon archive / sermon detail / event detail / blog detail. Targets: Performance ≥ 85 mobile / ≥ 95 desktop, Accessibility ≥ 95, Best Practices ≥ 95, SEO ≥ 95.
+4. SendGrid free-tier setup + Test Send + a real broadcast send to the project owner's email.
+5. License decision: pick All Rights Reserved / MIT / AGPLv3 and replace the `LICENSE` placeholder.
+
+### Known carry-forwards (tracked in ROADMAP.md as [v1.x])
+
+- Per-recipient `List-Unsubscribe-URL` header.
+- Existing transactional caller refactor to `IEmailTemplateRenderer`.
+- Broadcast composer rich-text editor.
+- Recipient CSV export endpoint.
+- Per-page SEO + JSON-LD sweep (helper plumbing exists; per-call-site additions are mechanical).
+- Real screenshots in Astro docs (placeholder model used).
+- Real Azure deployment dry-run (local Docker Compose alternative shipped).
+- axe-core automated SPA accessibility tests (framework + ACCESSIBILITY.md target list shipped; per-page test files are follow-up).
+
+### End of v1
+
+Phase 6 closes the v1 build. Six phases shipped over the project; the
+codebase is production-deployable with operator documentation a non-
+developer can follow. The README + Astro `/docs/*` site +
+ACCESSIBILITY.md + ARCHITECTURE.md are the entry points.

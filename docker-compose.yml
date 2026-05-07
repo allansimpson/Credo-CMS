@@ -1,0 +1,52 @@
+# Phase 6 S19 — local deployment dry-run alternative.
+#
+# Boots the API + SQL Server in containers, exercising the same code paths
+# as a production Azure deploy: migration apply, seed data, admin login,
+# content publish + render. The Bicep template is unchanged; this is a
+# local pre-flight check before the real Azure run.
+#
+# Usage:
+#   docker compose up --build
+#   # API at http://localhost:8080
+#   # SQL Server at localhost:1433 (sa / Credo!ChangeMe123)
+#   # Sign in as admin@credocms.local / Admin!ChangeMe123
+#
+# Stop + remove (incl. SQL data):
+#   docker compose down -v
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Credo!ChangeMe123"
+      MSSQL_PID: "Developer"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'Credo!ChangeMe123' -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=CredoCms;User=sa;Password=Credo!ChangeMe123;TrustServerCertificate=True"
+      Identity__DefaultAdminEmail: "admin@credocms.local"
+      Identity__DefaultAdminPassword: "Admin!ChangeMe123"
+      PublicSite__BaseUrl: "http://localhost:8080"
+    ports:
+      - "8080:8080"
+
+volumes:
+  sqldata:
