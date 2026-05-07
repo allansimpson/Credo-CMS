@@ -105,6 +105,16 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
             .WithMessage("GA4 measurement ID must look like 'G-XXXXXXXXXX'.")
             .MaximumLength(50);
 
+        // When the operator picks AnalyticsProvider=Ga4 they must also supply a
+        // measurement ID — otherwise the cookie banner renders, the user
+        // accepts, and gtag never loads (the loader checks for a non-blank
+        // id). A silent "consent given but no tracking" is the worst of both
+        // worlds. Reject at save time.
+        RuleFor(x => x.Ga4MeasurementId)
+            .NotEmpty()
+            .When(x => x.AnalyticsProvider == Domain.Settings.AnalyticsProvider.Ga4)
+            .WithMessage("GA4 measurement ID is required when AnalyticsProvider is GA4.");
+
         // -------------------------------------------------------------------
 
         RuleFor(x => x.RowVersion).NotEmpty();

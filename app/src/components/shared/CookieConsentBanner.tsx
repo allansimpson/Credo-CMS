@@ -37,7 +37,7 @@ export function clearConsent() {
 }
 
 export function CookieConsentBanner() {
-  const { settings } = useSiteSettings();
+  const { settings, reload } = useSiteSettings();
   const [consent, setConsent] = useState<ConsentValue | null>(() => readConsent());
 
   // Inject gtag.js when consent flips to accepted and a measurement id is set.
@@ -68,7 +68,14 @@ export function CookieConsentBanner() {
     ? "left-0 right-0 bottom-0" // BottomFull
     : "right-4 bottom-4 max-w-sm w-full sm:max-w-md"; // BottomRight
 
-  const handleAccept = () => { writeConsent("accepted"); setConsent("accepted"); };
+  const handleAccept = () => {
+    writeConsent("accepted");
+    setConsent("accepted");
+    // The server omits Ga4MeasurementId from the public bootstrap until the
+    // consent cookie is set + accepted. Re-fetch so the id flows through and
+    // the loader effect can inject gtag with the correct measurement.
+    reload().catch(() => { /* loader will fall through with whatever's in context */ });
+  };
   const handleDecline = () => { writeConsent("declined"); setConsent("declined"); };
 
   return (

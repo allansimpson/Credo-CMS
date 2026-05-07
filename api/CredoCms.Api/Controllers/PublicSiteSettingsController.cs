@@ -14,10 +14,33 @@ namespace CredoCms.Api.Controllers;
 [AllowAnonymous]
 public sealed class PublicSiteSettingsController : ControllerBase
 {
+    /// <summary>The cookie the SPA writes on Accept; presence means the
+    /// visitor has authorized non-essential tracking.</summary>
+    private const string ConsentCookieName = "cms_consent";
+
     private readonly ISiteSettingsService _service;
 
     public PublicSiteSettingsController(ISiteSettingsService service) => _service = service;
 
     [HttpGet("public")]
-    public Task<PublicSiteSettingsDto> GetPublicAsync(CancellationToken ct) => _service.GetPublicAsync(ct);
+    public async Task<PublicSiteSettingsDto> GetPublicAsync(CancellationToken ct)
+    {
+        var dto = await _service.GetPublicAsync(ct).ConfigureAwait(false);
+
+        // Phase 6 polish — Ga4MeasurementId is omitted from the response
+        // until the visitor has accepted cookies. The cookie banner can
+        // make its accept/decline decision from the AnalyticsProvider flag
+        // alone; the loader needs the id, but only after consent has been
+        // captured. The SPA re-fetches site-settings after Accept to
+        // surface the now-populated id.
+        if (!HasAcceptedConsent(Request))
+        {
+            dto = dto with { Ga4MeasurementId = null };
+        }
+        return dto;
+    }
+
+    private static bool HasAcceptedConsent(HttpRequest request) =>
+        request.Cookies.TryGetValue(ConsentCookieName, out var v)
+        && string.Equals(v, "accepted", StringComparison.Ordinal);
 }

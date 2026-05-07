@@ -10,6 +10,15 @@ public sealed class UnsubscribeTokenService : IUnsubscribeTokenService
 {
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromDays(30);
 
+    /// <summary>Process-wide gate around first-read key initialization.
+    /// Two concurrent token issues with no persisted key would otherwise
+    /// each generate fresh random bytes; the loser's tokens become invalid
+    /// the moment the winner persists. SemaphoreSlim makes the first reader
+    /// generate + persist, then subsequent readers see the persisted value.
+    /// Re-read inside the lock so we don't generate again after a peer
+    /// already wrote.</summary>
+    private static readonly SemaphoreSlim KeyInitGate = new(1, 1);
+
     private readonly ISiteSettingsRepository _settings;
 
     public UnsubscribeTokenService(ISiteSettingsRepository settings) => _settings = settings;
@@ -63,14 +72,30 @@ public sealed class UnsubscribeTokenService : IUnsubscribeTokenService
         {
             return Convert.FromBase64String(settings.UnsubscribeSigningKey);
         }
-        // First-read auto-init. The new key persists on next save by the admin
-        // settings flow; until then we use a deterministic fallback per-process
-        // (test/dev only — production should always have the key configured).
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        settings.UnsubscribeSigningKey = Convert.ToBase64String(bytes);
-        try { await _settings.UpdateAsync(settings, ct).ConfigureAwait(false); }
-        catch { /* read-only test repos throw — fall through with the in-memory key */ }
-        return bytes;
+
+        // No key persisted — initialize under a process-wide lock so
+        // concurrent first-reads converge on the same key.
+        await KeyInitGate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            // Re-read inside the lock — another thread may have already
+            // generated + persisted while we were waiting.
+            settings = await _settings.GetAsync(ct).ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(settings.UnsubscribeSigningKey))
+            {
+                return Convert.FromBase64String(settings.UnsubscribeSigningKey);
+            }
+
+            var bytes = RandomNumberGenerator.GetBytes(32);
+            settings.UnsubscribeSigningKey = Convert.ToBase64String(bytes);
+            try { await _settings.UpdateAsync(settings, ct).ConfigureAwait(false); }
+            catch { /* read-only test repos throw — fall through with the in-memory key */ }
+            return bytes;
+        }
+        finally
+        {
+            KeyInitGate.Release();
+        }
     }
 
     private static string ComputeHmac(string payload, byte[] key)

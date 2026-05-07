@@ -64,12 +64,26 @@ jobs:
         working-directory: app
         run: npm run build
 
+      # ---- Astro docs site (Phase 6) ----------------------------------------
+      - name: Install docs deps
+        working-directory: docs
+        run: npm ci
+
+      - name: Build docs (Astro + Pagefind)
+        working-directory: docs
+        run: npm run build
+
       # ---- Compose deployment artifact --------------------------------------
       - name: Copy SPA into API wwwroot
         run: |
           mkdir -p api/CredoCms.Api/wwwroot
           rm -rf api/CredoCms.Api/wwwroot/*
           cp -r app/dist/* api/CredoCms.Api/wwwroot/
+
+      - name: Copy docs into API wwwroot/docs
+        run: |
+          mkdir -p api/CredoCms.Api/wwwroot/docs
+          cp -r docs/dist/* api/CredoCms.Api/wwwroot/docs/
 
       - name: Publish API
         run: |

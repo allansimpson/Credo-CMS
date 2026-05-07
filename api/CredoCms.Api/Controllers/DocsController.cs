@@ -19,7 +19,12 @@ public sealed class DocsController : ControllerBase
         ".html", ".htm", ".css", ".js", ".mjs", ".map", ".json",
         ".svg", ".png", ".webp", ".jpg", ".jpeg", ".gif", ".ico",
         ".woff", ".woff2", ".ttf", ".eot",
-        ".txt", ".pf_meta", ".pf_index", ".pagefind", // Pagefind index files
+        ".txt",
+        // Pagefind index files. Built by `pagefind --site dist`; the
+        // search UI fetches these chunks on demand. All four extensions
+        // must be allowed or the search index is partial-load and search
+        // silently misses results.
+        ".pf_meta", ".pf_index", ".pf_fragment", ".pf_filter", ".pagefind",
     };
 
     private readonly IWebHostEnvironment _env;
