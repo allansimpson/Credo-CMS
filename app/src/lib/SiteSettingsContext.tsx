@@ -7,7 +7,10 @@ interface SiteSettingsContextValue {
   reload: () => Promise<void>;
 }
 
-const SiteSettingsContext = createContext<SiteSettingsContextValue | undefined>(undefined);
+// Exported so tests can wrap components with a custom Provider value
+// without going through SiteSettingsProvider (which would issue a real
+// API call on mount).
+export const SiteSettingsContext = createContext<SiteSettingsContextValue | undefined>(undefined);
 
 export function SiteSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<PublicSiteSettings | null>(null);
