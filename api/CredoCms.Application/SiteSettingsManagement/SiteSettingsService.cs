@@ -47,7 +47,9 @@ public sealed class SiteSettingsService : ISiteSettingsService
             // Phase 6
             s.AnalyticsProvider, s.Ga4MeasurementId,
             s.Ga4ConsentBannerEnabled, s.Ga4ConsentBannerPosition,
-            cookiePolicySlug);
+            cookiePolicySlug,
+            // Public Site design handoff
+            s.Template);
     }
 
     public async Task<SiteSettingsDto> GetAsync(CancellationToken ct = default)
@@ -146,6 +148,9 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.Ga4ConsentBannerPosition = request.Ga4ConsentBannerPosition;
         s.CookiePolicyPageId = request.CookiePolicyPageId;
 
+        // Public Site design handoff
+        s.Template = request.Template;
+
         s.ModifiedAt = DateTimeOffset.UtcNow;
         s.RowVersion = Convert.FromBase64String(request.RowVersion);
 
@@ -206,6 +211,8 @@ public sealed class SiteSettingsService : ISiteSettingsService
         // Phase 6
         s.AnalyticsProvider, s.Ga4MeasurementId,
         s.Ga4ConsentBannerEnabled, s.Ga4ConsentBannerPosition, s.CookiePolicyPageId,
+        // Public Site design handoff
+        s.Template,
         s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
         Convert.ToBase64String(s.RowVersion));
 }

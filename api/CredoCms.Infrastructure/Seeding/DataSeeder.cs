@@ -169,15 +169,25 @@ public sealed class DataSeeder
         var exists = await _db.SiteSettings.AnyAsync(s => s.Id == SystemConstants.SiteSettingsId, ct).ConfigureAwait(false);
         if (exists) return;
 
+        // Public Site design handoff: seed with Hope Community Church
+        // demo fixtures so a fresh `dotnet ef database update` produces
+        // a runnable demo of both templates. Operators replace this with
+        // their actual church info via Site Settings → Branding.
         var now = DateTimeOffset.UtcNow;
         _db.SiteSettings.Add(new SiteSettings
         {
             Id = SystemConstants.SiteSettingsId,
-            ChurchName = "Your Church Name",
-            Tagline = "Welcome to our community",
-            PrimaryColor = "#1e3a8a",
-            AccentColor = "#f59e0b",
+            ChurchName = "Hope Community Church",
+            Tagline = "A church for people who never thought they'd be in one.",
+            ContactAddress = "412 W 12th Street, Cedar Falls, IA 50613",
+            ContactPhone = "(319) 555-0100",
+            ContactEmail = "hello@hopecommunity.example",
+            PrimaryColor = "#b8531a",
+            AccentColor = "#b8531a",
             DefaultVersionRetentionCount = 20,
+            HomepageHeroCtaLabel = "Plan a visit",
+            HomepageHeroCtaLink = "/im-new",
+            Template = PublicTemplate.Editorial,
             CreatedAt = now,
             ModifiedAt = now,
             ModifiedByUserId = SystemConstants.SystemUserId,
@@ -185,7 +195,7 @@ public sealed class DataSeeder
         });
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded SiteSettings row");
+        _logger.LogInformation("Seeded SiteSettings row (Hope Community Church demo)");
     }
 
     private async Task SeedAnnouncementBannerAsync(CancellationToken ct)

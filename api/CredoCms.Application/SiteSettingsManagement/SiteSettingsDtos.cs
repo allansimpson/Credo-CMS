@@ -38,7 +38,10 @@ public sealed record PublicSiteSettingsDto(
     ConsentBannerPosition Ga4ConsentBannerPosition,
     /// <summary>Resolved Page slug for the consent banner's "Cookie Policy"
     /// link. Null when no page is configured.</summary>
-    string? CookiePolicyPageSlug);
+    string? CookiePolicyPageSlug,
+    /// <summary>Selects the public-facing visual template. The SPA writes
+    /// <c>data-template</c> on the church theme root from this value.</summary>
+    PublicTemplate Template);
 
 /// <summary>Full settings DTO returned to admins.</summary>
 public sealed record SiteSettingsDto(
@@ -127,6 +130,8 @@ public sealed record SiteSettingsDto(
     bool Ga4ConsentBannerEnabled,
     ConsentBannerPosition Ga4ConsentBannerPosition,
     Guid? CookiePolicyPageId,
+    // ---- Public Site design handoff --------------------------------------
+    PublicTemplate Template,
     DateTimeOffset CreatedAt,
     DateTimeOffset ModifiedAt,
     Guid? ModifiedByUserId,
@@ -212,4 +217,6 @@ public sealed record UpdateSiteSettingsRequest(
     bool Ga4ConsentBannerEnabled,
     ConsentBannerPosition Ga4ConsentBannerPosition,
     Guid? CookiePolicyPageId,
+    // ---- Public Site design handoff --------------------------------------
+    PublicTemplate Template,
     string RowVersion);

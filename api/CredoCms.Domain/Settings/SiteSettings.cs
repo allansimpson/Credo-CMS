@@ -317,6 +317,14 @@ public class SiteSettings
     /// server-side before public exposure.</summary>
     public Guid? CookiePolicyPageId { get; set; }
 
+    // -- Public site template (Public Site design handoff) ----------------
+
+    /// <summary>Selects the public-facing visual template. Content
+    /// shape is identical across templates; only visual treatment
+    /// differs. The SPA reads this from the public bootstrap and sets
+    /// <c>data-template</c> on the church theme root.</summary>
+    public PublicTemplate Template { get; set; } = PublicTemplate.Editorial;
+
     // -----------------------------------------------------------------------
 
     public DateTimeOffset CreatedAt { get; set; }

@@ -23,10 +23,20 @@ export function ChurchThemeLayout({ children }: { children: ReactNode }) {
     const accentHsl = hexToHsl(settings.accentColor);
     if (primaryHsl) root.style.setProperty("--primary", primaryHsl);
     if (accentHsl) root.style.setProperty("--accent", accentHsl);
+
+    // Public Site design handoff: set data-template on the theme root so
+    // the CSS variable cascade picks up the right token block. Default
+    // 'editorial' if the bootstrap hasn't populated it yet.
+    const template = settings.template === 1 ? "quiet" : "editorial";
+    root.dataset.template = template;
   }, [settings]);
 
+  // First-paint default (before useSiteSettings resolves) — pick from the
+  // bootstrap value if available, otherwise editorial.
+  const initialTemplate = settings?.template === 1 ? "quiet" : "editorial";
+
   return (
-    <div data-theme="church" className="min-h-full">
+    <div data-theme="church" data-template={initialTemplate} className="min-h-full">
       {/* Phase 6 — accessibility skip-to-main-content link. sr-only by
           default; visible on keyboard focus. The public layout's <main>
           carries id="main-content". */}

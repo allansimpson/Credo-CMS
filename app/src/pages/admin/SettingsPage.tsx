@@ -142,6 +142,8 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     ga4ConsentBannerEnabled: s.ga4ConsentBannerEnabled,
     ga4ConsentBannerPosition: s.ga4ConsentBannerPosition,
     cookiePolicyPageId: s.cookiePolicyPageId,
+    // Public Site design handoff
+    template: s.template,
     rowVersion: s.rowVersion,
   };
 }

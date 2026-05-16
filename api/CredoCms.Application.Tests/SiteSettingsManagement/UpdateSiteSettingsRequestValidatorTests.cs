@@ -89,6 +89,8 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         Ga4ConsentBannerEnabled: true,
         Ga4ConsentBannerPosition: ConsentBannerPosition.BottomRight,
         CookiePolicyPageId: null,
+        // Public Site design handoff — default to Editorial.
+        Template: PublicTemplate.Editorial,
         RowVersion: "AAAAAAAAB9E=");
 
     [Fact]

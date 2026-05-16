@@ -1,52 +1,132 @@
 /*
  * Church theme — applied to all public-facing pages, the login flow, member areas,
- * and profile pages. Configurable per-church via the SiteSettings row, which
- * overrides --color-primary and --color-accent at runtime.
+ * and profile pages.
  *
- * All colours are HSL-channel triples (no hsl() wrapper), matching the shadcn
- * convention: rgba alpha can be applied via Tailwind's /<alpha> modifier.
+ * Three layers of cascade (specificity ascending):
+ *   1. [data-theme="church"] — base brand vars + per-tenant overrides for
+ *      --primary and --accent. These two are tenant-overridable at runtime
+ *      via ChurchThemeLayout.useEffect on the SiteSettings response. Every
+ *      other var on the theme root is template-fixed; tenants cannot
+ *      repaint --fg, --bg, etc.
+ *   2. [data-theme="church"][data-template="editorial"] — Editorial Warm
+ *      tokens (default). Cream + ink, single sans, warm accent.
+ *   3. [data-theme="church"][data-template="quiet"]     — Quiet Sanctuary
+ *      tokens. Pared-back, generous whitespace, sage accent.
+ *
+ * All colours are HSL-channel triples (no hsl() wrapper) so Tailwind's
+ *   hsl(var(--background) / <alpha-value>)
+ * pattern can use /<alpha> modifiers.
+ *
+ * IMPORTANT — per the Public Site design handoff: --primary maps to
+ * BUTTON/CTA usage only. Headings + body text use --foreground (template-
+ * fixed) so a tenant's chosen primary color does NOT repaint headlines.
+ * If a future call site needs to use --primary for type, it must do so
+ * deliberately (and check contrast against the template's --background).
  */
+
+/* ---- Self-hosted fonts ---------------------------------------------------
+ * Per design handoff Q1: Inter Tight + JetBrains Mono, self-hosted under
+ * /fonts/, with font-display: swap and a system fallback stack. The actual
+ * .woff2 files are placed during the build pipeline (operator drop or
+ * downloaded by the build step); the fallback stack keeps the UI usable
+ * until the fonts arrive. */
+@font-face {
+  font-family: "Inter Tight";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("/fonts/InterTight-Variable.woff2") format("woff2-variations");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/JetBrainsMono-Variable.woff2") format("woff2-variations");
+}
+
 [data-theme="church"] {
-  /* Brand — set by SiteSettings; defaults match the seeded values. */
+  /* Tenant-overridable brand. Set at runtime from SiteSettings. */
   --color-primary: #1e3a8a;
   --color-accent: #f59e0b;
-
-  /* Tailwind tokens (HSL channel triples) */
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-
-  --primary: 222 84% 33%;             /* approx of #1e3a8a; runtime-overridden */
+  --primary: 222 84% 33%;
   --primary-foreground: 0 0% 100%;
-
-  --accent: 38 92% 50%;                /* approx of #f59e0b; runtime-overridden */
+  --accent: 38 92% 50%;
   --accent-foreground: 222 47% 11%;
+  --accent-soft: 38 92% 50% / 0.13;
 
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 11%;
+  /* Editorial Warm defaults — template-fixed (not tenant-overridable).
+   * The [data-template="..."] selectors below override these. The block
+   * here also serves as fallback when no data-template attribute is set. */
+  --background: 41 27% 95%;        /* #f6f4ef cream */
+  --foreground: 36 9% 9%;           /* #1a1815 ink */
+  --panel: 45 33% 97%;              /* #fbfaf6 */
+  --panel-alt: 44 25% 92%;          /* #f0ede5 */
+  --inset: 36 9% 9%;                /* #1a1815 */
+  --inset-fg: 39 49% 93%;           /* #f5efe2 */
+  --fg-soft: 33 13% 20%;            /* #3a352e */
+  --muted: 30 9% 44%;               /* #7a7165 */
+  --border: 44 30% 82%;             /* #dcd5c5 */
+  --border-soft: 42 36% 88%;        /* #ebe6d8 */
 
+  /* shadcn-style aliases used elsewhere in the SPA. Keep mapped. */
+  --secondary: 44 25% 92%;
+  --secondary-foreground: 36 9% 9%;
   --danger: 0 72% 51%;
   --danger-foreground: 0 0% 98%;
-
-  /* Token rename (sync with system-theme.css):
-   *   tertiary text — was --muted-foreground, now --muted.
-   * The legacy `--muted` (subtle surface) is dropped; `bg-muted` callers were
-   * migrated to `bg-panel-alt`, so we expose --panel-alt as an alias to the
-   * old surface value for any stray references. */
-  --muted: 215 16% 47%;
-  --panel-alt: 210 40% 96%;
-
-  --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
-
-  --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 222 84% 33%;
+  --card: 45 33% 97%;
+  --card-foreground: 36 9% 9%;
+  --popover: 45 33% 97%;
+  --popover-foreground: 36 9% 9%;
+  --input: 44 30% 82%;
+  --ring: 36 9% 9%;
 
   --radius: 0;
 
-  --font-heading: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+[data-theme="church"][data-template="editorial"] {
+  /* Default; values already on the root block. Selector exists for
+   * explicit intent + future divergence. */
+}
+
+[data-theme="church"][data-template="quiet"] {
+  --background: 45 50% 98%;         /* #fbfaf7 */
+  --foreground: 120 6% 13%;          /* #1f231f */
+  --panel: 0 0% 100%;                /* #ffffff */
+  --panel-alt: 47 31% 94%;           /* #f4f2ec */
+  --inset: 138 11% 17%;              /* #26302a */
+  --inset-fg: 60 12% 90%;            /* #e9eae3 */
+  --fg-soft: 138 6% 30%;             /* #48504a */
+  --muted: 86 4% 54%;                /* #8b8e84 */
+  --border: 47 16% 87%;              /* #e3e1d8 */
+  --border-soft: 47 26% 91%;         /* #eeece4 */
+
+  /* Quiet's default accent (sage). Tenant override via --color-accent
+   * still applies — this is the template's STARTING value. */
+  --accent: 119 15% 42%;             /* #5b7a5a */
+  --accent-foreground: 0 0% 100%;
+  --accent-soft: 119 15% 42% / 0.09;
+
+  --secondary: 47 31% 94%;
+  --card: 0 0% 100%;
+  --card-foreground: 120 6% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 120 6% 13%;
+  --input: 47 16% 87%;
+  --ring: 120 6% 13%;
+}
+
+/* Square corners globally. The only exception is the Quiet template's
+ * pill-shaped filter chips, which opt back in via `rounded-full`. */
+[data-theme="church"] *,
+[data-theme="church"] *::before,
+[data-theme="church"] *::after {
+  border-radius: 0;
+}
+[data-theme="church"] .rounded-full {
+  border-radius: 9999px !important;
 }

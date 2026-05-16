@@ -80,7 +80,12 @@ export interface PublicSiteSettings {
   ga4ConsentBannerEnabled: boolean;
   ga4ConsentBannerPosition: ConsentBannerPosition;
   cookiePolicyPageSlug: string | null;
+  // Public Site design handoff — visual template selector. Same content
+  // shape across both; only treatment differs.
+  template: PublicTemplate;
 }
+
+export type PublicTemplate = 0 | 1; // Editorial | Quiet
 
 export interface SiteSettings extends PublicSiteSettings {
   defaultVersionRetentionCount: number;

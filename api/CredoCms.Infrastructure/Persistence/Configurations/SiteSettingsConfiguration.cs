@@ -36,5 +36,8 @@ internal sealed class SiteSettingsConfiguration : IEntityTypeConfiguration<SiteS
         // Phase 6
         builder.Property(x => x.AnalyticsProvider).HasConversion<int>();
         builder.Property(x => x.Ga4ConsentBannerPosition).HasConversion<int>();
+
+        // Public Site design handoff
+        builder.Property(x => x.Template).HasConversion<int>();
     }
 }

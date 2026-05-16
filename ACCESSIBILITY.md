@@ -97,14 +97,28 @@ indicators, or migrate to a more accessible calendar library.
 ### Color contrast in church themes
 
 The site supports administrator-configured `PrimaryColor` and
-`AccentColor` (Site Settings → Branding). Some color choices may
-violate the AA 4.5:1 contrast ratio against the background. The admin
-UI does NOT enforce contrast checks at save time — operators are
-expected to test their chosen colors against [WebAIM's contrast
-checker](https://webaim.org/resources/contrastchecker/).
+`AccentColor` (Site Settings → Branding).
 
-**v1.x target:** inline contrast preview in the Branding tab with a
-"this color may not pass WCAG AA" warning.
+**Design-time:** both Public Site templates ship with default palettes
+verified for WCAG AAA contrast (7:1 normal text, 4.5:1 large) against
+the template background. The AAA target is documented; we do not
+enforce it at runtime.
+
+**Runtime:** the per-tenant `PrimaryColor` / `AccentColor` override is
+contrast-checked at save time as a **soft warning** — never blocked.
+The check runs against the active template's background (Editorial
+`#f6f4ef`, Quiet `#fbfaf7`) and surfaces a warning string when the
+chosen color drops below AA (4.5:1). Save proceeds regardless. Some
+churches have inherited brand colors they must use even when contrast
+is borderline; refusing the save would be paternalistic.
+
+The contrast helper (`ColorContrast` in
+`CredoCms.Application.SiteSettingsManagement`) is the canonical
+WCAG-relative-luminance + contrast-ratio implementation; reuse it
+rather than re-implementing per-call-site.
+
+**v1.x target:** inline contrast preview in the Branding tab showing
+the live ratio + AA/AAA pass markers as the admin picks colors.
 
 ### Profile photo alt text
 

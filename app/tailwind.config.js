@@ -68,6 +68,12 @@ export default {
         },
         input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",
+        // Public Site design handoff — dark inset blocks (Editorial uses
+        // them for "I'm New" / "Give" / footer; Quiet uses them sparingly).
+        inset: {
+          DEFAULT: "hsl(var(--inset) / <alpha-value>)",
+          foreground: "hsl(var(--inset-fg) / <alpha-value>)",
+        },
       },
       fontFamily: {
         heading: "var(--font-heading)",
