@@ -13,8 +13,15 @@ namespace CredoCms.Application.Events;
 public sealed class RegistrationTokenSignerOptions
 {
     public const string SectionName = "EventRegistration";
-    /// <summary>Base64 or raw string secret. Must be >= 32 chars in production.</summary>
-    public string TokenSigningSecret { get; set; } = "credo-cms-dev-token-secret-change-me-in-production-please-do-it";
+
+    /// <summary>The default value compared against at startup; deployments
+    /// running in Production with this exact value get a hard fail.</summary>
+    public const string DefaultDevSecret =
+        "credo-cms-dev-token-secret-change-me-in-production-please-do-it";
+
+    /// <summary>Base64 or raw string secret. Must be >= 32 chars in
+    /// production AND must not equal <see cref="DefaultDevSecret"/>.</summary>
+    public string TokenSigningSecret { get; set; } = DefaultDevSecret;
 }
 
 public interface IRegistrationTokenSigner

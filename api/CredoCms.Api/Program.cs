@@ -233,6 +233,24 @@ try
     builder.Services.AddSingleton<CredoCms.Application.RealTime.IRealtimeNotifier,
         CredoCms.Api.RealTime.SignalRRealtimeNotifier>();
 
+    // -- Production safety check on RegistrationTokenSigner secret --
+    // In Production, refuse to boot if the secret equals the default dev
+    // value baked into the source. Dev / Testing builds continue silently
+    // so contributors can run the app without configuring a custom secret.
+    if (builder.Environment.IsProduction())
+    {
+        var configuredSecret = builder.Configuration[
+            $"{CredoCms.Application.Events.RegistrationTokenSignerOptions.SectionName}:TokenSigningSecret"];
+        if (string.IsNullOrWhiteSpace(configuredSecret)
+            || configuredSecret == CredoCms.Application.Events.RegistrationTokenSignerOptions.DefaultDevSecret)
+        {
+            throw new InvalidOperationException(
+                $"{CredoCms.Application.Events.RegistrationTokenSignerOptions.SectionName}:TokenSigningSecret "
+                + "is unset or still using the default dev value. Production deployments must override this "
+                + "via configuration (App Service application setting or Key Vault).");
+        }
+    }
+
     // -- CORS for dev SPA -----------------------------------------------------
     if (builder.Environment.IsDevelopment())
     {

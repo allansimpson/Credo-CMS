@@ -62,6 +62,18 @@ ordered by priority within each tag.
 - **[v1.x] Live chat widget** — third-party embed (Crisp, Intercom, etc.).
 - **[v1.x] Photo galleries** — image-grid content type with lightbox.
 
+### From project evaluation (see `EVALUATION.md`)
+
+- **[v1.x] Tighten `RegistrationTokenSigner` secret min length** — docs say ≥32; the check is ≥16. Pick one.
+- **[v1.x] Sanitize tenant `PrimaryColor` / `AccentColor` on save** — server-side regex guard against pasted `url(javascript:…)` strings even though the runtime conversion rejects them.
+- **[v1.x] `cookiePolicyPageSlug` / `Id` TS type cleanup** — admin `SiteSettings` carries both fields today via the `extends PublicSiteSettings` chain. Decouple.
+- **[v1.x] `<PublicPage>` vs `PublicLayout` consolidation** — pick one chrome-provider pattern, drop the other. Currently both exist and `<PublicPage>` is unusable inside `PublicLayout` without double-rendering.
+- **[v1.x] `SmtpEmailService` swallow-blocks** — tighten the bare `catch` on disconnect failures to pass-through `OperationCanceledException`.
+- **[v1.x] Admin Dashboard live data** — four placeholder endpoints (sermon-of-the-week, recent activity, this-Sunday, tend-to action queue) need wiring.
+- **[v1.x] Login page pull-quote** — currently static; pull from a public API.
+- **[v1.x] CI lint + format** — add `dotnet format --verify-no-changes` + `eslint --max-warnings 0` to `ci.yml`.
+- **[v1.x] Public-endpoint regression tests** — `WebApplicationFactory` snapshot tests for `/api/public/homepage`, `/sermons`, `/events` etc.
+
 ## v2 candidates (multi-tenancy + SaaS)
 
 - **[v2] Multi-tenant architecture** — see [MULTI_TENANCY.md](./MULTI_TENANCY.md) for the migration path.
