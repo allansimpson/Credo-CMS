@@ -1,6 +1,9 @@
 using CredoCms.Domain.Announcements;
 using CredoCms.Domain.Blog;
+using CredoCms.Domain.Classes;
 using CredoCms.Domain.Common;
+using CredoCms.Domain.ConnectCard;
+using CredoCms.Domain.Documents;
 using CredoCms.Domain.Email;
 using CredoCms.Domain.Events;
 using CredoCms.Domain.Groups;
@@ -8,6 +11,7 @@ using CredoCms.Domain.Identity;
 using CredoCms.Domain.Leaders;
 using CredoCms.Domain.News;
 using CredoCms.Domain.Pages;
+using CredoCms.Domain.Prayer;
 using CredoCms.Domain.Sermons;
 using CredoCms.Domain.Volunteers;
 using CredoCms.Domain.Services;
@@ -68,6 +72,12 @@ public sealed class DataSeeder
         await SeedEmailTemplatesAsync(ct).ConfigureAwait(false);
         await SeedSampleBroadcastAsync(ct).ConfigureAwait(false);
         await SeedSampleVolunteerRolesAsync(ct).ConfigureAwait(false);
+        // Demo-content seeds — keep the test site believable end-to-end.
+        await SeedSampleClassesAsync(ct).ConfigureAwait(false);
+        await SeedSampleDocumentsAsync(ct).ConfigureAwait(false);
+        await SeedSampleDirectoryMembersAsync(ct).ConfigureAwait(false);
+        await SeedSamplePrayerRequestsAsync(ct).ConfigureAwait(false);
+        await SeedSampleConnectCardsAsync(ct).ConfigureAwait(false);
     }
 
     private async Task SeedRolesAsync(CancellationToken ct)
@@ -738,4 +748,220 @@ public sealed class DataSeeder
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample volunteer roles on event {Id}.", firstEvent.Id);
     }
+
+    // -- Demo content (idempotent) -----------------------------------------
+
+    private async Task SeedSampleClassesAsync(CancellationToken ct)
+    {
+        if (await _db.ClassSlots.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        var slotAdult = new ClassSlot
+        {
+            Id = Guid.NewGuid(),
+            Slug = "sunday-morning-bible-study",
+            Name = "Sunday Morning Bible Study",
+            AudienceAgeGroup = "Adults",
+            GeneralMeetingTime = "Sundays · 9:00am",
+            DefaultRoom = "Fellowship Hall",
+            DescriptionJson = ParaJson("Open Bible study working through one book of Scripture each term. Coffee provided; everyone welcome."),
+            IsActive = true, DisplayOrder = 0,
+            CreatedAt = now, ModifiedAt = now,
+        };
+        var slotKids = new ClassSlot
+        {
+            Id = Guid.NewGuid(),
+            Slug = "kids-discovery-class",
+            Name = "Kids Discovery Class",
+            AudienceAgeGroup = "Children (K-5)",
+            GeneralMeetingTime = "Sundays · 10:30am",
+            DefaultRoom = "Children's Wing",
+            DescriptionJson = ParaJson("Age-appropriate Bible stories, songs, and crafts during the second service."),
+            IsActive = true, DisplayOrder = 1,
+            CreatedAt = now, ModifiedAt = now,
+        };
+        _db.ClassSlots.AddRange(slotAdult, slotKids);
+
+        var termStart = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
+        var termEnd = termStart.AddDays(70);
+        _db.ClassOfferings.AddRange(
+            new ClassOffering
+            {
+                Id = Guid.NewGuid(),
+                ClassSlotId = slotAdult.Id,
+                Subject = "The Gospel of Mark",
+                DescriptionJson = ParaJson("A ten-week walk through Mark's gospel. Bring a Bible; we'll provide handouts."),
+                StartDate = termStart, EndDate = termEnd,
+                TeacherFreeText = "Pastor Daniel",
+                CreatedAt = now, ModifiedAt = now,
+            },
+            new ClassOffering
+            {
+                Id = Guid.NewGuid(),
+                ClassSlotId = slotKids.Id,
+                Subject = "Heroes of the Old Testament",
+                DescriptionJson = ParaJson("Ten weeks of stories from Abraham, Moses, David, and more."),
+                StartDate = termStart, EndDate = termEnd,
+                TeacherFreeText = "Children's Ministry Team",
+                CreatedAt = now, ModifiedAt = now,
+            });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample classes (2 slots, 2 current offerings).");
+    }
+
+    private async Task SeedSampleDocumentsAsync(CancellationToken ct)
+    {
+        if (await _db.Documents.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        // BlobUrl is a placeholder pointing at the seeded admin's expected
+        // storage container. A fresh operator replaces these with real
+        // uploads via /admin/documents.
+        _db.Documents.AddRange(
+            new Document
+            {
+                Id = Guid.NewGuid(),
+                Title = "Sunday bulletin (template)",
+                Description = "Weekly worship guide template — replace with your church's actual bulletin.",
+                Category = "Bulletins",
+                BlobUrl = "placeholder://bulletins/template.pdf",
+                OriginalFilename = "bulletin-template.pdf",
+                SizeBytes = 0,
+                IsPublished = true, IsMembersOnly = false,
+                CreatedAt = now, ModifiedAt = now,
+            },
+            new Document
+            {
+                Id = Guid.NewGuid(),
+                Title = "New member welcome packet",
+                Description = "Onboarding information for new members.",
+                Category = "Forms",
+                BlobUrl = "placeholder://forms/welcome-packet.pdf",
+                OriginalFilename = "welcome-packet.pdf",
+                SizeBytes = 0,
+                IsPublished = true, IsMembersOnly = true,
+                CreatedAt = now, ModifiedAt = now,
+            });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample documents (placeholder BlobUrls).");
+    }
+
+    private async Task SeedSampleDirectoryMembersAsync(CancellationToken ct)
+    {
+        // Two sample members with directory opt-in toggles set so the
+        // /members directory page renders something on a fresh deploy.
+        // Both have unconfirmed emails + no usable password — they cannot
+        // sign in. Operator replaces them with real invitations.
+        var existing = await _userManager.FindByEmailAsync("sample.member@credocms.local").ConfigureAwait(false);
+        if (existing is not null) return;
+
+        var now = DateTimeOffset.UtcNow;
+        var alice = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "sample.member@credocms.local",
+            Email = "sample.member@credocms.local",
+            EmailConfirmed = false,
+            FirstName = "Alice",
+            LastName = "Sample",
+            IsActive = true,
+            IsListedInDirectory = true,
+            ShowEmailInDirectory = false,
+            ShowPhoneInDirectory = false,
+            ShowPhotoInDirectory = true,
+            PublicAuthorBio = "Member since 2019. Serves on the welcome team.",
+            CreatedAt = now,
+        };
+        var ben = new ApplicationUser
+        {
+            Id = Guid.NewGuid(),
+            UserName = "sample.member2@credocms.local",
+            Email = "sample.member2@credocms.local",
+            EmailConfirmed = false,
+            FirstName = "Ben",
+            LastName = "Example",
+            IsActive = true,
+            IsListedInDirectory = true,
+            ShowEmailInDirectory = true,
+            ShowPhoneInDirectory = false,
+            ShowPhotoInDirectory = false,
+            PublicAuthorBio = "Husband, father, accountant. Helps run the small-groups program.",
+            CreatedAt = now,
+        };
+
+        var aliceResult = await _userManager.CreateAsync(alice).ConfigureAwait(false);
+        var benResult = await _userManager.CreateAsync(ben).ConfigureAwait(false);
+        if (!aliceResult.Succeeded || !benResult.Succeeded) return;
+
+        await _userManager.AddToRoleAsync(alice, SystemConstants.Roles.Member).ConfigureAwait(false);
+        await _userManager.AddToRoleAsync(ben, SystemConstants.Roles.Member).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample directory members (cannot sign in; replace with real invitations).");
+    }
+
+    private async Task SeedSamplePrayerRequestsAsync(CancellationToken ct)
+    {
+        if (await _db.PrayerRequests.AnyAsync(ct).ConfigureAwait(false)) return;
+        // Submitted by the seeded admin so the audit row is meaningful.
+        var admin = await _userManager.FindByEmailAsync(_identitySeed.DefaultAdminEmail).ConfigureAwait(false);
+        if (admin is null) return;
+
+        var now = DateTimeOffset.UtcNow;
+        _db.PrayerRequests.AddRange(
+            new PrayerRequest
+            {
+                Id = Guid.NewGuid(),
+                Title = "Healing for a friend",
+                BodyJson = ParaJson("Please pray for healing for a friend recovering from surgery."),
+                SubmittedByUserId = admin.Id,
+                IsAnonymous = false,
+                Status = PrayerRequestStatus.Active,
+                CreatedAt = now, ModifiedAt = now,
+            },
+            new PrayerRequest
+            {
+                Id = Guid.NewGuid(),
+                Title = "Wisdom for a job change",
+                BodyJson = ParaJson("Discerning a major career decision in the next month. Asking for clarity."),
+                SubmittedByUserId = admin.Id,
+                IsAnonymous = true,
+                Status = PrayerRequestStatus.Active,
+                CreatedAt = now.AddDays(-2), ModifiedAt = now.AddDays(-2),
+            });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample prayer requests.");
+    }
+
+    private async Task SeedSampleConnectCardsAsync(CancellationToken ct)
+    {
+        if (await _db.ConnectCardSubmissions.AnyAsync(ct).ConfigureAwait(false)) return;
+        var now = DateTimeOffset.UtcNow;
+        _db.ConnectCardSubmissions.AddRange(
+            new ConnectCardSubmission
+            {
+                Id = Guid.NewGuid(),
+                Name = "Visitor One",
+                Email = "visitor.one@example.org",
+                Phone = null,
+                IsFirstTimeVisitor = true,
+                HowDidYouHear = "Friend invited me",
+                Comments = "Came on Sunday and enjoyed it. Would like more info on small groups.",
+                Status = ConnectCardStatus.New,
+                SubmittedAt = now.AddDays(-1),
+                ModifiedAt = now.AddDays(-1),
+            },
+            new ConnectCardSubmission
+            {
+                Id = Guid.NewGuid(),
+                Name = "Visitor Two",
+                Email = "visitor.two@example.org",
+                Phone = "+1-555-0124",
+                IsFirstTimeVisitor = false,
+                HowDidYouHear = "Drove by, saw the sign",
+                Comments = "Interested in volunteering with the food pantry.",
+                Status = ConnectCardStatus.FollowUpNeeded,
+                SubmittedAt = now.AddDays(-3),
+                ModifiedAt = now.AddDays(-3),
+            });
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample connect card submissions.");
+    }
+
 }
