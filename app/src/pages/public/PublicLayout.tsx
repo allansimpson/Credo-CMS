@@ -3,7 +3,6 @@ import { Outlet } from "react-router-dom";
 import { ChurchThemeLayout } from "@/themes/ChurchThemeLayout";
 import { PublicNavBar } from "@/components/shared/PublicNavBar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
-import { AnnouncementBar } from "@/components/shared/AnnouncementBar";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 
 export function PublicLayout() {
@@ -38,10 +37,11 @@ export function PublicLayout() {
     return () => { script.remove(); };
   }, [settings]);
 
+  // PublicNavBar (shim) renders the AnnouncementBar conditionally per
+  // template — no need to render it again here.
   return (
     <ChurchThemeLayout>
       <div className="flex min-h-screen flex-col">
-        <AnnouncementBar />
         <PublicNavBar />
         <div className="flex-1">
           <Outlet />
