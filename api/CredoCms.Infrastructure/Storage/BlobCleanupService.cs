@@ -4,9 +4,8 @@ using Microsoft.Extensions.Logging;
 namespace CredoCms.Infrastructure.Storage;
 
 /// <summary>
-/// Phase 2 stub. Logs the orphan-blob intent so operators can see what would
-/// be reclaimed; the real reconciliation job is deferred to a later phase
-/// per BUILD_PLAN P-6.
+/// Stub. Logs the orphan-blob intent so operators can see what would
+/// be reclaimed; the real reconciliation job is deferred.
 /// </summary>
 public sealed class BlobCleanupService : IBlobCleanupService
 {

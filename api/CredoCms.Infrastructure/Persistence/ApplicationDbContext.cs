@@ -60,7 +60,6 @@ public class ApplicationDbContext
     public DbSet<EventRegistration> EventRegistrations => Set<EventRegistration>();
     public DbSet<CalendarFeedToken> CalendarFeedTokens => Set<CalendarFeedToken>();
 
-    // Phase 4
     public DbSet<Group> Groups => Set<Group>();
     public DbSet<GroupMembership> GroupMemberships => Set<GroupMembership>();
     public DbSet<ClassSlot> ClassSlots => Set<ClassSlot>();
@@ -72,7 +71,6 @@ public class ApplicationDbContext
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     public DbSet<BlogPostTag> BlogPostTags => Set<BlogPostTag>();
 
-    // Phase 5
     public DbSet<EmailSuppression> EmailSuppressions => Set<EmailSuppression>();
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
     public DbSet<EmailBroadcast> EmailBroadcasts => Set<EmailBroadcast>();

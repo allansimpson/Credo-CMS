@@ -3,7 +3,7 @@ using CredoCms.Application.Sms;
 namespace CredoCms.Infrastructure.Sms;
 
 /// <summary>
-/// Phase 5 v1.5 placeholder. The class exists so v1.5 can drop in a real
+/// v1.5 placeholder. The class exists so v1.5 can drop in a real
 /// Twilio implementation without changing DI signatures or DTOs. v1
 /// callers always resolve <see cref="NoOpSmsService"/> as
 /// <see cref="ISmsService"/>; constructing this class throws so an

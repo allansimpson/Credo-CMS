@@ -8,9 +8,9 @@ namespace CredoCms.Infrastructure.BackgroundServices;
 /// configured retention count.
 /// </summary>
 /// <remarks>
-/// <b>Phase 1:</b> registered but inert — no entities implement <c>IVersionedEntity</c>
-/// yet, so each tick logs a debug message and exits. Phase 2 will iterate the
-/// versioned-entity registry and apply per-entity retention.
+/// Currently registered but inert — no entities implement <c>IVersionedEntity</c>
+/// yet, so each tick logs a debug message and exits. A future revision will iterate
+/// the versioned-entity registry and apply per-entity retention.
 /// </remarks>
 public sealed class VersioningTrimBackgroundService : BackgroundService
 {
@@ -24,7 +24,7 @@ public sealed class VersioningTrimBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("VersioningTrimBackgroundService started (Phase 1: inert)");
+        _logger.LogInformation("VersioningTrimBackgroundService started (inert)");
 
         while (!stoppingToken.IsCancellationRequested)
         {

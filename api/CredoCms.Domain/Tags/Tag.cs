@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 namespace CredoCms.Domain.Tags;
 
 /// <summary>
-/// Unified tag table shared across content types (sermons, blog posts in
-/// Phase 4, etc.). Tags normalize on insert: case-insensitive match against
-/// existing rows; new tags get title-cased canonical names.
+/// Unified tag table shared across content types (sermons, blog posts, etc.).
+/// Tags normalize on insert: case-insensitive match against existing rows;
+/// new tags get title-cased canonical names.
 /// </summary>
 public sealed class Tag
 {

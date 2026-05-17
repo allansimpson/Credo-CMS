@@ -936,3 +936,27 @@ Phase 6 closes the v1 build. Six phases shipped over the project; the
 codebase is production-deployable with operator documentation a non-
 developer can follow. The README + Astro `/docs/*` site +
 ACCESSIBILITY.md + ARCHITECTURE.md are the entry points.
+
+## Post-v1 deep-dive pass
+
+After the project evaluation in EVALUATION.md, a second pass took a
+"what would you do if writing this from scratch" stance. The actionable
+carry-forwards are in `ROADMAP.md` under "From 'from scratch' deep-dive
+analysis" (v1.x) and "From 'from scratch' — deferred to v2"
+(architectural rewrites that don't pay for themselves before launch).
+
+Inline fixes from that pass:
+
+- ✓ `RegistrationTokenSigner` constructor check tightened 16 → 32 chars.
+- ✓ `SmtpEmailService` disconnect cleanup uses `CancellationToken.None`
+  with a typed `catch (Exception)` (CA2219 "throw from finally" smell
+  avoided).
+- ✓ `useNotificationHub` no longer logs to `console.warn` on hub
+  unavailability — degrades silently.
+- ✓ `ci.yml` gates `dotnet format --verify-no-changes --severity info`
+  and `npx eslint . --max-warnings 0`.
+- ✓ Project-phase / PR-number references removed from production
+  source files (.cs / .ts / .tsx). Phase history lives in commit
+  messages + BUILD_PLAN.md.
+- ✓ EVALUATION.md and ROADMAP.md de-duplicated; ROADMAP is now the
+  single source of v1.x carry-forwards.

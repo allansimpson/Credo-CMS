@@ -15,15 +15,14 @@ using Microsoft.Extensions.Logging;
 namespace CredoCms.Infrastructure.BackgroundServices;
 
 /// <summary>
-/// Phase 5 R11. Ticks every 5 minutes; for each Editor/Administrator,
+/// Ticks every 5 minutes; for each Editor/Administrator,
 /// computes the count of unacknowledged Connect Card submissions and
 /// pending Group join requests since their last digest, and sends a
 /// digest email when the per-user frequency window has elapsed.
 ///
 /// <para>Default frequency is <see cref="AdminNotificationFrequency.Every30Minutes"/>
 /// from <see cref="Domain.Settings.SiteSettings.AdminNotificationFrequency"/>;
-/// per-admin override on the user profile beats the default (Phase 5 R15
-/// wires the SPA toggle).</para>
+/// per-admin override on the user profile beats the default.</para>
 /// </summary>
 public sealed class AdminNotificationDigestService : BackgroundService
 {

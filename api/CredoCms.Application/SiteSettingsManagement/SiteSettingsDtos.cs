@@ -4,8 +4,8 @@ using CredoCms.Domain.Settings;
 namespace CredoCms.Application.SiteSettingsManagement;
 
 /// <summary>Public-facing subset, returned to anonymous SPA bootstrap.
-/// Phase 2 additions exposed publicly: LeadersPageLabel (used by the public
-/// nav and routes), HomepageHeroCtaLabel/Link.</summary>
+/// Fields exposed publicly include LeadersPageLabel (used by the public
+/// nav and routes) and HomepageHeroCtaLabel/Link.</summary>
 public sealed record PublicSiteSettingsDto(
     string ChurchName,
     string? Tagline,
@@ -27,9 +27,9 @@ public sealed record PublicSiteSettingsDto(
     string HomepageHeroCtaLabel,
     string HomepageHeroCtaLink,
     /// <summary>Drives whether the SPA shows the "Continue with Facebook"
-    /// button on /login. Phase 4 Q15 introduced the toggle.</summary>
+    /// button on /login.</summary>
     bool FacebookLoginEnabled,
-    // Phase 6 — analytics + cookie consent surface for the SPA bootstrap.
+    // Analytics + cookie consent surface for the SPA bootstrap.
     /// <summary>Analytics provider. <c>None</c> hides the cookie banner.</summary>
     AnalyticsProvider AnalyticsProvider,
     /// <summary>GA4 measurement ID. The SPA only reads this after consent.</summary>
@@ -73,7 +73,6 @@ public sealed record SiteSettingsDto(
     string HomepageHeroCtaLabel,
     string HomepageHeroCtaLink,
     string? DefaultMetaDescription,
-    // ---- Phase 4 admin-side fields ---------------------------------------
     string GetInvolvedPageLabel,
     string ClassesPageLabel,
     string ClassAudienceAgeGroupsJson,
@@ -95,7 +94,6 @@ public sealed record SiteSettingsDto(
     /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
     string? FacebookOAuthAppSecret,
     bool FacebookLoginEnabled,
-    // ---- Phase 5 admin-side fields ---------------------------------------
     EmailProvider EmailProvider,
     string EmailFromAddress,
     string EmailFromName,
@@ -124,7 +122,6 @@ public sealed record SiteSettingsDto(
     /// <summary>Masked in the admin UI. Sent on every PUT regardless.</summary>
     string? TwilioAuthToken,
     string? TwilioFromNumber,
-    // ---- Phase 6 admin-side fields ---------------------------------------
     AnalyticsProvider AnalyticsProvider,
     string? Ga4MeasurementId,
     bool Ga4ConsentBannerEnabled,
@@ -166,7 +163,6 @@ public sealed record UpdateSiteSettingsRequest(
     string HomepageHeroCtaLabel,
     string HomepageHeroCtaLink,
     string? DefaultMetaDescription,
-    // ---- Phase 4 admin-side fields ---------------------------------------
     string GetInvolvedPageLabel,
     string ClassesPageLabel,
     string ClassAudienceAgeGroupsJson,
@@ -186,7 +182,6 @@ public sealed record UpdateSiteSettingsRequest(
     string? FacebookOAuthAppId,
     string? FacebookOAuthAppSecret,
     bool FacebookLoginEnabled,
-    // ---- Phase 5 admin-side fields ---------------------------------------
     EmailProvider EmailProvider,
     string EmailFromAddress,
     string EmailFromName,
@@ -211,7 +206,6 @@ public sealed record UpdateSiteSettingsRequest(
     string? TwilioAccountSid,
     string? TwilioAuthToken,
     string? TwilioFromNumber,
-    // ---- Phase 6 admin-side fields ---------------------------------------
     AnalyticsProvider AnalyticsProvider,
     string? Ga4MeasurementId,
     bool Ga4ConsentBannerEnabled,

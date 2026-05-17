@@ -14,7 +14,7 @@ internal sealed class ApplicationUserConfiguration : IEntityTypeConfiguration<Ap
         builder.Property(u => u.RequirePasswordChangeOnFirstLogin).HasDefaultValue(false);
         builder.Property(u => u.CreatedAt).HasDefaultValueSql("SYSDATETIMEOFFSET()");
 
-        // Phase 4: directory + notification preference defaults.
+        // Directory + notification preference defaults.
         builder.Property(u => u.IsListedInDirectory).HasDefaultValue(false);
         builder.Property(u => u.ShowEmailInDirectory).HasDefaultValue(false);
         builder.Property(u => u.ShowPhoneInDirectory).HasDefaultValue(false);

@@ -384,8 +384,8 @@ public sealed class UserAdminService : IUserAdminService
             user.CreatedAt,
         };
 
-        // Phase 5: null UserId on broadcast-recipient rows BEFORE deleting the
-        // user. Snapshot fields preserve the audit row's meaning; cascading
+        // Null UserId on broadcast-recipient rows BEFORE deleting the user.
+        // Snapshot fields preserve the audit row's meaning; cascading
         // foreign-key delete would discard the historical record.
         await _broadcastRecipients.NullUserReferencesAsync(id, ct).ConfigureAwait(false);
 

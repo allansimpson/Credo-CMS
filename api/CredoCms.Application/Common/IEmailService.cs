@@ -3,7 +3,7 @@ using CredoCms.Domain.Email;
 namespace CredoCms.Application.Common;
 
 /// <summary>
-/// Outbound email abstraction. Phase 5 splits the surface in two:
+/// Outbound email abstraction. The surface splits in two:
 /// <see cref="SendTransactionalAsync"/> for account / system mail (which
 /// bypasses the suppression list and per-user notification preferences) and
 /// <see cref="SendBroadcastAsync"/> for bulk member mail (which respects

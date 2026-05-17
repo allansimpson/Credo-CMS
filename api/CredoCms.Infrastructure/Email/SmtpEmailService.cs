@@ -121,8 +121,13 @@ public sealed class SmtpEmailService : IEmailService
         }
         finally
         {
-            try { await client.DisconnectAsync(true, cancellationToken).ConfigureAwait(false); }
-            catch { /* swallow disconnect errors — they don't affect already-sent messages */ }
+            // CancellationToken.None: a cancelled disconnect leaks the socket and
+            // we're already past every send the caller cares about.
+            try { await client.DisconnectAsync(true, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "[SMTP] Disconnect after broadcast {BroadcastId} failed", message.BroadcastId);
+            }
         }
 
         return new BroadcastSendResult(results);
@@ -160,8 +165,11 @@ public sealed class SmtpEmailService : IEmailService
         }
         finally
         {
-            try { await client.DisconnectAsync(true, ct).ConfigureAwait(false); }
-            catch { /* swallow */ }
+            try { await client.DisconnectAsync(true, CancellationToken.None).ConfigureAwait(false); }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "[SMTP] Disconnect after transactional send failed");
+            }
         }
     }
 

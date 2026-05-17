@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace CredoCms.Infrastructure.BackgroundServices;
 
 /// <summary>
-/// Phase 5 R13. Daily-cadence reminder for volunteer commitments due
+/// Daily-cadence reminder for volunteer commitments due
 /// 1–2 days out. Sends a transactional email per signup, marks
 /// <see cref="EventVolunteerSignup.ReminderEmailSentAt"/> so dupes don't
 /// fire on the next tick. Cancels and past-date signups are skipped by

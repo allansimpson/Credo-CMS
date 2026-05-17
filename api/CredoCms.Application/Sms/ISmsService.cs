@@ -1,7 +1,7 @@
 namespace CredoCms.Application.Sms;
 
 /// <summary>
-/// Phase 5 R14. Outbound SMS abstraction. v1 ships
+/// Outbound SMS abstraction. v1 ships
 /// <see cref="NoOpSmsService"/> only; <see cref="TwilioSmsService"/> exists
 /// as a structural placeholder so v1.5 can drop in the implementation
 /// without schema or interface changes.

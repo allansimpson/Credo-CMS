@@ -37,8 +37,8 @@ public sealed class RegistrationTokenSigner : IRegistrationTokenSigner
     public RegistrationTokenSigner(RegistrationTokenSignerOptions options)
     {
         _key = Encoding.UTF8.GetBytes(options.TokenSigningSecret ?? string.Empty);
-        if (_key.Length < 16)
-            throw new InvalidOperationException("RegistrationTokenSigner secret must be at least 16 chars.");
+        if (_key.Length < 32)
+            throw new InvalidOperationException("RegistrationTokenSigner secret must be at least 32 chars.");
     }
 
     public string Sign(Guid registrationId, TimeSpan validity)

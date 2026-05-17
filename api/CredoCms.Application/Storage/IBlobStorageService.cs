@@ -1,8 +1,8 @@
 namespace CredoCms.Application.Storage;
 
 /// <summary>
-/// Generic blob-storage abstraction. Phase 2 only uses the upload + delete
-/// surface; later phases may add SAS-token issuance or copy/rename helpers.
+/// Generic blob-storage abstraction. Currently only the upload + delete
+/// surface is used; later additions may include SAS-token issuance or copy/rename helpers.
 /// </summary>
 public interface IBlobStorageService
 {

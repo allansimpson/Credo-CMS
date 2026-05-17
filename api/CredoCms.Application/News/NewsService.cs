@@ -43,7 +43,7 @@ public sealed class NewsService : INewsService
             IsPublished: n.IsPublished, IsMembersOnly: n.IsMembersOnly), ct).ConfigureAwait(false);
     }
 
-    /// <summary>Phase 5: when an item transitions to published with the
+    /// <summary>When an item transitions to published with the
     /// SendEmailOnPublish flag set, queue an EmailBroadcast and clear the
     /// flag inside the same transaction so a re-publish does not re-fire
     /// unless the editor explicitly re-enables it.</summary>

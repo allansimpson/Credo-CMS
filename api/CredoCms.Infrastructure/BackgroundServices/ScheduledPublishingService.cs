@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace CredoCms.Infrastructure.BackgroundServices;
 
 /// <summary>
-/// Phase 5 R10. Ticks every 60 seconds and publishes News + Blog entries
+/// Ticks every 60 seconds and publishes News + Blog entries
 /// whose <c>ScheduledPublishAt</c> has passed. Per-record errors are
 /// logged and don't crash the worker. Triggers email-on-publish via the
 /// same service the create/update flows use, so a scheduled publish has

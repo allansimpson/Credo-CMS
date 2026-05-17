@@ -5,7 +5,7 @@ namespace CredoCms.Infrastructure.Email;
 
 /// <summary>
 /// Thin abstraction over <see cref="MailKit.Net.Smtp.SmtpClient"/> covering
-/// only the methods the Phase 5 SMTP send loop uses. Exists so tests can
+/// only the methods the SMTP send loop uses. Exists so tests can
 /// mock the transport without spinning up a real SMTP server. The default
 /// impl is a one-line forwarder.
 /// </summary>

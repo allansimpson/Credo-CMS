@@ -2,7 +2,7 @@ namespace CredoCms.Application.Profanity;
 
 /// <summary>
 /// Service-layer profanity check used by user-submitted content (prayer
-/// requests in Phase 4; connect-card free-text fields when Q11 lands).
+/// requests; connect-card free-text fields when Q11 lands).
 /// Implementations merge a built-in wordlist with SiteSettings
 /// <c>ProfanityWordlist</c>, then strip <c>ProfanityAllowlist</c> matches
 /// (false-positive recovery — useful for biblical names like "Damascus"

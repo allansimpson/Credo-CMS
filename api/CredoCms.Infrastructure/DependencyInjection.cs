@@ -164,7 +164,7 @@ public static class DependencyInjection
         services.AddSingleton<CredoCms.Application.Events.IRegistrationTokenSigner,
             CredoCms.Application.Events.RegistrationTokenSigner>();
 
-        // YouTube integration (Phase 3 Q5)
+        // YouTube integration.
         services.AddScoped<IYouTubeApiClient, YouTubeApiClient>();
         services.AddHttpClient(YouTubeTranscriptClient.HttpClientName, c =>
         {
@@ -175,9 +175,8 @@ public static class DependencyInjection
         services.AddHostedService(sp => sp.GetRequiredService<YouTubeSyncService>());
 
         services.AddScoped<IInvitationEmailComposer, InvitationEmailComposer>();
-        // Phase 5 — three IEmailService impls + the router that picks one
-        // per request based on SiteSettings.EmailProvider. R4 introduces
-        // this; before R4 the registration was just LoggingEmailService.
+        // Three IEmailService impls + the router that picks one per request
+        // based on SiteSettings.EmailProvider.
         services.AddScoped<LoggingEmailService>();
         services.AddScoped<SendGridEmailService>();
         services.AddScoped<SmtpEmailService>();
@@ -186,8 +185,7 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, EmailServiceRouter>();
         services.AddScoped<IAuthService, AuthService>();
 
-        // Phase 5 — email suppression service. SendGrid/SMTP impls of
-        // IEmailService land in R2/R3; this list grows then.
+        // Email suppression service.
         services.AddScoped<IEmailSuppressionRepository, EmailSuppressionRepository>();
         services.AddScoped<IEmailSuppressionService, EmailSuppressionService>();
         services.AddScoped<ITestEmailService, TestEmailService>();
@@ -214,7 +212,7 @@ public static class DependencyInjection
         // R12 — One-click unsubscribe.
         services.AddScoped<IUnsubscribeTokenService, UnsubscribeTokenService>();
 
-        // Phase 6 S1 — RSS feed builder.
+        // RSS feed builder.
         services.AddSingleton<CredoCms.Application.Rss.IRssFeedBuilder,
             CredoCms.Infrastructure.Rss.RssFeedBuilder>();
 
@@ -258,9 +256,9 @@ public static class DependencyInjection
         services.AddSingleton<ISearchIndexer, SearchIndexer>();
         services.AddScoped<IOutputCacheInvalidator, OutputCacheInvalidator>();
 
-        // Version-history handlers (Phase 2: only Pages handler ships; News /
+        // Version-history handlers. Only the Pages handler ships today; News /
         // ServiceTime / Document / AnnouncementBanner handlers follow the
-        // same pattern and can be added without touching the controller).
+        // same pattern and can be added without touching the controller.
         services.AddScoped<IVersionedEntityHandler, PageVersionHandler>();
         services.AddScoped<IVersionedEntityHandlerRegistry, VersionedEntityHandlerRegistry>();
 

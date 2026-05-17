@@ -25,7 +25,7 @@ public sealed class ClassOffering : IVersionedEntity
 
     public DateOnly EndDate { get; set; }
 
-    /// <summary>MEMBERS-ONLY field. FK to a Leader entity from Phase 2.</summary>
+    /// <summary>MEMBERS-ONLY field. FK to a Leader entity.</summary>
     public Guid? TeacherLeaderId { get; set; }
 
     /// <summary>MEMBERS-ONLY fallback when no Leader is linked.</summary>

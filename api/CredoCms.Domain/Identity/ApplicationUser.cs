@@ -39,7 +39,6 @@ public class ApplicationUser : IdentityUser<Guid>
     /// </summary>
     public bool RequirePasswordChangeOnFirstLogin { get; set; }
 
-    // --- Phase 4: profile fields ---
     // Note: PhoneNumber is inherited from IdentityUser<Guid>. Max-length is enforced
     // via FluentValidation on the profile API input model rather than [MaxLength] here
     // (which would conflict with Identity's column definition).
@@ -75,14 +74,14 @@ public class ApplicationUser : IdentityUser<Guid>
     /// blog author archive when this user has at least one published post.</summary>
     public string? PublicAuthorBio { get; set; }
 
-    // --- Phase 4: directory opt-in (default OFF) ---
+    // Directory opt-in (default OFF).
     public bool IsListedInDirectory { get; set; }
     public bool ShowEmailInDirectory { get; set; }
     public bool ShowPhoneInDirectory { get; set; }
     public bool ShowAddressInDirectory { get; set; }
     public bool ShowPhotoInDirectory { get; set; }
 
-    // --- Phase 4: notification preferences ---
+    // Notification preferences.
     public bool ReceiveNewsEmails { get; set; } = true;
     public bool ReceiveBlogEmails { get; set; }
     public bool ReceiveBroadcastEmails { get; set; } = true;

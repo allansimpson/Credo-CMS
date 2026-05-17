@@ -11,13 +11,11 @@ const HUB_URL = "/hubs/notifications";
 
 /**
  * Connects to the SignalR notification hub when the user is authenticated.
- * Disconnects on logout. Auto-reconnects with exponential backoff on transient
- * failure. Falls back to a logged warning if the connection cannot be
- * established (does not break the app).
+ * Disconnects on logout. Auto-reconnects with exponential backoff. Hub
+ * unavailability degrades silently — the app continues without real-time.
  *
  * Subscribers attach via `on(eventName, handler)` and clean up via
- * `off(eventName, handler)`. Phase 1 ships the seam; the events are added
- * starting in Phase 4.
+ * `off(eventName, handler)`.
  */
 export function useNotificationHub() {
   const { isAuthenticated } = useAuth();
@@ -71,10 +69,8 @@ export function useNotificationHub() {
         connectionRef.current = connection;
         setIsConnected(true);
       })
-      .catch((err: unknown) => {
-        // Graceful fallback — log and continue without real-time.
-        // eslint-disable-next-line no-console
-        console.warn("SignalR hub connection failed:", err);
+      .catch(() => {
+        // Hub unavailable — app degrades gracefully without real-time updates.
       });
 
     return () => {

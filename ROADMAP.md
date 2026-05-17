@@ -62,17 +62,37 @@ ordered by priority within each tag.
 - **[v1.x] Live chat widget** — third-party embed (Crisp, Intercom, etc.).
 - **[v1.x] Photo galleries** — image-grid content type with lightbox.
 
-### From project evaluation (see `EVALUATION.md`)
+### From project evaluation
 
-- **[v1.x] Tighten `RegistrationTokenSigner` secret min length** — docs say ≥32; the check is ≥16. Pick one.
-- **[v1.x] Sanitize tenant `PrimaryColor` / `AccentColor` on save** — server-side regex guard against pasted `url(javascript:…)` strings even though the runtime conversion rejects them.
-- **[v1.x] `cookiePolicyPageSlug` / `Id` TS type cleanup** — admin `SiteSettings` carries both fields today via the `extends PublicSiteSettings` chain. Decouple.
-- **[v1.x] `<PublicPage>` vs `PublicLayout` consolidation** — pick one chrome-provider pattern, drop the other. Currently both exist and `<PublicPage>` is unusable inside `PublicLayout` without double-rendering.
-- **[v1.x] `SmtpEmailService` swallow-blocks** — tighten the bare `catch` on disconnect failures to pass-through `OperationCanceledException`.
+See `EVALUATION.md` for the diagnostic write-up. Open v1.x items:
+
 - **[v1.x] Admin Dashboard live data** — four placeholder endpoints (sermon-of-the-week, recent activity, this-Sunday, tend-to action queue) need wiring.
 - **[v1.x] Login page pull-quote** — currently static; pull from a public API.
-- **[v1.x] CI lint + format** — add `dotnet format --verify-no-changes` + `eslint --max-warnings 0` to `ci.yml`.
 - **[v1.x] Public-endpoint regression tests** — `WebApplicationFactory` snapshot tests for `/api/public/homepage`, `/sermons`, `/events` etc.
+
+### From "from scratch" deep-dive analysis
+
+- **[v1.x] Single job-table background runner** — replace 5 polling `BackgroundService` workers (broadcast, scheduled-publishing, admin-digest, volunteer-reminder, versioning-trim) with one `JobRunner` over a `Jobs` table with row-level leasing. Removes the dual-instance race and gives queryable history.
+- **[v1.x] SaveChanges-interceptor cache invalidation** — replace ~28 manual `IOutputCacheInvalidator.InvalidateAsync(tag)` calls with an EF interceptor that derives invalidation tags from changed entity types. Removes the "remember to invalidate" footgun.
+- **[v1.x] OpenAPI → SPA type codegen** — replace hand-written TS mirror of 192 DTO records. Drift becomes a compile error.
+- **[v1.x] Validation consolidation** — pick FluentValidation as the single source; drop `[Required]` attributes on request DTOs and bespoke service-layer checks for already-validated invariants.
+- **[v1.x] Migration squash at v1 tag** — fold migrations 1–23 into one `V1_Schema` baseline at the v1 release tag.
+- **[v1.x] Demo seed → JSON fixtures** — split `DataSeeder.cs` system-required reference data from demo content; demo content reads from `Seeding/Fixtures/*.json` instead of inline `new BlogPost { ... }`.
+- **[v1.x] Covert routing consistency** — `/docs/*` returns 404 to non-admins; other admin-only controllers return 401/403. Pick one (covert or standard) and apply across all admin-mounted controllers.
+- **[v1.x] Composition-root split** — `Program.cs` (379 LOC) and `Infrastructure/DependencyInjection.cs` (272 LOC) split into per-concern composition modules.
+- **[v1.x] `SettingsPage.tsx` per-tab split** — 823-line tabbed component → `pages/admin/settings/{BrandingTab,EmailTab,AnalyticsTab,…}.tsx`.
+- **[v1.x] Email-provider routing source** — route by host-bound configuration, not by DB-settable `SiteSettings.EmailProvider`. Prevents misconfigured Production from routing live mail through `LoggingEmailService`.
+- **[v1.x] Drop `<PublicPage>` primitive** — `PublicLayout` is the chrome provider; the primitive double-renders and is the documented reason PR #2's HomePage doesn't use it.
+- **[v1.x] Delete chrome-shim components** — `PublicFooter` / `PublicHeader` shims around the canonical versions in `@/components/public/`. Replace import paths repo-wide and remove the shims.
+- **[v1.x] `SiteSettings` TS type decoupling** — stop extending `PublicSiteSettings`; declare admin shape separately. Removes the `cookiePolicyPageSlug` / `cookiePolicyPageId` dual-field ambiguity.
+- **[v1.x] Strip stale tenant-readiness comments** — multi-tenant forward-declarations scattered across entity / service files. Concentrate in `MULTI_TENANCY.md`; remove the comment debt.
+- **[v1.x] Temporal-tables only where audited** — currently every table is temporal. Drop temporal versioning on tables that don't need it (join tables, notifications, broadcast tracking, webhook events). Net write-path + storage win.
+
+### From "from scratch" — deferred to v2
+
+- **[v2] Vertical-slice refactor** — replace the four-project DDD layering (Domain / Application / Infrastructure / Api) with folder-per-feature slices. Domain is too shallow to pay for the horizontal split.
+- **[v2] Drop the repository layer** — 27 repos over EF Core's `DbContext`. Services take `ApplicationDbContext` directly; narrow projection helpers for shared `Select(... => new Dto())` shapes.
+- **[v2] Re-evaluate Astro for docs** — admin-only docs site with Pagefind static search. Could be served as plain rendered Markdown via the API.
 
 ## v2 candidates (multi-tenancy + SaaS)
 

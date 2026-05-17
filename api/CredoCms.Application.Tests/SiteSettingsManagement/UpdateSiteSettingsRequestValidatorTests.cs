@@ -38,7 +38,6 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         HomepageHeroCtaLabel: "Join us Sunday",
         HomepageHeroCtaLink: "#service-times",
         DefaultMetaDescription: null,
-        // Phase 4 fields — defaults match SiteSettings entity defaults.
         GetInvolvedPageLabel: "Get Involved",
         ClassesPageLabel: "Classes",
         ClassAudienceAgeGroupsJson: "[\"Adults\"]",
@@ -58,7 +57,6 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         FacebookOAuthAppId: null,
         FacebookOAuthAppSecret: null,
         FacebookLoginEnabled: false,
-        // Phase 5 fields — defaults match SiteSettings entity defaults.
         EmailProvider: EmailProvider.None,
         EmailFromAddress: "noreply@example.org",
         EmailFromName: "Church Communications",
@@ -83,7 +81,6 @@ public sealed class UpdateSiteSettingsRequestValidatorTests
         TwilioAccountSid: null,
         TwilioAuthToken: null,
         TwilioFromNumber: null,
-        // Phase 6 fields — defaults match SiteSettings entity defaults.
         AnalyticsProvider: AnalyticsProvider.None,
         Ga4MeasurementId: null,
         Ga4ConsentBannerEnabled: true,

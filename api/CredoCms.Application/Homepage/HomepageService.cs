@@ -13,10 +13,9 @@ public sealed record HomepageDto(
     IReadOnlyList<PublicNewsItemDto> LatestNews,
     string? MembersWelcomeText,
     PublicAnnouncementBannerDto? Banner,
-    // Public Site PR #2 — Home additions. Both are optional; the SPA
-    // degrades to ImageSlot placeholders / empty-state copy when null or
-    // empty so a fresh deployment with no content still renders the full
-    // layout.
+    // Home additions. Both are optional; the SPA degrades to ImageSlot
+    // placeholders / empty-state copy when null or empty so a fresh
+    // deployment with no content still renders the full layout.
     SermonListItemDto? LatestSermon,
     IReadOnlyList<PublicEventListItemDto> UpcomingEvents);
 
@@ -61,8 +60,8 @@ public sealed class HomepageService : IHomepageService
         var banner = await _banner.GetActivePublicAsync(ct).ConfigureAwait(false);
 
         // Latest published sermon — used as "This Sunday" on the home page.
-        // PR #2 default: most-recently-published. Members get members-only
-        // sermons in the pick; anonymous visitors only see public sermons.
+        // Default: most-recently-published. Members get members-only sermons
+        // in the pick; anonymous visitors only see public sermons.
         var sermonResults = await _sermons.ListPublicAsync(
             new SermonListQuery(PublishedOnly: true, Page: 1, PageSize: 1),
             includeMembersOnly: isAuthenticatedMember,

@@ -70,8 +70,6 @@ public class SiteSettings
     /// </summary>
     public int DefaultVersionRetentionCount { get; set; } = 20;
 
-    // ---- Phase 2 additions ------------------------------------------------
-
     /// <summary>Public label for the Leaders page (e.g. "Our Leaders", "Elders").</summary>
     [Required]
     [MaxLength(100)]
@@ -116,9 +114,8 @@ public class SiteSettings
     [MaxLength(300)]
     public string? DefaultMetaDescription { get; set; }
 
-    // ---- Phase 3: YouTube integration -------------------------------------
-    // Stored plain in DB, masked in admin UI per BUILD_PLAN Q-2 #5.
-    // Data Protection encrypt-at-rest queued in PHASE_3_BACKLOG.md.
+    // YouTube integration secrets are stored plain in DB, masked in admin UI.
+    // Data Protection encrypt-at-rest is tracked in the backlog.
 
     [MaxLength(50)]
     public string? YouTubeChannelId { get; set; }
@@ -144,8 +141,6 @@ public class SiteSettings
     public string? YouTubeLastSyncStatus { get; set; }
 
     public int? YouTubeLastSyncImportedCount { get; set; }
-
-    // ---- Phase 4: Members + Community -------------------------------------
 
     [Required]
     [MaxLength(100)]
@@ -183,7 +178,7 @@ public class SiteSettings
 
     public int PrayerRequestArchiveDays { get; set; } = 30;
 
-    /// <summary>Captured for future use; Phase 4 keeps direct posting.</summary>
+    /// <summary>Captured for future use; current behaviour keeps direct posting.</summary>
     public bool PrayerRequestRequireApproval { get; set; }
 
     /// <summary>JSON list of interest checkbox labels for the Connect Card form.</summary>
@@ -211,8 +206,6 @@ public class SiteSettings
     public string? FacebookOAuthAppSecret { get; set; }
 
     public bool FacebookLoginEnabled { get; set; }
-
-    // -- Phase 5: Communications -------------------------------------------
 
     /// <summary>Provider selection for outbound email. <c>None</c> forces
     /// <see cref="EmailEnabled"/>=false regardless of UI state.</summary>
@@ -291,8 +284,6 @@ public class SiteSettings
 
     [MaxLength(50)]
     public string? TwilioFromNumber { get; set; }
-
-    // -- Phase 6: Analytics + cookie consent ------------------------------
 
     /// <summary>Selects the analytics provider. <c>Ga4</c> triggers the
     /// SPA's cookie consent banner; tracking only loads after Accept.</summary>

@@ -34,18 +34,16 @@ Looked at:
    is empty or equal to the default. Dev / Testing builds still accept
    the default silently so contributors don't need extra config.
 
-**2. `RegistrationTokenSigner` accepts ≥16-char secrets but spec says ≥32.** →
-   Class docstring + options doc-comment claim 32-char minimum; the
-   actual check is `_key.Length < 16`. Loosen the docs to match (16 is
-   secure enough for HMAC-SHA256) or tighten the check to 32. Track as
-   v1.x.
+**2. `RegistrationTokenSigner` accepts ≥16-char secrets but spec says ≥32.** ✓ Fixed.
+   Tightened the constructor check from `_key.Length < 16` to
+   `_key.Length < 32` to match the documented contract. Existing test
+   secrets and the dev default were already ≥32 chars; no test breakage.
 
-**3. Tenant `PrimaryColor` / `AccentColor` accepted without sanitization.** →
-   The fields are persisted as hex strings and emitted into CSS custom
-   properties via JS. No CSP issues today, but if the admin pastes
-   `url(javascript:alert(1))` style JS the runtime conversion via
-   `hexToHsl` silently rejects it (regex check). Worth a server-side
-   regex on save too. Track as v1.x.
+**3. Tenant `PrimaryColor` / `AccentColor` accepted without sanitization.** ✓ Already covered.
+   `UpdateSiteSettingsRequestValidator` enforces
+   `^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$` server-side at
+   save time. `url(javascript:…)` strings cannot pass this regex. The
+   initial finding missed the validator already performs this check.
 
 ### Bugs
 
@@ -89,10 +87,12 @@ Looked at:
    commit). The remaining single helper is fine.
 
 **9. `SmtpEmailService` has two `catch { /* swallow */ }` blocks** for
-   disconnect failures. Acceptable — disconnect errors don't affect
-   already-sent messages — but the bare `catch` could mask cancellation
-   tokens. Worth tightening to `catch (Exception)` with explicit
-   passthrough for `OperationCanceledException`. Minor; v1.x.
+   disconnect failures. ✓ Fixed. Disconnect now runs with
+   `CancellationToken.None` (a cancelled disconnect would leak the
+   socket and we're already past every send the caller cares about);
+   the bare catch is replaced with a typed `catch (Exception ex)`
+   that logs at Debug level. No more swallowed exceptions; CA2219
+   "throw from finally" smell avoided.
 
 **10. Admin Dashboard has four `// TODO: wire endpoint` placeholders.** →
     `AdminDashboard.tsx` (sermon-of-the-week, recent activity, this-
@@ -111,15 +111,14 @@ Looked at:
 ### Code quality
 
 **13. `console.warn` in `useNotificationHub`** for SignalR connection
-    failures. Acceptable — infrastructure-level diagnostic, no PII —
-    but inconsistent with the rest of the SPA which avoids console.*
-    in favor of toast notifications + error context. Track as polish.
+    failures. ✓ Fixed. Hub-start failure now degrades silently; the
+    app continues without real-time and the rest of the SPA's
+    no-console-statements convention is preserved.
 
-**14. No CI lint / format check.** →
-    `ci.yml` builds + tests but doesn't run `dotnet format` or
-    `eslint --max-warnings 0`. PRs that pass tests can still ship
-    inconsistent style. Adding the checks is one workflow-step diff
-    each. Track as v1.x.
+**14. No CI lint / format check.** ✓ Fixed. `ci.yml` now runs
+    `dotnet format --verify-no-changes --severity info` as the first
+    backend step and `npx eslint . --max-warnings 0` in the spa job.
+    PRs that drift on style now fail CI.
 
 **15. No regression net for public-page rendering** beyond the new
     HomePage tests. SeoTags break, layout drift, etc., would slip
@@ -139,21 +138,23 @@ Looked at:
     inefficient. Long-term: switch to SQL Server Service Broker or
     AzureServiceBus. Documented; v2 / v1.x.
 
-## Inline fixes applied in this evaluation
+## Inline fixes applied
 
 - ✓ #1 — production-environment validation of `RegistrationTokenSigner` secret.
+- ✓ #2 — `RegistrationTokenSigner` constructor check tightened from 16 → 32.
+- ✓ #3 — re-verified: server-side hex-regex validation already in place.
+- ✓ #9 — `SmtpEmailService` typed catch with explicit cancellation pass-through.
+- ✓ #13 — `console.warn` in `useNotificationHub` removed.
+- ✓ #14 — CI gates `dotnet format --verify-no-changes` + `eslint --max-warnings 0`.
 
 ## Carry-forwards (v1.x)
 
-Added to `ROADMAP.md` under "v1.x candidates":
+Open in `ROADMAP.md`:
 
-- Tenant color sanitization on save (#3)
 - `cookiePolicyPageSlug`/`Id` type refactor (#5)
 - `<PublicPage>` / `PublicLayout` consolidation (#7)
-- SmtpEmailService swallow-block tightening (#9)
 - Admin Dashboard live-data endpoints (#10)
 - LoginPage pull-quote (#11)
-- CI lint/format checks (#14)
 - Backend public-endpoint regression tests (#15)
 
 Items already in ROADMAP that this evaluation re-confirms:

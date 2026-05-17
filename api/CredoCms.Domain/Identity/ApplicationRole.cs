@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 namespace CredoCms.Domain.Identity;
 
 /// <summary>
-/// Application role. Phase 1 seeds three: Administrator, Editor, Member.
+/// Application role. Seeded roles: Administrator, Editor, Member.
 /// </summary>
 public class ApplicationRole : IdentityRole<Guid>
 {

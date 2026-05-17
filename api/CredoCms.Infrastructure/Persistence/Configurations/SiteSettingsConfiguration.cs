@@ -16,7 +16,6 @@ internal sealed class SiteSettingsConfiguration : IEntityTypeConfiguration<SiteS
             .IsRowVersion()
             .IsConcurrencyToken();
 
-        // Phase 4 JSON / nvarchar(max) properties.
         builder.Property(x => x.ClassAudienceAgeGroupsJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.BlogCategoriesJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.ProfanityWordlist).HasColumnType("nvarchar(max)");
@@ -24,7 +23,6 @@ internal sealed class SiteSettingsConfiguration : IEntityTypeConfiguration<SiteS
         builder.Property(x => x.ConnectCardInterestsJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.ConnectCardAcknowledgmentMessageJson).HasColumnType("nvarchar(max)");
 
-        // Phase 5 enum-as-int + JSON columns.
         builder.Property(x => x.EmailProvider).HasConversion<int>();
         builder.Property(x => x.NewsEmailTargetMode).HasConversion<int>();
         builder.Property(x => x.BlogEmailTargetMode).HasConversion<int>();
@@ -33,7 +31,6 @@ internal sealed class SiteSettingsConfiguration : IEntityTypeConfiguration<SiteS
         builder.Property(x => x.NewsEmailTargetGroupIdsJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.BlogEmailTargetGroupIdsJson).HasColumnType("nvarchar(max)");
 
-        // Phase 6
         builder.Property(x => x.AnalyticsProvider).HasConversion<int>();
         builder.Property(x => x.Ga4ConsentBannerPosition).HasConversion<int>();
 

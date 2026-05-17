@@ -68,7 +68,6 @@ public sealed class DataSeeder
         await SeedSampleEventsAsync(ct).ConfigureAwait(false);
         await SeedSampleGroupsAsync(ct).ConfigureAwait(false);
         await SeedSampleBlogPostsAsync(ct).ConfigureAwait(false);
-        // Phase 5
         await SeedEmailTemplatesAsync(ct).ConfigureAwait(false);
         await SeedSampleBroadcastAsync(ct).ConfigureAwait(false);
         await SeedSampleVolunteerRolesAsync(ct).ConfigureAwait(false);
@@ -234,8 +233,8 @@ public sealed class DataSeeder
     {
         if (await _db.Pages.AnyAsync(p => p.IsSystemPage, ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
-        // Slugs match the Phase 2 prompt's "/privacy-policy" and
-        // "/terms-of-service" public routes and the footer links in the SPA.
+        // Slugs match the "/privacy-policy" and "/terms-of-service" public
+        // routes and the footer links in the SPA.
         _db.Pages.AddRange(
             SamplePage("privacy-policy", "Privacy Policy", isSystem: true, now: now,
                 paragraph: "This is a placeholder Privacy Policy. Please replace with the policy that governs your church's data practices."),
@@ -506,8 +505,6 @@ public sealed class DataSeeder
         => "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
            + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"}]}]}";
 
-    // ---- Phase 4 seed methods ---------------------------------------------
-
     private async Task SeedSampleGroupsAsync(CancellationToken ct)
     {
         if (await _db.Groups.AnyAsync(ct).ConfigureAwait(false)) return;
@@ -576,8 +573,6 @@ public sealed class DataSeeder
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample blog post (welcome).");
     }
-
-    // ---- Phase 5 seeds ---------------------------------------------------
 
     private async Task SeedEmailTemplatesAsync(CancellationToken ct)
     {

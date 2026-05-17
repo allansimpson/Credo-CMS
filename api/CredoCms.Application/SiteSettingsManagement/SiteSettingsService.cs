@@ -44,7 +44,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
             s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText,
             s.LeadersPageLabel, s.HomepageHeroCtaLabel, s.HomepageHeroCtaLink,
             s.FacebookLoginEnabled,
-            // Phase 6
             s.AnalyticsProvider, s.Ga4MeasurementId,
             s.Ga4ConsentBannerEnabled, s.Ga4ConsentBannerPosition,
             cookiePolicySlug,
@@ -80,7 +79,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.FooterText = request.FooterText;
         s.DefaultVersionRetentionCount = request.DefaultVersionRetentionCount;
 
-        // Phase 2 fields.
         s.LeadersPageLabel = request.LeadersPageLabel;
         s.LeaderCategoriesJson = request.LeaderCategoriesJson;
         s.DocumentCategoriesJson = request.DocumentCategoriesJson;
@@ -93,7 +91,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.HomepageHeroCtaLink = request.HomepageHeroCtaLink;
         s.DefaultMetaDescription = request.DefaultMetaDescription;
 
-        // Phase 4 fields.
         s.GetInvolvedPageLabel = request.GetInvolvedPageLabel;
         s.ClassesPageLabel = request.ClassesPageLabel;
         s.ClassAudienceAgeGroupsJson = request.ClassAudienceAgeGroupsJson;
@@ -114,7 +111,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.FacebookOAuthAppSecret = request.FacebookOAuthAppSecret;
         s.FacebookLoginEnabled = request.FacebookLoginEnabled;
 
-        // Phase 5
         s.EmailProvider = request.EmailProvider;
         s.EmailFromAddress = request.EmailFromAddress;
         s.EmailFromName = request.EmailFromName;
@@ -141,7 +137,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.TwilioAuthToken = request.TwilioAuthToken;
         s.TwilioFromNumber = request.TwilioFromNumber;
 
-        // Phase 6
         s.AnalyticsProvider = request.AnalyticsProvider;
         s.Ga4MeasurementId = request.Ga4MeasurementId;
         s.Ga4ConsentBannerEnabled = request.Ga4ConsentBannerEnabled;
@@ -198,7 +193,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.CloudflareTurnstileSiteKey, s.CloudflareTurnstileSecretKey,
         s.FacebookOAuthAppId, s.FacebookOAuthAppSecret,
         s.FacebookLoginEnabled,
-        // Phase 5
         s.EmailProvider, s.EmailFromAddress, s.EmailFromName, s.EmailReplyToAddress,
         s.SendGridApiKey, s.SendGridWebhookSecret,
         s.SmtpHost, s.SmtpPort, s.SmtpUsername, s.SmtpPassword, s.SmtpUseSsl,
@@ -208,7 +202,6 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.EmailSubjectPrefixNews, s.EmailSubjectPrefixBlog,
         s.AdminNotificationFrequency,
         s.SmsProvider, s.TwilioAccountSid, s.TwilioAuthToken, s.TwilioFromNumber,
-        // Phase 6
         s.AnalyticsProvider, s.Ga4MeasurementId,
         s.Ga4ConsentBannerEnabled, s.Ga4ConsentBannerPosition, s.CookiePolicyPageId,
         // Public Site design handoff

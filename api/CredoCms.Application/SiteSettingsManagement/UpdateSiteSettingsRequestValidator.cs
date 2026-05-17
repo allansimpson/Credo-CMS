@@ -46,8 +46,6 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
 
         RuleFor(x => x.DefaultVersionRetentionCount).InclusiveBetween(5, 50);
 
-        // ---- Phase 2 ------------------------------------------------------
-
         RuleFor(x => x.LeadersPageLabel).NotEmpty().MaximumLength(100);
 
         RuleFor(x => x.LeaderCategoriesJson)
@@ -70,8 +68,6 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
         RuleFor(x => x.HomepageHeroCtaLink).NotEmpty().MaximumLength(500);
 
         RuleFor(x => x.DefaultMetaDescription).MaximumLength(300);
-
-        // ---- Phase 5 fields -----------------------------------------------
 
         RuleFor(x => x.EmailFromAddress).NotEmpty().EmailAddress().MaximumLength(200);
         RuleFor(x => x.EmailFromName).NotEmpty().MaximumLength(200);
@@ -96,8 +92,6 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
         RuleFor(x => x.TwilioAccountSid).MaximumLength(200);
         RuleFor(x => x.TwilioAuthToken).MaximumLength(500);
         RuleFor(x => x.TwilioFromNumber).MaximumLength(50);
-
-        // ---- Phase 6 fields -----------------------------------------------
 
         RuleFor(x => x.Ga4MeasurementId)
             .Matches(@"^G-[A-Z0-9]{8,12}$")

@@ -145,7 +145,7 @@ public sealed class EventRegistrationService : IEventRegistrationService
 
     public async Task<SubmitRegistrationResult> SubmitAsync(Guid eventId, SubmitRegistrationRequest req, Guid? userId, CancellationToken ct = default)
     {
-        // Defenses: honeypot + time-to-submit. Turnstile deferred to Phase 4.
+        // Defenses: honeypot + time-to-submit. Turnstile deferred.
         if (!string.IsNullOrEmpty(req.Hp))
             return new(false, new[] { "Submission rejected." }, null, null);
         if (req.FormOpenedElapsedMs < 5000)
