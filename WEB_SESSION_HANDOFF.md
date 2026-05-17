@@ -61,7 +61,6 @@ Foundation per the design handoff Section 9. Detailed list in commit
 
 **Primitives** (all in `app/src/components/public/`, all TypeScript-typed,
 no `any`, Tailwind classes only):
-- `<PublicPage>` — top-level wrapper.
 - `<PublicHeader>` — both templates, mobile drawer, announcement bar
   conditional (Editorial only).
 - `<PublicFooter>` — both templates, social-icons block, cookie

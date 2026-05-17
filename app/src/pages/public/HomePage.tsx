@@ -12,12 +12,6 @@ import {
   ImageSlot,
 } from "@/components/public";
 
-// Note: HomePage is rendered inside PublicLayout, which already provides
-// the chrome (header + footer) via the legacy shims that delegate to the
-// new template-aware <PublicHeader>/<PublicFooter>. The page itself only
-// emits section content; wrapping in <PublicPage> would double-render
-// the chrome.
-
 // Members-only welcome text is the only place the home page reaches for
 // the TipTap renderer. Lazy so anonymous visitors don't pay the cost.
 const TipTapReadOnly = lazy(() =>

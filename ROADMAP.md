@@ -84,9 +84,7 @@ See `EVALUATION.md` for the diagnostic write-up. Open v1.x items:
 - **[v1.x] Composition-root split** — `Program.cs` (379 LOC) and `Infrastructure/DependencyInjection.cs` (272 LOC) split into per-concern composition modules.
 - **[v1.x] `SettingsPage.tsx` per-tab split** — 823-line tabbed component → `pages/admin/settings/{BrandingTab,EmailTab,AnalyticsTab,…}.tsx`.
 - **[v1.x] Email-provider routing source** — route by host-bound configuration, not by DB-settable `SiteSettings.EmailProvider`. Prevents misconfigured Production from routing live mail through `LoggingEmailService`.
-- **[v1.x] Drop `<PublicPage>` primitive** — `PublicLayout` is the chrome provider; the primitive double-renders and is the documented reason PR #2's HomePage doesn't use it.
-- **[v1.x] Delete chrome-shim components** — `PublicFooter` / `PublicHeader` shims around the canonical versions in `@/components/public/`. Replace import paths repo-wide and remove the shims.
-- **[v1.x] `SiteSettings` TS type decoupling** — stop extending `PublicSiteSettings`; declare admin shape separately. Removes the `cookiePolicyPageSlug` / `cookiePolicyPageId` dual-field ambiguity.
+- **[v1.x] Delete chrome-shim wrappers in `components/shared/`** — `PublicNavBar` and `PublicFooter` in `components/shared/` delegate to the canonical versions in `@/components/public/`. ~17 page files import them directly. Refactor those call sites to either be wrapped in `<PublicLayout>` or import the canonical components directly with explicit props, then delete the shims.
 - **[v1.x] Strip stale tenant-readiness comments** — multi-tenant forward-declarations scattered across entity / service files. Concentrate in `MULTI_TENANCY.md`; remove the comment debt.
 - **[v1.x] Temporal-tables only where audited** — currently every table is temporal. Drop temporal versioning on tables that don't need it (join tables, notifications, broadcast tracking, webhook events). Net write-path + storage win.
 

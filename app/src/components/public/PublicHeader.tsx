@@ -8,7 +8,20 @@ import { AnnouncementBar } from "@/components/shared/AnnouncementBar";
 import { BtnLink } from "./Btn";
 import { Eyebrow } from "./Eyebrow";
 import { PIcon } from "./PIcon";
-import type { PublicActivePage } from "./PublicPage";
+
+/** Page identifiers used for active-nav styling. */
+export type PublicActivePage =
+  | "home"
+  | "about"
+  | "im-new"
+  | "beliefs"
+  | "sermons"
+  | "events"
+  | "news"
+  | "leaders"
+  | "contact"
+  | "members"
+  | null;
 
 export interface PublicHeaderProps {
   template: PublicTemplate;

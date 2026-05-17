@@ -151,11 +151,17 @@ Looked at:
 
 Open in `ROADMAP.md`:
 
-- `cookiePolicyPageSlug`/`Id` type refactor (#5)
-- `<PublicPage>` / `PublicLayout` consolidation (#7)
 - Admin Dashboard live-data endpoints (#10)
 - LoginPage pull-quote (#11)
 - Backend public-endpoint regression tests (#15)
+
+Resolved during the post-evaluation deep-dive pass:
+
+- ✓ `<PublicPage>` / `PublicLayout` consolidation (#7) — primitive deleted;
+  `PublicHeader` / `PublicFooter` remain as the single chrome contract.
+- ✓ `cookiePolicyPageSlug` / `Id` type refactor (#5) — `SiteSettings`
+  now uses `Omit<PublicSiteSettings, "cookiePolicyPageSlug">` so the
+  admin type matches what the API actually returns.
 
 Items already in ROADMAP that this evaluation re-confirms:
 Output cache scaling (#4), SPA bundle size (#12), background service

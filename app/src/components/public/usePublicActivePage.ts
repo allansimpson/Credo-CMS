@@ -1,12 +1,10 @@
 import { useLocation } from "react-router-dom";
-import type { PublicActivePage } from "./PublicPage";
+import type { PublicActivePage } from "./PublicHeader";
 
 /**
  * Derives the active-nav token for the public header from the current
  * route. Returns `null` for routes outside the primary nav (404, search,
- * profile sub-pages other than /members/*, auth flows). Used by the
- * shared shim layer that wraps the new <PublicHeader> for legacy call
- * sites that don't have a way to thread `activePage` down themselves.
+ * profile sub-pages other than /members/*, auth flows).
  */
 export function usePublicActivePage(): PublicActivePage {
   const { pathname } = useLocation();

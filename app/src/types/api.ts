@@ -87,7 +87,11 @@ export interface PublicSiteSettings {
 
 export type PublicTemplate = 0 | 1; // Editorial | Quiet
 
-export interface SiteSettings extends PublicSiteSettings {
+// The admin DTO carries page-id, the public DTO carries the resolved slug —
+// they are mutually exclusive. Omit the slug from the public shape when
+// composing the admin shape so consumers of `SiteSettings` see exactly one
+// of the pair, matching what the API actually returns.
+export type SiteSettings = Omit<PublicSiteSettings, "cookiePolicyPageSlug"> & {
   defaultVersionRetentionCount: number;
   leaderCategoriesJson: string;
   documentCategoriesJson: string;
@@ -115,19 +119,16 @@ export interface SiteSettings extends PublicSiteSettings {
   cloudflareTurnstileSecretKey: string | null;
   facebookOAuthAppId: string | null;
   facebookOAuthAppSecret: string | null;
+  cookiePolicyPageId: string | null;
   createdAt: string;
   modifiedAt: string;
   modifiedByUserId: string | null;
   rowVersion: string;
-  // Admin-side carries the page-id; the public DTO resolves the slug. Both
-  // coexist on this type; UpdateSiteSettingsRequest omits the resolved slug
-  // so admin saves go through with the id.
-  cookiePolicyPageId: string | null;
-}
+};
 
 export type UpdateSiteSettingsRequest = Omit<
   SiteSettings,
-  "createdAt" | "modifiedAt" | "modifiedByUserId" | "cookiePolicyPageSlug"
+  "createdAt" | "modifiedAt" | "modifiedByUserId"
 >;
 
 export interface PagedResult<T> {

@@ -146,7 +146,6 @@ Both templates extend the existing `church` CSS variables (the per-tenant primar
 
 Build once, used by both templates (templates differ only in tokens). Add to `components/shared/` or wherever the public-site components live.
 
-- **`<PublicPage template activePage>`** — top-level wrapper. Mounts `<PublicHeader>`, `<main>`, `<PublicFooter>`.
 - **`<PublicHeader template activePage>`** — varies by template (see section 6). Includes the announcement bar.
 - **`<AnnouncementBar>`** — already exists; ensure it picks up new theme tokens.
 - **`<PublicFooter template>`** — varies by template.
@@ -239,7 +238,7 @@ The SiteSettings row already supports primary + accent color override. **Add one
 
 - `template`: `'editorial'` | `'quiet'` — default `'editorial'`.
 
-Render `<PublicPage template={siteSettings.template}>` so the admin can swap templates from the existing Branding tab in `/admin/settings`. No tenant-facing template picker UI is needed beyond a single radio in admin Settings.
+`PublicLayout` reads `siteSettings.template` and passes it down to `<PublicHeader>` / `<PublicFooter>` so the admin can swap templates from the existing Branding tab in `/admin/settings`. No tenant-facing template picker UI is needed beyond a single radio in admin Settings.
 
 ---
 

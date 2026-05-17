@@ -28,8 +28,9 @@ export type { ImageSlotProps, ImageSlotRatio, ImageSlotTone } from "./ImageSlot"
 export { PIcon } from "./PIcon";
 export type { PIconProps, PIconSize } from "./PIcon";
 
-export { PublicPage } from "./PublicPage";
-export type { PublicPageProps, PublicActivePage } from "./PublicPage";
-
 export { PublicHeader } from "./PublicHeader";
+export type { PublicActivePage, PublicHeaderProps } from "./PublicHeader";
+
 export { PublicFooter } from "./PublicFooter";
+
+export { usePublicActivePage } from "./usePublicActivePage";
