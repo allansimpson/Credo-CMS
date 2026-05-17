@@ -56,7 +56,7 @@ export function ClassesPage() {
   }, [slots, activeAge]);
 
   // The configurable page label lands in Q16 alongside the SiteSettings DTO
-  // expansion. Phase 4 ships with a static fallback.
+  // expansion. A static fallback is used in the meantime.
   const pageLabel = "Classes";
 
   return (

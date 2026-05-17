@@ -3,7 +3,7 @@ export type ImageSlotTone = "default" | "inverse";
 
 export interface ImageSlotProps {
   /** Optional CMS-supplied source. When set, renders a <picture> with
-   * a WebP source + the supplied URL as JPEG fallback (per Phase 2's
+   * a WebP source + the supplied URL as JPEG fallback (per the
    * upload pipeline that emits both variants). When null, renders the
    * labelled placeholder. */
   src?: string | null;
@@ -42,7 +42,7 @@ const RATIO_CLASSES: Record<ImageSlotRatio, string> = {
  * supplied, or a labelled hairline-border placeholder when null.
  * The placeholder treatment matches the prototype's ImageSlot look
  * (mono caps caption like "[ HERO PHOTO ]") rather than a broken-image
- * icon. Phase 2's ImageUpload pipeline generates the WebP sibling
+ * icon. The ImageUpload pipeline generates the WebP sibling
  * automatically, so callers only need to wire the storage URL pair.
  */
 export function ImageSlot({

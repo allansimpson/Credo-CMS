@@ -311,8 +311,8 @@ try
     app.MapHub<NotificationHub>("/hubs/notifications");
 
     // SPA fallback: any unmatched non-API request returns the SPA's index.html.
-    // Phase 1 has no built SPA yet; the file-not-found fallback gracefully handles
-    // that case until the SPA is built into wwwroot.
+    // The file-not-found fallback gracefully handles the case where the SPA
+    // has not yet been built into wwwroot.
     app.MapFallbackToFile("index.html");
 
     // -- Database setup -------------------------------------------------------

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace CredoCms.Api.Controllers.Public;
 
-/// <summary>Phase 6 RSS 2.0 feeds for Blog, News, and Sermons. Public-only;
+/// <summary>RSS 2.0 feeds for Blog, News, and Sermons. Public-only;
 /// members-only items excluded by the underlying public list calls.
 /// 50-item cap per feed; 15-min output cache, evicted on relevant entity
 /// writes via the existing tag-based invalidator.</summary>

@@ -478,7 +478,7 @@ function NotificationsTab({ profile, onUpdated }: TabPropsBase) {
           checked={form.receiveGroupEmailsGlobal}
           onChange={(v) => setForm({ ...form, receiveGroupEmailsGlobal: v })}
           label="Group emails"
-          hint="Messages from groups you're a member of. Master toggle; per-group overrides land alongside Groups in Phase 4."
+          hint="Messages from groups you're a member of. Master toggle; per-group overrides land alongside Groups."
         />
       </fieldset>
 
@@ -564,7 +564,7 @@ function AccountTab() {
       <fieldset className="space-y-3 rounded-lg border bg-card p-4">
         <legend className="px-2 text-sm font-semibold">My groups</legend>
         <p className="text-xs text-muted">
-          Group memberships will appear here once Groups land in Phase 4.
+          Group memberships will appear here once Groups land.
         </p>
         <Link
           to="/profile/groups"

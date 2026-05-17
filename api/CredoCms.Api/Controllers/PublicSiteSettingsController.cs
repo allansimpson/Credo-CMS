@@ -27,7 +27,7 @@ public sealed class PublicSiteSettingsController : ControllerBase
     {
         var dto = await _service.GetPublicAsync(ct).ConfigureAwait(false);
 
-        // Phase 6 polish — Ga4MeasurementId is omitted from the response
+        // Ga4MeasurementId is omitted from the response
         // until the visitor has accepted cookies. The cookie banner can
         // make its accept/decline decision from the AnalyticsProvider flag
         // alone; the loader needs the id, but only after consent has been

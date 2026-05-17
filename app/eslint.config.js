@@ -12,11 +12,19 @@ export default defineConfig([
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
-      reactHooks.configs.flat.recommended,
+      reactHooks.configs['recommended-latest'],
       reactRefresh.configs.vite,
     ],
     languageOptions: {
       globals: globals.browser,
+    },
+    rules: {
+      // HMR-optimization rule; conflicts with the co-located
+      // context+provider+hook pattern used across the codebase
+      // (AuthContext, SiteSettingsContext, etc.). Disabled until
+      // those contexts are refactored to separate files — tracked
+      // in ROADMAP.md.
+      'react-refresh/only-export-components': 'off',
     },
   },
 ])

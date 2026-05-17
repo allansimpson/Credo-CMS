@@ -132,11 +132,17 @@ public sealed class LeaderService : ILeaderService
         var leader = new Leader
         {
             Id = Guid.NewGuid(),
-            FullName = request.FullName, Title = request.Title, Category = request.Category,
-            BioJson = request.BioJson, Email = request.Email,
-            PhotoUrl = request.PhotoUrl, PhotoWebpUrl = request.PhotoWebpUrl, PhotoAlt = request.PhotoAlt,
+            FullName = request.FullName,
+            Title = request.Title,
+            Category = request.Category,
+            BioJson = request.BioJson,
+            Email = request.Email,
+            PhotoUrl = request.PhotoUrl,
+            PhotoWebpUrl = request.PhotoWebpUrl,
+            PhotoAlt = request.PhotoAlt,
             DisplayOrder = request.DisplayOrder,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         await _repo.AddAsync(leader, ct).ConfigureAwait(false);
         await IndexAsync(leader, ct).ConfigureAwait(false);

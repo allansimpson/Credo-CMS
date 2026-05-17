@@ -59,8 +59,15 @@ public sealed class SermonRepository : ISermonRepository
             .Take(pageSize)
             .Select(s => new
             {
-                s.Id, s.Slug, s.Title, s.ThumbnailBlobUrl, s.ThumbnailWebpBlobUrl,
-                s.PublishedAt, s.IsPublished, s.IsMembersOnly, s.IsDeleted,
+                s.Id,
+                s.Slug,
+                s.Title,
+                s.ThumbnailBlobUrl,
+                s.ThumbnailWebpBlobUrl,
+                s.PublishedAt,
+                s.IsPublished,
+                s.IsMembersOnly,
+                s.IsDeleted,
                 s.SermonSeriesId,
                 SeriesTitle = s.SermonSeriesId == null ? null
                     : _db.SermonSeries.Where(ss => ss.Id == s.SermonSeriesId).Select(ss => ss.Title).FirstOrDefault(),

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 
 /**
- * Phase 6 cookie consent banner. Renders only when:
+ * Cookie consent banner. Renders only when:
  *   - PublicSiteSettings.analyticsProvider === Ga4 (1)
  *   - settings.ga4ConsentBannerEnabled is true
  *   - the cms_consent cookie is absent (no decision yet)

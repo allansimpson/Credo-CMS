@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace CredoCms.Api.Controllers;
 
 /// <summary>
-/// Phase 5 R12. Anonymous unsubscribe endpoint backing the
+/// Anonymous unsubscribe endpoint backing the
 /// List-Unsubscribe header (RFC 2369) and List-Unsubscribe-Post header
 /// (RFC 8058 one-click). GET renders a confirmation hand-off; POST
 /// performs the unsubscribe immediately. Both pivot on a signed token

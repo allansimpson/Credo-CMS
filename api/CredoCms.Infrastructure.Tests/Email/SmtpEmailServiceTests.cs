@@ -21,19 +21,19 @@ public sealed class SmtpEmailServiceTests
         string? smtpPass = "pass",
         string? testRecipient = null,
         string? replyTo = "office@example.org") => new()
-    {
-        EmailProvider = EmailProvider.Smtp,
-        EmailFromAddress = "noreply@example.org",
-        EmailFromName = "Church Test",
-        EmailReplyToAddress = replyTo,
-        SmtpHost = smtpHost,
-        SmtpPort = smtpPort,
-        SmtpUseSsl = smtpUseSsl,
-        SmtpUsername = smtpUser,
-        SmtpPassword = smtpPass,
-        EmailEnabled = emailEnabled,
-        TestEmailRecipient = testRecipient,
-    };
+        {
+            EmailProvider = EmailProvider.Smtp,
+            EmailFromAddress = "noreply@example.org",
+            EmailFromName = "Church Test",
+            EmailReplyToAddress = replyTo,
+            SmtpHost = smtpHost,
+            SmtpPort = smtpPort,
+            SmtpUseSsl = smtpUseSsl,
+            SmtpUsername = smtpUser,
+            SmtpPassword = smtpPass,
+            EmailEnabled = emailEnabled,
+            TestEmailRecipient = testRecipient,
+        };
 
     private sealed class CapturingFactory : IMailKitSmtpClientFactory
     {

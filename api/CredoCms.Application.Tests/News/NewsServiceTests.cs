@@ -46,8 +46,11 @@ public sealed class NewsServiceTests
         repo.Setup(x => x.GetBySlugAsync("expired", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new NewsItem
             {
-                Slug = "expired", Title = "Old", BodyJson = "{}",
-                IsPublished = true, IsMembersOnly = false,
+                Slug = "expired",
+                Title = "Old",
+                BodyJson = "{}",
+                IsPublished = true,
+                IsMembersOnly = false,
                 ExpiresAt = DateTimeOffset.UtcNow.AddHours(-1),
             });
 
@@ -62,8 +65,11 @@ public sealed class NewsServiceTests
         repo.Setup(x => x.GetBySlugAsync("private", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new NewsItem
             {
-                Slug = "private", Title = "Private", BodyJson = "{}",
-                IsPublished = true, IsMembersOnly = true,
+                Slug = "private",
+                Title = "Private",
+                BodyJson = "{}",
+                IsPublished = true,
+                IsMembersOnly = true,
             });
 
         var result = await sut.GetPublicBySlugAsync("private", includeMembersOnly: false);

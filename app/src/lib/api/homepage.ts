@@ -21,9 +21,9 @@ export interface HomepageDto {
   latestNews: PublicNewsItem[];
   membersWelcomeText: string | null;
   banner: PublicAnnouncementBannerForHomepage | null;
-  // Public Site PR #2 — Home additions. Null/empty when there's no
-  // content yet; HomePage degrades to ImageSlot placeholders + empty-
-  // state copy so the layout still renders on a fresh deployment.
+  // Home additions. Null/empty when there's no content yet; HomePage
+  // degrades to ImageSlot placeholders + empty-state copy so the
+  // layout still renders on a fresh deployment.
   latestSermon: SermonListItem | null;
   upcomingEvents: PublicEventListItem[];
 }

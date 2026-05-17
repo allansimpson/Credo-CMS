@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.SignalR;
 namespace CredoCms.Api.Hubs;
 
 /// <summary>
-/// Real-time notification hub. Phase 2 adds <c>JoinAdminGroup</c> for
-/// admin-shell content-change notifications. Phase 4 (Q5) adds the per-
-/// user channel <c>UserGroup({userId})</c> for direct messaging — used
-/// by group join-request leader notifications and approval responses.
+/// Real-time notification hub. Provides <c>JoinAdminGroup</c> for
+/// admin-shell content-change notifications and the per-user channel
+/// <c>UserGroup({userId})</c> for direct messaging — used by group
+/// join-request leader notifications and approval responses.
 /// </summary>
 [Authorize]
 public sealed class NotificationHub : Hub

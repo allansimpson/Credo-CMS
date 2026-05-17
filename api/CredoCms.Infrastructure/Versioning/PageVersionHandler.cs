@@ -23,7 +23,8 @@ public sealed class PageVersionHandler : IVersionedEntityHandler
             .IgnoreQueryFilters()
             .Where(p => p.Id == id)
             .OrderByDescending(p => EF.Property<DateTime>(p, "ValidFrom"))
-            .Select(p => new {
+            .Select(p => new
+            {
                 ValidFrom = EF.Property<DateTime>(p, "ValidFrom"),
                 ValidTo = EF.Property<DateTime>(p, "ValidTo"),
                 p.Title,

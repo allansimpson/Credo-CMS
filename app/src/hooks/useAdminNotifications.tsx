@@ -5,7 +5,7 @@ import { useAuth } from "./useAuth";
 /**
  * Toast-style admin notification surface. Consumes the SignalR hub from
  * <see cref="useNotificationHub"/> and exposes a small list of recent
- * events to the admin shell. Phase 4 Q5 adds <c>GroupJoinRequestSubmitted</c>;
+ * events to the admin shell. Surfaces <c>GroupJoinRequestSubmitted</c>;
  * Q9 will add Prayer events; Q11 will add Connect-card events.
  */
 

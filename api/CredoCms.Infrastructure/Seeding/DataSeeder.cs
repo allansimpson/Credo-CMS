@@ -265,18 +265,45 @@ public sealed class DataSeeder
         if (await _db.ServiceTimes.AnyAsync(ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
         _db.ServiceTimes.AddRange(
-            new ServiceTime { Id = Guid.NewGuid(), Name = "Sunday Worship", DayOfWeek = DayOfWeek.Sunday,
-                StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(10, 30),
-                Location = "Main Sanctuary", DisplayOrder = 0, IsActive = true,
-                CreatedAt = now, ModifiedAt = now },
-            new ServiceTime { Id = Guid.NewGuid(), Name = "Sunday School", DayOfWeek = DayOfWeek.Sunday,
-                StartTime = new TimeOnly(11, 0), EndTime = new TimeOnly(12, 0),
-                Location = "Education Wing", DisplayOrder = 1, IsActive = true,
-                CreatedAt = now, ModifiedAt = now },
-            new ServiceTime { Id = Guid.NewGuid(), Name = "Wednesday Bible Study", DayOfWeek = DayOfWeek.Wednesday,
-                StartTime = new TimeOnly(19, 0), EndTime = new TimeOnly(20, 30),
-                Location = "Fellowship Hall", DisplayOrder = 0, IsActive = true,
-                CreatedAt = now, ModifiedAt = now });
+            new ServiceTime
+            {
+                Id = Guid.NewGuid(),
+                Name = "Sunday Worship",
+                DayOfWeek = DayOfWeek.Sunday,
+                StartTime = new TimeOnly(9, 0),
+                EndTime = new TimeOnly(10, 30),
+                Location = "Main Sanctuary",
+                DisplayOrder = 0,
+                IsActive = true,
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new ServiceTime
+            {
+                Id = Guid.NewGuid(),
+                Name = "Sunday School",
+                DayOfWeek = DayOfWeek.Sunday,
+                StartTime = new TimeOnly(11, 0),
+                EndTime = new TimeOnly(12, 0),
+                Location = "Education Wing",
+                DisplayOrder = 1,
+                IsActive = true,
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new ServiceTime
+            {
+                Id = Guid.NewGuid(),
+                Name = "Wednesday Bible Study",
+                DayOfWeek = DayOfWeek.Wednesday,
+                StartTime = new TimeOnly(19, 0),
+                EndTime = new TimeOnly(20, 30),
+                Location = "Fellowship Hall",
+                DisplayOrder = 0,
+                IsActive = true,
+                CreatedAt = now,
+                ModifiedAt = now
+            });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample service times.");
     }
@@ -286,18 +313,46 @@ public sealed class DataSeeder
         if (await _db.Leaders.AnyAsync(ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
         _db.Leaders.AddRange(
-            new Leader { Id = Guid.NewGuid(), FullName = "Lead Pastor",
-                Title = "Senior Pastor", Category = "Pastoral Staff", DisplayOrder = 0,
-                CreatedAt = now, ModifiedAt = now },
-            new Leader { Id = Guid.NewGuid(), FullName = "Associate Pastor",
-                Title = "Family Ministry", Category = "Pastoral Staff", DisplayOrder = 1,
-                CreatedAt = now, ModifiedAt = now },
-            new Leader { Id = Guid.NewGuid(), FullName = "Elder One",
-                Title = null, Category = "Elders", DisplayOrder = 0,
-                CreatedAt = now, ModifiedAt = now },
-            new Leader { Id = Guid.NewGuid(), FullName = "Deacon One",
-                Title = null, Category = "Deacons", DisplayOrder = 0,
-                CreatedAt = now, ModifiedAt = now });
+            new Leader
+            {
+                Id = Guid.NewGuid(),
+                FullName = "Lead Pastor",
+                Title = "Senior Pastor",
+                Category = "Pastoral Staff",
+                DisplayOrder = 0,
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new Leader
+            {
+                Id = Guid.NewGuid(),
+                FullName = "Associate Pastor",
+                Title = "Family Ministry",
+                Category = "Pastoral Staff",
+                DisplayOrder = 1,
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new Leader
+            {
+                Id = Guid.NewGuid(),
+                FullName = "Elder One",
+                Title = null,
+                Category = "Elders",
+                DisplayOrder = 0,
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new Leader
+            {
+                Id = Guid.NewGuid(),
+                FullName = "Deacon One",
+                Title = null,
+                Category = "Deacons",
+                DisplayOrder = 0,
+                CreatedAt = now,
+                ModifiedAt = now
+            });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample leaders (placeholder names — replace with real staff).");
     }
@@ -323,9 +378,16 @@ public sealed class DataSeeder
         return new Page
         {
             Id = Guid.NewGuid(),
-            Slug = slug, Title = title, BodyJson = body, Excerpt = paragraph,
-            IsPublished = true, IsMembersOnly = false, IsSystemPage = isSystem,
-            CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+            Slug = slug,
+            Title = title,
+            BodyJson = body,
+            Excerpt = paragraph,
+            IsPublished = true,
+            IsMembersOnly = false,
+            IsSystemPage = isSystem,
+            CreatedAt = now,
+            ModifiedAt = now,
+            PublishedAt = now,
         };
     }
 
@@ -337,9 +399,15 @@ public sealed class DataSeeder
         return new NewsItem
         {
             Id = Guid.NewGuid(),
-            Slug = slug, Title = title, BodyJson = body, Excerpt = paragraph,
-            IsPublished = true, IsMembersOnly = isMembersOnly,
-            CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+            Slug = slug,
+            Title = title,
+            BodyJson = body,
+            Excerpt = paragraph,
+            IsPublished = true,
+            IsMembersOnly = isMembersOnly,
+            CreatedAt = now,
+            ModifiedAt = now,
+            PublishedAt = now,
         };
     }
 
@@ -357,7 +425,8 @@ public sealed class DataSeeder
             Title = "The Letter to the Romans",
             DescriptionJson = ParaJson("A walk through Paul's most theologically rich letter."),
             StartDate = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-2),
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         var seriesPsalms = new SermonSeries
         {
@@ -366,7 +435,8 @@ public sealed class DataSeeder
             Title = "Psalms of Ascent",
             DescriptionJson = ParaJson("Songs sung on the road to Jerusalem — and to God."),
             StartDate = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-1),
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         _db.SermonSeries.AddRange(seriesRomans, seriesPsalms);
 
@@ -411,37 +481,47 @@ public sealed class DataSeeder
         // Single events
         var picnic = new Event
         {
-            Id = Guid.NewGuid(), Slug = "summer-picnic", Title = "Summer Picnic",
+            Id = Guid.NewGuid(),
+            Slug = "summer-picnic",
+            Title = "Summer Picnic",
             DescriptionJson = ParaJson("Bring a side dish and lawn chairs."),
             StartsAt = now.Date.AddDays(14).AddHours(11),
             EndsAt = now.Date.AddDays(14).AddHours(15),
             Location = "Memorial Park, Pavilion 3",
             Visibility = EventVisibility.Public,
             RegistrationMode = EventRegistrationMode.RsvpOptional,
-            Capacity = 80, WaitlistEnabled = true,
+            Capacity = 80,
+            WaitlistEnabled = true,
             IsPublished = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         var workshop = new Event
         {
-            Id = Guid.NewGuid(), Slug = "marriage-workshop", Title = "Marriage Workshop",
+            Id = Guid.NewGuid(),
+            Slug = "marriage-workshop",
+            Title = "Marriage Workshop",
             DescriptionJson = ParaJson("A Saturday workshop for couples — registration required."),
             StartsAt = now.Date.AddDays(30).AddHours(9),
             EndsAt = now.Date.AddDays(30).AddHours(15),
             Location = "Fellowship Hall",
             Visibility = EventVisibility.Public,
             RegistrationMode = EventRegistrationMode.RegistrationRequired,
-            Capacity = 24, WaitlistEnabled = true,
+            Capacity = 24,
+            WaitlistEnabled = true,
             RegistrationOpensAt = now,
             RegistrationClosesAt = now.AddDays(28),
             IsPublished = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
 
         // Recurring weekly: Wednesday Bible study
         var bibleStudy = new Event
         {
-            Id = Guid.NewGuid(), Slug = "wednesday-bible-study", Title = "Wednesday Bible Study",
+            Id = Guid.NewGuid(),
+            Slug = "wednesday-bible-study",
+            Title = "Wednesday Bible Study",
             DescriptionJson = ParaJson("Weekly verse-by-verse study. Childcare provided."),
             StartsAt = NextDayOfWeek(now, DayOfWeek.Wednesday).AddHours(19),
             EndsAt = NextDayOfWeek(now, DayOfWeek.Wednesday).AddHours(20).AddMinutes(30),
@@ -449,13 +529,16 @@ public sealed class DataSeeder
             Visibility = EventVisibility.Public,
             RecurrenceRule = "FREQ=WEEKLY;BYDAY=WE",
             IsPublished = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
 
         // Recurring monthly: members' prayer breakfast (members-only)
         var prayerBreakfast = new Event
         {
-            Id = Guid.NewGuid(), Slug = "members-prayer-breakfast", Title = "Members' Prayer Breakfast",
+            Id = Guid.NewGuid(),
+            Slug = "members-prayer-breakfast",
+            Title = "Members' Prayer Breakfast",
             DescriptionJson = ParaJson("First Saturday of each month."),
             StartsAt = FirstSaturdayOfNextMonth(now).AddHours(8),
             EndsAt = FirstSaturdayOfNextMonth(now).AddHours(9).AddMinutes(30),
@@ -463,13 +546,16 @@ public sealed class DataSeeder
             Visibility = EventVisibility.MembersOnly,
             RecurrenceRule = "FREQ=MONTHLY;BYMONTHDAY=1",
             IsPublished = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
 
         // Single members-only with external URL
         var retreat = new Event
         {
-            Id = Guid.NewGuid(), Slug = "annual-retreat", Title = "Annual Members' Retreat",
+            Id = Guid.NewGuid(),
+            Slug = "annual-retreat",
+            Title = "Annual Members' Retreat",
             DescriptionJson = ParaJson("A weekend away — registration via the camp's site."),
             StartsAt = now.Date.AddDays(60).AddHours(17),
             EndsAt = now.Date.AddDays(62).AddHours(15),
@@ -478,7 +564,8 @@ public sealed class DataSeeder
             ExternalRegistrationUrl = "https://example.org/retreat",
             RegistrationMode = EventRegistrationMode.RegistrationRequired,
             IsPublished = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
 
         _db.Events.AddRange(picnic, workshop, bibleStudy, prayerBreakfast, retreat);
@@ -522,7 +609,8 @@ public sealed class DataSeeder
             RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
             RosterVisibility = RosterVisibility.LeadersOnly,
             IsActive = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         var menBibleStudy = new Group
         {
@@ -536,7 +624,8 @@ public sealed class DataSeeder
             RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
             RosterVisibility = RosterVisibility.AllGroupMembers,
             IsActive = true,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         _db.Groups.AddRange(youth, menBibleStudy);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
@@ -566,7 +655,8 @@ public sealed class DataSeeder
             IsPinned = true,
             PublishedAt = now,
             ReadingTimeMinutes = 1,
-            CreatedAt = now, ModifiedAt = now,
+            CreatedAt = now,
+            ModifiedAt = now,
             ModifiedByUserId = admin.Id,
         };
         _db.BlogPosts.Add(welcome);
@@ -728,7 +818,8 @@ public sealed class DataSeeder
                 Description = "Arrive 30 minutes early to set up chairs, tables, and refreshments.",
                 SlotsNeeded = 2,
                 DisplayOrder = 0,
-                CreatedAt = now, ModifiedAt = now,
+                CreatedAt = now,
+                ModifiedAt = now,
             },
             new EventVolunteerRole
             {
@@ -738,7 +829,8 @@ public sealed class DataSeeder
                 Description = "Welcome attendees, hand out nametags.",
                 SlotsNeeded = 2,
                 DisplayOrder = 1,
-                CreatedAt = now, ModifiedAt = now,
+                CreatedAt = now,
+                ModifiedAt = now,
             });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample volunteer roles on event {Id}.", firstEvent.Id);
@@ -759,8 +851,10 @@ public sealed class DataSeeder
             GeneralMeetingTime = "Sundays · 9:00am",
             DefaultRoom = "Fellowship Hall",
             DescriptionJson = ParaJson("Open Bible study working through one book of Scripture each term. Coffee provided; everyone welcome."),
-            IsActive = true, DisplayOrder = 0,
-            CreatedAt = now, ModifiedAt = now,
+            IsActive = true,
+            DisplayOrder = 0,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         var slotKids = new ClassSlot
         {
@@ -771,8 +865,10 @@ public sealed class DataSeeder
             GeneralMeetingTime = "Sundays · 10:30am",
             DefaultRoom = "Children's Wing",
             DescriptionJson = ParaJson("Age-appropriate Bible stories, songs, and crafts during the second service."),
-            IsActive = true, DisplayOrder = 1,
-            CreatedAt = now, ModifiedAt = now,
+            IsActive = true,
+            DisplayOrder = 1,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         _db.ClassSlots.AddRange(slotAdult, slotKids);
 
@@ -785,9 +881,11 @@ public sealed class DataSeeder
                 ClassSlotId = slotAdult.Id,
                 Subject = "The Gospel of Mark",
                 DescriptionJson = ParaJson("A ten-week walk through Mark's gospel. Bring a Bible; we'll provide handouts."),
-                StartDate = termStart, EndDate = termEnd,
+                StartDate = termStart,
+                EndDate = termEnd,
                 TeacherFreeText = "Pastor Daniel",
-                CreatedAt = now, ModifiedAt = now,
+                CreatedAt = now,
+                ModifiedAt = now,
             },
             new ClassOffering
             {
@@ -795,9 +893,11 @@ public sealed class DataSeeder
                 ClassSlotId = slotKids.Id,
                 Subject = "Heroes of the Old Testament",
                 DescriptionJson = ParaJson("Ten weeks of stories from Abraham, Moses, David, and more."),
-                StartDate = termStart, EndDate = termEnd,
+                StartDate = termStart,
+                EndDate = termEnd,
                 TeacherFreeText = "Children's Ministry Team",
-                CreatedAt = now, ModifiedAt = now,
+                CreatedAt = now,
+                ModifiedAt = now,
             });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample classes (2 slots, 2 current offerings).");
@@ -820,8 +920,10 @@ public sealed class DataSeeder
                 BlobUrl = "placeholder://bulletins/template.pdf",
                 OriginalFilename = "bulletin-template.pdf",
                 SizeBytes = 0,
-                IsPublished = true, IsMembersOnly = false,
-                CreatedAt = now, ModifiedAt = now,
+                IsPublished = true,
+                IsMembersOnly = false,
+                CreatedAt = now,
+                ModifiedAt = now,
             },
             new Document
             {
@@ -832,8 +934,10 @@ public sealed class DataSeeder
                 BlobUrl = "placeholder://forms/welcome-packet.pdf",
                 OriginalFilename = "welcome-packet.pdf",
                 SizeBytes = 0,
-                IsPublished = true, IsMembersOnly = true,
-                CreatedAt = now, ModifiedAt = now,
+                IsPublished = true,
+                IsMembersOnly = true,
+                CreatedAt = now,
+                ModifiedAt = now,
             });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample documents (placeholder BlobUrls).");
@@ -908,7 +1012,8 @@ public sealed class DataSeeder
                 SubmittedByUserId = admin.Id,
                 IsAnonymous = false,
                 Status = PrayerRequestStatus.Active,
-                CreatedAt = now, ModifiedAt = now,
+                CreatedAt = now,
+                ModifiedAt = now,
             },
             new PrayerRequest
             {
@@ -918,7 +1023,8 @@ public sealed class DataSeeder
                 SubmittedByUserId = admin.Id,
                 IsAnonymous = true,
                 Status = PrayerRequestStatus.Active,
-                CreatedAt = now.AddDays(-2), ModifiedAt = now.AddDays(-2),
+                CreatedAt = now.AddDays(-2),
+                ModifiedAt = now.AddDays(-2),
             });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample prayer requests.");

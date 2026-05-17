@@ -57,9 +57,9 @@ export function SettingsPage() {
           {active === "branding" && <BrandingTab />}
           {active === "content" && <ContentTab />}
           {active === "members" && <MembersTab />}
-          {active === "email" && <PlaceholderTab name="Email & Notifications" phase="Phase 5" />}
+          {active === "email" && <PlaceholderTab name="Email & Notifications" />}
           {active === "integrations" && <IntegrationsTab />}
-          {active === "privacy" && <PlaceholderTab name="Privacy & Security" phase="future phase" />}
+          {active === "privacy" && <PlaceholderTab name="Privacy & Security" />}
           {active === "advanced" && <AdvancedTab />}
         </div>
       </div>
@@ -67,12 +67,12 @@ export function SettingsPage() {
   );
 }
 
-function PlaceholderTab({ name, phase }: { name: string; phase: string }) {
+function PlaceholderTab({ name }: { name: string }) {
   return (
     <div className="rounded-lg border bg-card p-6">
       <h2 className="text-lg font-semibold">{name}</h2>
       <p className="mt-2 text-sm text-muted">
-        Settings for {name.toLowerCase()} arrive in {phase}. The tab is shown here so the
+        Settings for {name.toLowerCase()} are not yet implemented. The tab is shown here so the
         layout is consistent from day one.
       </p>
     </div>
@@ -115,8 +115,8 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     homepageHeroCtaLabel: s.homepageHeroCtaLabel,
     homepageHeroCtaLink: s.homepageHeroCtaLink,
     defaultMetaDescription: s.defaultMetaDescription,
-    // Phase 4 fields — round-tripped on every save so partial-update
-    // flows from individual tabs don't accidentally drop values.
+    // Round-tripped on every save so partial-update flows from
+    // individual tabs don't accidentally drop values.
     getInvolvedPageLabel: s.getInvolvedPageLabel,
     classesPageLabel: s.classesPageLabel,
     classAudienceAgeGroupsJson: s.classAudienceAgeGroupsJson,
@@ -136,7 +136,6 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     facebookOAuthAppId: s.facebookOAuthAppId,
     facebookOAuthAppSecret: s.facebookOAuthAppSecret,
     facebookLoginEnabled: s.facebookLoginEnabled,
-    // Phase 6
     analyticsProvider: s.analyticsProvider,
     ga4MeasurementId: s.ga4MeasurementId,
     ga4ConsentBannerEnabled: s.ga4ConsentBannerEnabled,

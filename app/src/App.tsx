@@ -884,12 +884,12 @@ export default function App() {
             />
           </Route>
 
-          {/* Docs placeholder (Phase 6 fills the content) */}
+          {/* Docs placeholder */}
           <Route
             path="docs/*"
             element={
               <ProtectedRoute mode="admin" roles={["Administrator", "Editor"]}>
-                <PlaceholderPage title="Documentation" body="Astro-rendered docs land in Phase 6." />
+                <PlaceholderPage title="Documentation" body="Astro-rendered docs are served from wwwroot/docs/." />
               </ProtectedRoute>
             }
           />

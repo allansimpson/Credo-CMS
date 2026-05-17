@@ -133,10 +133,16 @@ public sealed class DocumentService : IDocumentService
         var doc = new Document
         {
             Id = Guid.NewGuid(),
-            Title = request.Title, Description = request.Description, Category = request.Category,
-            BlobUrl = request.BlobUrl, OriginalFilename = request.OriginalFilename, SizeBytes = request.SizeBytes,
-            IsPublished = request.IsPublished, IsMembersOnly = request.IsMembersOnly,
-            CreatedAt = now, ModifiedAt = now,
+            Title = request.Title,
+            Description = request.Description,
+            Category = request.Category,
+            BlobUrl = request.BlobUrl,
+            OriginalFilename = request.OriginalFilename,
+            SizeBytes = request.SizeBytes,
+            IsPublished = request.IsPublished,
+            IsMembersOnly = request.IsMembersOnly,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         await _repo.AddAsync(doc, ct).ConfigureAwait(false);
         await IndexAsync(doc, ct).ConfigureAwait(false);

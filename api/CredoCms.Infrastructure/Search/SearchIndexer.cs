@@ -46,9 +46,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = command.EntityType, EntityId = command.EntityId,
-                Title = command.Title, BodyText = command.BodyText, Url = command.Url,
-                IsPublished = command.IsPublished, IsMembersOnly = command.IsMembersOnly,
+                EntityType = command.EntityType,
+                EntityId = command.EntityId,
+                Title = command.Title,
+                BodyText = command.BodyText,
+                Url = command.Url,
+                IsPublished = command.IsPublished,
+                IsMembersOnly = command.IsMembersOnly,
                 IndexedAt = DateTimeOffset.UtcNow,
             });
         }
@@ -104,10 +108,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "Page", EntityId = p.Id,
-                Title = p.Title, BodyText = ExtractText(p.BodyJson) + " " + (p.Excerpt ?? ""),
+                EntityType = "Page",
+                EntityId = p.Id,
+                Title = p.Title,
+                BodyText = ExtractText(p.BodyJson) + " " + (p.Excerpt ?? ""),
                 Url = "/" + p.Slug,
-                IsPublished = p.IsPublished, IsMembersOnly = p.IsMembersOnly,
+                IsPublished = p.IsPublished,
+                IsMembersOnly = p.IsMembersOnly,
                 IndexedAt = now,
             });
         }
@@ -119,10 +126,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "NewsItem", EntityId = n.Id,
-                Title = n.Title, BodyText = ExtractText(n.BodyJson) + " " + (n.Excerpt ?? ""),
+                EntityType = "NewsItem",
+                EntityId = n.Id,
+                Title = n.Title,
+                BodyText = ExtractText(n.BodyJson) + " " + (n.Excerpt ?? ""),
                 Url = "/news/" + n.Slug,
-                IsPublished = n.IsPublished, IsMembersOnly = n.IsMembersOnly,
+                IsPublished = n.IsPublished,
+                IsMembersOnly = n.IsMembersOnly,
                 IndexedAt = now,
             });
         }
@@ -134,11 +144,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "Leader", EntityId = l.Id,
+                EntityType = "Leader",
+                EntityId = l.Id,
                 Title = l.FullName,
                 BodyText = $"{l.Title} {l.Category} {ExtractText(l.BioJson)}",
                 Url = "/leaders/" + l.Id,
-                IsPublished = true, IsMembersOnly = false,
+                IsPublished = true,
+                IsMembersOnly = false,
                 IndexedAt = now,
             });
         }
@@ -150,11 +162,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "Document", EntityId = d.Id,
+                EntityType = "Document",
+                EntityId = d.Id,
                 Title = d.Title,
                 BodyText = $"{d.Description} {d.Category} {d.OriginalFilename}",
                 Url = "/documents/" + d.Id,
-                IsPublished = d.IsPublished, IsMembersOnly = d.IsMembersOnly,
+                IsPublished = d.IsPublished,
+                IsMembersOnly = d.IsMembersOnly,
                 IndexedAt = now,
             });
         }
@@ -166,11 +180,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "SermonSeries", EntityId = s.Id,
+                EntityType = "SermonSeries",
+                EntityId = s.Id,
                 Title = s.Title,
                 BodyText = ExtractText(s.DescriptionJson),
                 Url = "/sermons/series/" + s.Slug,
-                IsPublished = true, IsMembersOnly = false,
+                IsPublished = true,
+                IsMembersOnly = false,
                 IndexedAt = now,
             });
         }
@@ -182,11 +198,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "Sermon", EntityId = sm.Id,
+                EntityType = "Sermon",
+                EntityId = sm.Id,
                 Title = sm.Title,
                 BodyText = $"{sm.SpeakerNameFreeText} {ExtractText(sm.DescriptionJson)} {sm.Transcript}",
                 Url = "/sermons/" + sm.Slug,
-                IsPublished = sm.IsPublished, IsMembersOnly = sm.IsMembersOnly,
+                IsPublished = sm.IsPublished,
+                IsMembersOnly = sm.IsMembersOnly,
                 IndexedAt = now,
             });
         }
@@ -198,7 +216,8 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             db.SearchIndex.Add(new SearchIndexEntry
             {
                 Id = Guid.NewGuid(),
-                EntityType = "Event", EntityId = ev.Id,
+                EntityType = "Event",
+                EntityId = ev.Id,
                 Title = ev.Title,
                 BodyText = $"{ev.Location} {ExtractText(ev.DescriptionJson)}",
                 Url = "/events/" + ev.Slug,

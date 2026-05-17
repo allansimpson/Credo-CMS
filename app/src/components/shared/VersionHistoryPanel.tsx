@@ -1,7 +1,7 @@
 /**
- * Version-history panel SHELL. Phase 1 ships this component scaffold so the
- * prop contract is fixed; concrete entity wiring and the diff renderers are
- * integrated in Phase 2 when the first versioned entity (Pages) lands.
+ * Version-history panel SHELL. Scaffold component fixing the prop contract;
+ * concrete entity wiring and the diff renderers will be integrated when the
+ * first versioned entity (Pages) lands.
  */
 
 export type DiffStrategy = "prosemirror" | "html" | "text";
@@ -21,7 +21,7 @@ export function VersionHistoryPanel(props: VersionHistoryPanelProps) {
         <code>{props.entityId}</code> (<code>{props.diffStrategy}</code> diff).
       </p>
       <p className="mt-2">
-        Phase 2 will populate this panel with the actual list of historical
+        This panel will be populated with the actual list of historical
         versions, a diff renderer, and the restore action.
       </p>
     </aside>

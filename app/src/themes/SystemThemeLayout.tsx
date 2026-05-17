@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
  * across all churches forever — only the church name and logo swap in for
  * visual continuity.
  *
- * Phase 6 polish: skip-to-main-content link for keyboard users. The
+ * Includes a skip-to-main-content link for keyboard users. The
  * AdminLayout's <main> carries id="admin-main-content"; auth pages (login,
  * forgot-password, etc.) wrap themselves in SystemThemeLayout but don't
  * provide an explicit main-content anchor — the link points to a wrapping

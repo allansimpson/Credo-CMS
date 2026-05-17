@@ -1,12 +1,12 @@
 /**
  * Typed surface for API DTOs. Hand-written to keep parity with the C# DTOs in
- * CredoCms.Application — the project does NOT use NSwag (a deliberate Phase 1
+ * CredoCms.Application — the project does NOT use NSwag (a deliberate
  * decision to avoid generation/versioning friction for a small API).
  */
 
 export type Role = "Administrator" | "Editor" | "Member";
 
-// Phase 6 — analytics + cookie consent enums (top-level so they can be
+// Analytics + cookie consent enums (top-level so they can be
 // imported standalone by the consent banner / GA4 loader).
 export type AnalyticsProvider = 0 | 1; // None | Ga4
 export type ConsentBannerPosition = 0 | 1; // BottomRight | BottomFull
@@ -74,7 +74,7 @@ export interface PublicSiteSettings {
   homepageHeroCtaLabel: string;
   homepageHeroCtaLink: string;
   facebookLoginEnabled: boolean;
-  // Phase 6 — analytics + cookie consent
+  // Analytics + cookie consent
   analyticsProvider: AnalyticsProvider;
   ga4MeasurementId: string | null;
   ga4ConsentBannerEnabled: boolean;
@@ -97,7 +97,6 @@ export interface SiteSettings extends PublicSiteSettings {
   imageQuality: number;
   membersWelcomeText: string | null;
   defaultMetaDescription: string | null;
-  // Phase 4 fields ---------------------------------------------------------
   getInvolvedPageLabel: string;
   classesPageLabel: string;
   classAudienceAgeGroupsJson: string;
@@ -120,9 +119,9 @@ export interface SiteSettings extends PublicSiteSettings {
   modifiedAt: string;
   modifiedByUserId: string | null;
   rowVersion: string;
-  // Phase 6 — admin-side carries the page-id; the public DTO resolves the
-  // slug. Both coexist on this type; UpdateSiteSettingsRequest omits the
-  // resolved slug so admin saves go through with the id.
+  // Admin-side carries the page-id; the public DTO resolves the slug. Both
+  // coexist on this type; UpdateSiteSettingsRequest omits the resolved slug
+  // so admin saves go through with the id.
   cookiePolicyPageId: string | null;
 }
 

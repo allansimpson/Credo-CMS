@@ -314,7 +314,7 @@ export function AdminBlogEditorPage() {
                     className="input"
                   />
                 </Field>
-                <Field label="Scheduled publish" hint="Captured for Phase 5; no automation runs in Phase 4.">
+                <Field label="Scheduled publish" hint="Captured for future use.">
                   <input
                     type="datetime-local"
                     value={form.scheduledPublishAt}

@@ -61,8 +61,12 @@ public sealed class CalendarQueryService : ICalendarQueryService
                 && (includeMembersOnly || !n.IsMembersOnly))
             .Select(n => new
             {
-                n.Id, n.Slug, n.Title, n.CalendarDate,
-                n.HeroImageUrl, n.IsMembersOnly,
+                n.Id,
+                n.Slug,
+                n.Title,
+                n.CalendarDate,
+                n.HeroImageUrl,
+                n.IsMembersOnly,
             })
             .ToListAsync(ct).ConfigureAwait(false);
 

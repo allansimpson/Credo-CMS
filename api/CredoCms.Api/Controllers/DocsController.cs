@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.StaticFiles;
 namespace CredoCms.Api.Controllers;
 
 /// <summary>
-/// Phase 6 — serves the Astro-built operator docs from
+/// Serves the Astro-built operator docs from
 /// <c>wwwroot/docs/</c> behind the AdminShell auth policy. Anonymous /
 /// Member requests get the church-themed 404 (covert routing — the
 /// existence of the docs subtree is not disclosed). Path-traversal

@@ -16,7 +16,7 @@ namespace CredoCms.Api.Controllers;
 ///     TeacherFreeText, DetailedScheduleJson, MaterialsNeeded populated)
 /// SiteSettings drives recent-past visibility (<c>ShowRecentPastOnPublicClasses</c>
 /// + <c>RecentPastClassesLookbackDays</c>). The settings are read straight from
-/// the repository here because <c>SiteSettingsDto</c> doesn't expose Phase 4
+/// the repository here because <c>SiteSettingsDto</c> doesn't expose these
 /// fields yet — that surface lands in Q16.
 /// </summary>
 [ApiController]

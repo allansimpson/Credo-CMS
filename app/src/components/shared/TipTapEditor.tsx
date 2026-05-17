@@ -14,9 +14,9 @@ export interface TipTapEditorProps {
 }
 
 /**
- * Minimal TipTap editor used by Phase 2 Site Settings (members welcome
- * text). Pages/News in P3/P4 will add a richer toolbar; the editor body
- * shape is the same so the storage format won't change.
+ * Minimal TipTap editor used by Site Settings (members welcome text).
+ * Pages/News will add a richer toolbar; the editor body shape is the
+ * same so the storage format won't change.
  */
 export function TipTapEditor({
   valueJson,

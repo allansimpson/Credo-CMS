@@ -117,7 +117,9 @@ public sealed class GroupServicePermissionTests
         memberships.Setup(x => x.GetAsync(membershipId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupMembership
             {
-                Id = membershipId, GroupId = groupId, Status = GroupMembershipStatus.Pending,
+                Id = membershipId,
+                GroupId = groupId,
+                Status = GroupMembershipStatus.Pending,
             });
         memberships.Setup(x => x.GetLiveMembershipAsync(groupId, user.Object.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((GroupMembership?)null);
@@ -139,15 +141,20 @@ public sealed class GroupServicePermissionTests
         memberships.Setup(x => x.GetAsync(membershipId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupMembership
             {
-                Id = membershipId, GroupId = groupId, UserId = requesterId,
+                Id = membershipId,
+                GroupId = groupId,
+                UserId = requesterId,
                 Status = GroupMembershipStatus.Pending,
             });
         // Caller has active leader membership in this group.
         memberships.Setup(x => x.GetLiveMembershipAsync(groupId, user.Object.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupMembership
             {
-                Id = Guid.NewGuid(), GroupId = groupId, UserId = user.Object.UserId,
-                Status = GroupMembershipStatus.Active, IsLeader = true,
+                Id = Guid.NewGuid(),
+                GroupId = groupId,
+                UserId = user.Object.UserId,
+                Status = GroupMembershipStatus.Active,
+                IsLeader = true,
             });
         groups.Setup(x => x.GetAsync(groupId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Group { Id = groupId, Name = "Youth", Slug = "youth" });
@@ -168,8 +175,11 @@ public sealed class GroupServicePermissionTests
         groups.Setup(x => x.GetBySlugAsync("hidden", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Group
             {
-                Id = Guid.NewGuid(), Slug = "hidden", Name = "Secret",
-                IsActive = true, Visibility = GroupVisibility.Hidden,
+                Id = Guid.NewGuid(),
+                Slug = "hidden",
+                Name = "Secret",
+                IsActive = true,
+                Visibility = GroupVisibility.Hidden,
             });
 
         var result = await sut.GetPublicBySlugAsync("hidden");
@@ -196,8 +206,11 @@ public sealed class GroupServicePermissionTests
         groupRepo.Setup(x => x.GetBySlugAsync("staff", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Group
             {
-                Id = Guid.NewGuid(), Slug = "staff", Name = "Staff",
-                IsActive = true, Visibility = GroupVisibility.MembersOnly,
+                Id = Guid.NewGuid(),
+                Slug = "staff",
+                Name = "Staff",
+                IsActive = true,
+                Visibility = GroupVisibility.MembersOnly,
             });
 
         var sut = new GroupService(
@@ -218,8 +231,11 @@ public sealed class GroupServicePermissionTests
         groups.Setup(x => x.GetBySlugAsync("closed", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Group
             {
-                Id = Guid.NewGuid(), Slug = "closed", Name = "Closed",
-                IsActive = true, Visibility = GroupVisibility.Public,
+                Id = Guid.NewGuid(),
+                Slug = "closed",
+                Name = "Closed",
+                IsActive = true,
+                Visibility = GroupVisibility.Public,
                 Joinability = GroupJoinability.Closed,
             });
 
@@ -235,8 +251,11 @@ public sealed class GroupServicePermissionTests
         groups.Setup(x => x.GetBySlugAsync("youth", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Group
             {
-                Id = Guid.NewGuid(), Slug = "youth", Name = "Youth",
-                IsActive = true, Visibility = GroupVisibility.Public,
+                Id = Guid.NewGuid(),
+                Slug = "youth",
+                Name = "Youth",
+                IsActive = true,
+                Visibility = GroupVisibility.Public,
                 Joinability = GroupJoinability.Open,
                 RequiresMessageOnJoinRequest = MessageOnJoinRequest.Required,
             });
@@ -257,8 +276,11 @@ public sealed class GroupServicePermissionTests
         groups.Setup(x => x.GetBySlugAsync("youth", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Group
             {
-                Id = groupId, Slug = "youth", Name = "Youth",
-                IsActive = true, Visibility = GroupVisibility.Public,
+                Id = groupId,
+                Slug = "youth",
+                Name = "Youth",
+                IsActive = true,
+                Visibility = GroupVisibility.Public,
                 Joinability = GroupJoinability.Open,
             });
         memberships.Setup(x => x.GetLiveMembershipAsync(groupId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))

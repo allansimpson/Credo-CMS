@@ -73,7 +73,7 @@ export function AdminLayout() {
 
   return (
     <SystemThemeLayout>
-      {/* Phase 6 — admin-side skip-to-main-content link. Visible on focus. */}
+      {/* Admin-side skip-to-main-content link. Visible on focus. */}
       <a
         href="#admin-main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"

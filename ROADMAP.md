@@ -69,6 +69,8 @@ See `EVALUATION.md` for the diagnostic write-up. Open v1.x items:
 - **[v1.x] Admin Dashboard live data** — four placeholder endpoints (sermon-of-the-week, recent activity, this-Sunday, tend-to action queue) need wiring.
 - **[v1.x] Login page pull-quote** — currently static; pull from a public API.
 - **[v1.x] Public-endpoint regression tests** — `WebApplicationFactory` snapshot tests for `/api/public/homepage`, `/sermons`, `/events` etc.
+- **[v1.x] Fix `react-hooks/exhaustive-deps` warnings (8)** — pre-existing in admin pages; ESLint flags them as warnings. Either include the missing deps or wrap the load functions in `useCallback`.
+- **[v1.x] Re-enable `react-refresh/only-export-components`** — currently disabled because the codebase co-locates `AuthContext` / `SiteSettingsContext` with their providers and hooks. Refactor those contexts into separate files, then re-enable the rule.
 
 ### From "from scratch" deep-dive analysis
 

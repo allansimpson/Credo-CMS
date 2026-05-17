@@ -90,8 +90,13 @@ public sealed class BlogServiceTests
         repo.Setup(x => x.GetBySlugAsync("draft", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CredoCms.Domain.Blog.BlogPost
             {
-                Id = Guid.NewGuid(), Slug = "draft", Title = "Draft", BodyJson = "{}",
-                IsPublished = false, AuthorUserId = Guid.NewGuid(), Category = "Devotional",
+                Id = Guid.NewGuid(),
+                Slug = "draft",
+                Title = "Draft",
+                BodyJson = "{}",
+                IsPublished = false,
+                AuthorUserId = Guid.NewGuid(),
+                Category = "Devotional",
             });
 
         var result = await sut.GetPublicBySlugAsync("draft");
@@ -122,10 +127,15 @@ public sealed class BlogServiceTests
         repo.Setup(x => x.GetBySlugAsync("members-only", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new CredoCms.Domain.Blog.BlogPost
             {
-                Id = Guid.NewGuid(), Slug = "members-only", Title = "T", BodyJson = "{}",
-                IsPublished = true, IsMembersOnly = true,
+                Id = Guid.NewGuid(),
+                Slug = "members-only",
+                Title = "T",
+                BodyJson = "{}",
+                IsPublished = true,
+                IsMembersOnly = true,
                 PublishedAt = DateTimeOffset.UtcNow.AddDays(-1),
-                AuthorUserId = Guid.NewGuid(), Category = "Devotional",
+                AuthorUserId = Guid.NewGuid(),
+                Category = "Devotional",
             });
 
         var result = await sut2.GetPublicBySlugAsync("members-only");

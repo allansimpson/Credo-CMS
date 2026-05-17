@@ -36,7 +36,7 @@ export function LoginPage() {
   }
 
   // TODO: wire endpoint — pull current sermon pull-quote from
-  // GET /api/admin/dashboard/this-sunday once Phase 4 dashboard endpoints land.
+  // GET /api/admin/dashboard/this-sunday once the dashboard endpoint lands.
   const pullQuote = {
     quote: "Faith is the substance of things hoped for, the evidence of things not seen.",
     attribution: "Hebrews 11:1 · This Sunday",

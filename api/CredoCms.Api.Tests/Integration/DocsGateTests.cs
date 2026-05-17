@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 namespace CredoCms.Api.Tests.Integration;
 
 /// <summary>
-/// Phase 6 — covert routing for the /docs/* docs site. Anonymous and
+/// Covert routing for the /docs/* docs site. Anonymous and
 /// Member visitors should see 404 (covert), never 401 / 403 / a docs
 /// 200. Editor / Administrator return 200 (or 404 if the docs haven't
 /// been built into wwwroot yet — both are acceptable here since we're

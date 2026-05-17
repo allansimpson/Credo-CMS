@@ -95,11 +95,16 @@ public sealed class ServiceTimeService : IServiceTimeService
         var item = new ServiceTime
         {
             Id = Guid.NewGuid(),
-            Name = request.Name, DayOfWeek = request.DayOfWeek,
-            StartTime = request.StartTime, EndTime = request.EndTime,
-            Location = request.Location, Notes = request.Notes,
-            DisplayOrder = request.DisplayOrder, IsActive = request.IsActive,
-            CreatedAt = now, ModifiedAt = now,
+            Name = request.Name,
+            DayOfWeek = request.DayOfWeek,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Location = request.Location,
+            Notes = request.Notes,
+            DisplayOrder = request.DisplayOrder,
+            IsActive = request.IsActive,
+            CreatedAt = now,
+            ModifiedAt = now,
         };
         await _repo.AddAsync(item, ct).ConfigureAwait(false);
         await _audit.WriteAsync("ServiceTime.Created", nameof(ServiceTime), item.Id.ToString(),

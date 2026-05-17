@@ -25,7 +25,7 @@ const TipTapReadOnly = lazy(() =>
 );
 
 /**
- * Public Site PR #2 — Home (Editorial Warm + Quiet Sanctuary).
+ * Public Site Home (Editorial Warm + Quiet Sanctuary).
  *
  * Both templates render from this single source; only treatment differs
  * per the design handoff §7.1. Content shape is identical — same seven
@@ -108,8 +108,8 @@ interface HeroProps {
 function Hero({ churchName, tagline, ctaLabel, ctaLink, serviceTimes, isEditorial }: HeroProps) {
   // Editorial: photo-led overlay, type bottom-left.
   // Quiet: split with type left, photo right.
-  // Hero image source is a follow-up SiteSettings field; for PR #2 both
-  // treatments render the labelled <ImageSlot> placeholder.
+  // Hero image source is a follow-up SiteSettings field; both
+  // treatments currently render the labelled <ImageSlot> placeholder.
   if (isEditorial) {
     return (
       <section className="relative" data-testid="home-hero" data-template="editorial">

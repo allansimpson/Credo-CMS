@@ -39,9 +39,9 @@ public sealed class RegistrationTokenSignerTests
     public void Token_signed_with_different_secret_fails()
     {
         var s1 = new RegistrationTokenSigner(new RegistrationTokenSignerOptions
-            { TokenSigningSecret = "secret-one-thirty-two-chars-yep!" });
+        { TokenSigningSecret = "secret-one-thirty-two-chars-yep!" });
         var s2 = new RegistrationTokenSigner(new RegistrationTokenSignerOptions
-            { TokenSigningSecret = "secret-two-thirty-two-chars-yep!" });
+        { TokenSigningSecret = "secret-two-thirty-two-chars-yep!" });
         var token = s1.Sign(Guid.NewGuid(), TimeSpan.FromMinutes(10));
         s2.TryValidate(token, out _).Should().BeFalse();
     }

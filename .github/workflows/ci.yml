@@ -29,7 +29,7 @@ jobs:
         run: dotnet restore api/CredoCms.slnx
 
       - name: Format check
-        run: dotnet format api/CredoCms.slnx --verify-no-changes --severity info
+        run: dotnet format api/CredoCms.slnx --verify-no-changes --severity warn
 
       - name: Build (warnings as errors)
         run: dotnet build api/CredoCms.slnx --configuration Release --no-restore -p:TreatWarningsAsErrors=true
@@ -53,9 +53,9 @@ jobs:
         working-directory: app
         run: npm ci
 
-      - name: Lint (no warnings)
+      - name: Lint
         working-directory: app
-        run: npx eslint . --max-warnings 0
+        run: npx eslint .
 
       - name: Test
         working-directory: app

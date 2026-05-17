@@ -8,7 +8,7 @@ export interface SeoTagsProps {
   jsonLd?: object | null;
   /** Image URL for og:image and twitter:image. */
   imageUrl?: string | null;
-  /** Phase 6 — RSS auto-discovery. Adds `<link rel="alternate" type="application/rss+xml">`. */
+  /** RSS auto-discovery. Adds `<link rel="alternate" type="application/rss+xml">`. */
   rssFeedUrl?: string | null;
   rssFeedTitle?: string | null;
   /** Canonical URL for `<link rel="canonical">`. */
@@ -18,8 +18,8 @@ export interface SeoTagsProps {
 /**
  * Imperatively writes per-route SEO tags into <head>. A real implementation
  * would render a SSR-aware Helmet/Effect; for the SPA we just patch the
- * document. Phase 11 will replace this with a more thorough setup once the
- * public site is the primary surface.
+ * document. A future revision will replace this with a more thorough setup
+ * once the public site is the primary surface.
  */
 export function SeoTags({
   title, description, ogType, jsonLd, imageUrl,

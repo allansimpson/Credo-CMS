@@ -10,9 +10,9 @@ import {
 import { PageHeader } from "@/components/shared/admin/EditorialPrimitives";
 
 /**
- * Phase 5 R8 broadcast composer. Minimal but functional: subject, body
+ * Broadcast composer. Minimal but functional: subject, body
  * (textarea — TipTap integration deferred to a follow-up commit so the
- * Phase 5 ship doesn't gate on RTE plumbing), target mode, send-now /
+ * initial ship doesn't gate on RTE plumbing), target mode, send-now /
  * schedule. Recipient preview hits the server-side resolver so the
  * editor sees the actual count + sample.
  */

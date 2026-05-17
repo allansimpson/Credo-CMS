@@ -11,7 +11,7 @@ declare global {
 }
 
 /**
- * Phase 6 GA4 page-view tracker. Fires gtag('event', 'page_view', ...)
+ * GA4 page-view tracker. Fires gtag('event', 'page_view', ...)
  * on every React Router location change, but only when:
  *   - settings.analyticsProvider === Ga4
  *   - the visitor has accepted cookies
