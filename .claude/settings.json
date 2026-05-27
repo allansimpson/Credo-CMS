@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(npm --version)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(npm test *)",
+      "Bash(npm install *)",
+      "Bash(curl -fsSL \"https://api.nuget.org/v3-flatcontainer/sixlabors.imagesharp/index.json\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\(d['versions'][-15:]\\)\\)\")",
+      "Bash(npm run *)",
+      "Bash(git add *)"
+    ]
+  }
+}
