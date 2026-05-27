@@ -1,0 +1,13 @@
+C:\CODE\Credo-CMS\api\CredoCms.Domain\bin\Release\net10.0\CredoCms.Domain.deps.json
+C:\CODE\Credo-CMS\api\CredoCms.Domain\bin\Release\net10.0\CredoCms.Domain.dll
+C:\CODE\Credo-CMS\api\CredoCms.Domain\bin\Release\net10.0\CredoCms.Domain.pdb
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.csproj.AssemblyReference.cache
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.AssemblyInfoInputs.cache
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.AssemblyInfo.cs
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.csproj.CoreCompileInputs.cache
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.sourcelink.json
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.dll
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\refint\CredoCms.Domain.dll
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\CredoCms.Domain.pdb
+C:\CODE\Credo-CMS\api\CredoCms.Domain\obj\Release\net10.0\ref\CredoCms.Domain.dll

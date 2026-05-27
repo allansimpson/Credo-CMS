@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "4WMPnLQ6NiE=",
+  "success": false,
+  "projectFilePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain\\CredoCms.Domain.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1105",
+      "level": "Error",
+      "message": "Unable to read project information for 'CredoCms.Domain': Invalid framework identifier ''.",
+      "projectPath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain\\CredoCms.Domain.csproj",
+      "filePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain\\CredoCms.Domain.csproj",
+      "targetGraphs": []
+    }
+  ]
+}

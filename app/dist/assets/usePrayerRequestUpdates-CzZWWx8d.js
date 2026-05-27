@@ -1,0 +1,2 @@
+import{a2 as f,r as c}from"./index-BL7Bold5.js";function p(o,t){const{on:s,off:n}=f();c.useEffect(()=>{const d=e=>(...r)=>{const a=r[0];a&&(t&&a.prayerRequestId!==t||o({...a,kind:e}))},u=["PrayerRequestCreated","PrayerRequestUpdated","PrayerRequestStatusChanged","PrayerRequestPrayedForCountChanged","PrayerRequestUpdateAdded"].map(e=>[e,d(e)]);for(const[e,r]of u)s(e,r);return()=>{for(const[e,r]of u)n(e,r)}},[s,n,o,t])}export{p as u};
+//# sourceMappingURL=usePrayerRequestUpdates-CzZWWx8d.js.map

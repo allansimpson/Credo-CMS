@@ -1,0 +1,2 @@
+import{g as i,h as s,i as a,k as r}from"./index-BL7Bold5.js";const p={list:(e=!1)=>i(`/api/admin/service-times${e?"?includeDeleted=true":""}`),get:e=>i(`/api/admin/service-times/${e}`),create:e=>a("/api/admin/service-times",e),update:(e,t)=>r(`/api/admin/service-times/${e}`,t),softDelete:e=>s(`/api/admin/service-times/${e}`),restore:e=>a(`/api/admin/service-times/${e}/restore`),hardDelete:e=>s(`/api/admin/service-times/${e}/hard`),listPublic:()=>i("/api/public/service-times",{emitUnauthorized:!1})};export{p as s};
+//# sourceMappingURL=serviceTimes-b-C253dZ.js.map

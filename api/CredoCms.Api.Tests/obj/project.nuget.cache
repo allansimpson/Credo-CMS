@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "mC5zz9Pn/Uw=",
+  "success": false,
+  "projectFilePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Api.Tests\\CredoCms.Api.Tests.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1105",
+      "level": "Error",
+      "message": "Unable to read project information for 'CredoCms.Api.Tests': Invalid framework identifier ''.",
+      "projectPath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Api.Tests\\CredoCms.Api.Tests.csproj",
+      "filePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Api.Tests\\CredoCms.Api.Tests.csproj",
+      "targetGraphs": []
+    }
+  ]
+}

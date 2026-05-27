@@ -1,0 +1,6 @@
+{
+  "CredoCms.Api, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Api",
+  "CredoCms.Application, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Application",
+  "CredoCms.Domain, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain",
+  "CredoCms.Infrastructure, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Infrastructure"
+}

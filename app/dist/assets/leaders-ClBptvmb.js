@@ -1,0 +1,2 @@
+import{g as e,h as l,k as s,i as t}from"./index-BL7Bold5.js";const p={list:()=>e("/api/admin/leaders"),get:a=>e(`/api/admin/leaders/${a}`),create:a=>t("/api/admin/leaders",a),update:(a,i)=>s(`/api/admin/leaders/${a}`,i),delete:a=>l(`/api/admin/leaders/${a}`),listPublic:()=>e("/api/public/leaders",{emitUnauthorized:!1}),getPublic:a=>e(`/api/public/leaders/${a}`,{emitUnauthorized:!1})};export{p as l};
+//# sourceMappingURL=leaders-ClBptvmb.js.map

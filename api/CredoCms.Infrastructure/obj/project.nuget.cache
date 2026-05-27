@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "4PWnl/qmMp0=",
+  "success": false,
+  "projectFilePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Infrastructure\\CredoCms.Infrastructure.csproj",
+  "expectedPackageFiles": [],
+  "logs": [
+    {
+      "code": "NU1105",
+      "level": "Error",
+      "message": "Unable to read project information for 'CredoCms.Infrastructure': Invalid framework identifier ''.",
+      "projectPath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Infrastructure\\CredoCms.Infrastructure.csproj",
+      "filePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Infrastructure\\CredoCms.Infrastructure.csproj",
+      "targetGraphs": []
+    }
+  ]
+}
