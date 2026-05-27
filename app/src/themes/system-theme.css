@@ -1,0 +1,108 @@
+/*
+ * System theme — applied to /admin/*, /docs/*, and /login (the sign-in page is
+ * functionally part of the admin shell). Editorial direction per
+ * DESIGN_HANDOFF.md §3 + Claude Design's six clarifications.
+ *
+ * Palette is warm-grounded magazine: ink + cream + a single warm accent.
+ * Squared corners are global (--radius: 0); see /src/index.css for the
+ * `border-radius: 0 !important` override.
+ *
+ * Variables follow the shadcn channel-triplet convention so Tailwind utilities
+ * (bg-background, text-fg, border-border, /<alpha>) work transparently.
+ *
+ * Token rename (clarification #1):
+ *   tertiary text     — was --muted-foreground, now --muted
+ *   failure / danger  — was --destructive,       now --danger
+ * The legacy shadcn `--muted` (subtle surface) alias is intentionally dropped;
+ * components that previously used `bg-muted` use `bg-panel-alt` instead.
+ *
+ * Dark mode is opted in by adding `.theme-dark` to the same element that has
+ * `data-theme="system"`. The variable bundle is replaced; components don't
+ * need to fork.
+ */
+
+[data-theme="system"] {
+  /* Surfaces ----------------------------------------------------------- */
+  --background: 43 29% 95%;          /* #f6f4ef — page bg */
+  --panel: 48 38% 97%;               /* #fbfaf6 — card / table surface */
+  --panel-alt: 44 27% 92%;           /* #f0ede5 — table headers, inset rows */
+  --sidebar: 36 11% 9%;              /* #1a1815 — left rail + dark insets */
+
+  /* Text --------------------------------------------------------------- */
+  --foreground: 36 11% 9%;           /* #1a1815 — primary text */
+  --fg-soft: 35 12% 20%;             /* #3a352e — secondary text */
+  --muted: 34 9% 44%;                /* #7a7165 — tertiary / metadata */
+
+  /* Borders ------------------------------------------------------------ */
+  --border: 42 25% 82%;              /* #dcd5c5 — hairline, panel edges */
+  --border-soft: 44 32% 88%;         /* #ebe6d8 — row dividers */
+
+  /* Accent (single, warm) --------------------------------------------- */
+  --accent: 22 75% 41%;              /* #b8531a */
+  --accent-foreground: 48 38% 97%;   /* #fbfaf6 */
+
+  /* Status ------------------------------------------------------------- */
+  --success: 106 23% 33%;            /* #4a6741 — published / active / MFA on */
+  --warn: 38 74% 40%;                /* #b07a1a — drafts / capacity / no-MFA */
+  --danger: 9 71% 38%;               /* #a8311c — destructive / failures */
+  --danger-foreground: 48 38% 97%;
+
+  /* shadcn-compat aliases --------------------------------------------- */
+  /* These mirror Editorial tokens so existing Tailwind utilities and
+     shadcn components keep working without per-component edits. */
+  --primary: 36 11% 9%;              /* primary action ink — same as fg */
+  --primary-foreground: 48 38% 97%;
+  --secondary: 44 27% 92%;           /* same as panel-alt */
+  --secondary-foreground: 36 11% 9%;
+  --card: 48 38% 97%;                /* same as panel */
+  --card-foreground: 36 11% 9%;
+  --popover: 48 38% 97%;
+  --popover-foreground: 36 11% 9%;
+  --input: 42 25% 82%;               /* same as border */
+  --ring: 22 75% 41%;                /* accent for focus ring */
+
+  --radius: 0;
+
+  /* Typography (clarification #2) ------------------------------------- */
+  /* Inter Tight (400/500/600/700) and JetBrains Mono (400/500/600) loaded
+     via index.html <link> tags from Google Fonts. system-ui kept as fallback. */
+  --font-heading: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Dark mode (clarification #1) — exact hex values from Claude Design.
+   Toggle .theme-dark on the same element as data-theme="system". */
+[data-theme="system"].theme-dark,
+[data-theme="system"] .theme-dark {
+  --background: 40 12% 8%;           /* #16140f */
+  --panel: 38 12% 11%;               /* #201d18 */
+  --panel-alt: 40 12% 10%;           /* #1c1a16 */
+  --sidebar: 36 20% 5%;              /* #0f0d0a */
+
+  --foreground: 41 49% 92%;          /* #f5efe2 */
+  --fg-soft: 45 25% 78%;             /* #d4cdb8 */
+  --muted: 39 10% 49%;               /* #8a8170 */
+
+  --border: 38 14% 16%;              /* #2e2a23 */
+  --border-soft: 38 13% 13%;         /* #24211c */
+
+  --accent: 22 75% 41%;              /* unchanged */
+  --accent-foreground: 41 49% 92%;
+
+  --success: 102 19% 46%;            /* #6b8a5e */
+  --warn: 36 54% 54%;                /* #c99548 */
+  --danger: 9 56% 52%;               /* #c95541 */
+  --danger-foreground: 41 49% 92%;
+
+  --primary: 41 49% 92%;
+  --primary-foreground: 36 11% 9%;
+  --secondary: 40 12% 10%;           /* same as panel-alt */
+  --secondary-foreground: 41 49% 92%;
+  --card: 38 12% 11%;                /* same as panel */
+  --card-foreground: 41 49% 92%;
+  --popover: 38 12% 11%;
+  --popover-foreground: 41 49% 92%;
+  --input: 38 14% 16%;               /* same as border */
+  --ring: 22 75% 41%;
+}

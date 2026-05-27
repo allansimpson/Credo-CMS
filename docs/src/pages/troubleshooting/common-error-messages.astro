@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Common error messages">
+  <h1>Common error messages</h1>
+
+  <p>If you see one of these, the root cause is usually:</p>
+  <h2>"Optimistic concurrency exception"</h2>
+  <p>Two admins edited the same Site Settings row simultaneously. Reload and re-apply your changes.</p>
+  <h2>"Slug already in use"</h2>
+  <p>Another Page / News / Blog post has the same slug. Slugs are unique per entity type. Pick a different one.</p>
+  <h2>"Image upload failed: blob storage unreachable"</h2>
+  <p>App Service's managed identity may have lost access to the storage account. Check the role assignments in the storage account's IAM panel.</p>
+  <h2>"Connect card rejected: time-to-submit too short"</h2>
+  <p>The form was submitted in under 5 seconds. Anti-bot rule. Real users see this only when JavaScript pre-fills the form unusually fast.</p>
+</BaseLayout>

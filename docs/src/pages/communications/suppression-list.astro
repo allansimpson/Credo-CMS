@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Suppression list">
+  <h1>Suppression list</h1>
+
+  <p>The suppression list is a record of email addresses that should NOT receive non-transactional mail. Hard bounces, spam reports, and one-click unsubscribes auto-write here.</p>
+  <h2>Transactional bypass</h2>
+  <p>Account-related mail (invitation, password reset, registration confirmation) BYPASSES the suppression list per CAN-SPAM transactional exemption.</p>
+  <h2>Manual add / remove</h2>
+  <p>Site Settings → Email → Suppression list. Manual remove warns about CAN-SPAM compliance — only remove an address when the user has explicitly asked to re-subscribe.</p>
+</BaseLayout>

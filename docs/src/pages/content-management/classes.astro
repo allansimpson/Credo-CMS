@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Classes">
+  <h1>Classes</h1>
+
+  <p>Classes use a two-tier model: <strong>ClassSlot</strong> (the curriculum) and <strong>ClassOffering</strong> (a specific session run).</p>
+  <h2>Class Slot</h2>
+  <p>Defines the topic, audience, age group, length, materials. Reusable across multiple offerings.</p>
+  <h2>Class Offering</h2>
+  <p>An instance of a slot run on specific dates with a specific teacher/leader. Members see active offerings + recent past offerings (configurable lookback).</p>
+  <h2>Visibility</h2>
+  <p>Classes are public by default. Slot/offering visibility can be restricted to members only.</p>
+</BaseLayout>

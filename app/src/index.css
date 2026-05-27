@@ -1,0 +1,59 @@
+@import "./themes/church-theme.css";
+@import "./themes/system-theme.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  /*
+   * Squared-corners design choice: zero out border-radius globally so every
+   * element renders with sharp corners. Wins over Tailwind utilities (rounded-md,
+   * rounded-full, rounded-2xl, etc.) and component-level overrides because of
+   * the universal selector + !important.
+   */
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/*
+ * Touch-target compliance: ensure interactive elements are at least 44x44px
+ * on touch devices. (Phase 1 standing rule.)
+ */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

@@ -1,0 +1,5 @@
+# Astro documentation site placeholder
+
+Phase 6 builds the Astro documentation site here. The directory exists in Phase 1
+purely as a structural placeholder so that downstream tooling (CI, deployment) does
+not need to handle a missing path.

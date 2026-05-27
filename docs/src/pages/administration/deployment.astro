@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Deployment">
+  <h1>Deployment</h1>
+
+  <p>Production deploy is via the Bicep template + GitHub Actions workflow.</p>
+  <h2>Resources provisioned</h2>
+  <p>Azure App Service (Linux, B1+ recommended), Azure SQL Database (S0+ recommended), Azure Blob Storage (Hot tier), Application Insights, Key Vault (recommended for secrets).</p>
+  <h2>First deploy steps</h2>
+  <ol>
+    <li>Run the Bicep template against an empty resource group.</li>
+    <li>Configure App Service application settings: connection strings, Identity:DefaultAdminPassword, SendGrid keys (if used), YouTube API key (optional), Cloudflare Turnstile keys (optional).</li>
+    <li>Trigger the GitHub Actions deploy workflow (or push to main).</li>
+    <li>Migrations + seeds run on first boot (Program.cs detects pending migrations and applies them).</li>
+    <li>Sign in as the seeded admin, change password, configure Site Settings.</li>
+  </ol>
+  <p>See the project README for the detailed checklist.</p>
+</BaseLayout>

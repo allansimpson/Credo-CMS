@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="User management">
+  <h1>User management</h1>
+
+  <p>Create, edit, lock, unlock, hard-delete user accounts at <code>/admin/users</code>.</p>
+  <h2>Lifecycle states</h2>
+  <p>Active / Inactive (soft-disabled) / Locked (failed-login lockout). Inactive users cannot sign in; their content remains visible.</p>
+  <h2>Hard delete</h2>
+  <p>Confirms via display name typed in the modal. Cascades: profile photo deleted from Blob; broadcast-recipient rows have UserId nulled (snapshot fields preserved for audit); FK references in audit log retained.</p>
+  <h2>Forgotten admin password</h2>
+  <p>The default seeded admin is excluded from password reset. Recovery requires direct database access (run a SQL UPDATE against the AspNetUsers row to set a new password hash + security stamp). Document the SQL in your operator runbook.</p>
+</BaseLayout>

@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Cloudflare Turnstile">
+  <h1>Cloudflare Turnstile</h1>
+
+  <p>Cloudflare's privacy-respecting CAPTCHA alternative. Used on the public connect-card form.</p>
+  <h2>Setup</h2>
+  <p>Site Settings → Privacy &amp; Security → Cloudflare Turnstile. Set <em>CloudflareTurnstileSiteKey</em> (public; rendered in the form) and <em>CloudflareTurnstileSecretKey</em> (server-side; verifies tokens).</p>
+  <h2>When unconfigured</h2>
+  <p>Without keys, the connect-card form skips Turnstile (other anti-bot measures still apply: honeypot, time-to-submit, rate limit).</p>
+</BaseLayout>

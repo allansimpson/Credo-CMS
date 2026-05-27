@@ -1,0 +1,6 @@
+@CredoCms.Api_HostAddress = http://localhost:5128
+
+GET {{CredoCms.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

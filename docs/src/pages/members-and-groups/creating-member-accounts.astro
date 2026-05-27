@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Creating member accounts">
+  <h1>Creating member accounts</h1>
+
+  <p>Member accounts are created by Administrators via <code>/admin/users</code>. Two creation modes:</p>
+  <h2>Send invitation</h2>
+  <p>The invitation flow emails the new member a link to set their own password. They click the link, choose a password, and the account activates. Recommended for normal onboarding.</p>
+  <h2>Direct create with password</h2>
+  <p>For bulk imports or when email isn't available, the admin enters a temporary password. The member must change it on first login (RequirePasswordChangeOnFirstLogin).</p>
+  <h2>Roles</h2>
+  <p>Member is the default. Editor adds the admin shell. Administrator adds Site Settings + user management. See <a href="/docs/administration/roles-and-permissions">Roles &amp; permissions</a>.</p>
+</BaseLayout>

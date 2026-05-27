@@ -1,0 +1,98 @@
+---
+const sections = [
+  { title: "Getting Started", base: "/docs/getting-started", links: [
+    { href: "/docs/getting-started/", label: "Overview" },
+    { href: "/docs/getting-started/first-login", label: "First login" },
+    { href: "/docs/getting-started/site-settings", label: "Site Settings tour" },
+    { href: "/docs/getting-started/creating-your-first-content", label: "Creating your first content" },
+  ]},
+  { title: "Content Management", base: "/docs/content-management", links: [
+    { href: "/docs/content-management/", label: "Overview" },
+    { href: "/docs/content-management/pages", label: "Pages" },
+    { href: "/docs/content-management/news", label: "News" },
+    { href: "/docs/content-management/blog", label: "Blog" },
+    { href: "/docs/content-management/sermons", label: "Sermons" },
+    { href: "/docs/content-management/sermon-series", label: "Sermon Series" },
+    { href: "/docs/content-management/events", label: "Events" },
+    { href: "/docs/content-management/classes", label: "Classes" },
+    { href: "/docs/content-management/documents", label: "Documents" },
+    { href: "/docs/content-management/leaders", label: "Leaders" },
+    { href: "/docs/content-management/service-times", label: "Service Times" },
+  ]},
+  { title: "Members & Groups", base: "/docs/members-and-groups", links: [
+    { href: "/docs/members-and-groups/", label: "Overview" },
+    { href: "/docs/members-and-groups/creating-member-accounts", label: "Creating member accounts" },
+    { href: "/docs/members-and-groups/members-directory", label: "Members directory" },
+    { href: "/docs/members-and-groups/groups", label: "Groups" },
+    { href: "/docs/members-and-groups/prayer-requests", label: "Prayer Requests" },
+    { href: "/docs/members-and-groups/connect-card", label: "Connect Card" },
+  ]},
+  { title: "Communications", base: "/docs/communications", links: [
+    { href: "/docs/communications/", label: "Overview" },
+    { href: "/docs/communications/email-providers", label: "Email providers" },
+    { href: "/docs/communications/email-templates", label: "Email templates" },
+    { href: "/docs/communications/broadcasts", label: "Broadcasts" },
+    { href: "/docs/communications/email-on-publish", label: "Email-on-publish" },
+    { href: "/docs/communications/scheduled-publishing", label: "Scheduled publishing" },
+    { href: "/docs/communications/suppression-list", label: "Suppression list" },
+    { href: "/docs/communications/volunteer-signups", label: "Volunteer signups" },
+  ]},
+  { title: "Integrations", base: "/docs/integrations", links: [
+    { href: "/docs/integrations/", label: "Overview" },
+    { href: "/docs/integrations/youtube-sync", label: "YouTube sync" },
+    { href: "/docs/integrations/facebook-login", label: "Facebook login" },
+    { href: "/docs/integrations/cloudflare-turnstile", label: "Cloudflare Turnstile" },
+    { href: "/docs/integrations/tithely-giving", label: "Tithe.ly giving" },
+    { href: "/docs/integrations/google-analytics", label: "Google Analytics" },
+  ]},
+  { title: "Administration", base: "/docs/administration", links: [
+    { href: "/docs/administration/", label: "Overview" },
+    { href: "/docs/administration/user-management", label: "User management" },
+    { href: "/docs/administration/roles-and-permissions", label: "Roles & permissions" },
+    { href: "/docs/administration/audit-log", label: "Audit log" },
+    { href: "/docs/administration/version-history-and-restore", label: "Version history & restore" },
+    { href: "/docs/administration/site-settings-reference", label: "Site Settings reference" },
+    { href: "/docs/administration/deployment", label: "Deployment" },
+    { href: "/docs/administration/backups-and-recovery", label: "Backups & recovery" },
+  ]},
+  { title: "Troubleshooting", base: "/docs/troubleshooting", links: [
+    { href: "/docs/troubleshooting/", label: "Overview" },
+    { href: "/docs/troubleshooting/email-not-sending", label: "Email not sending" },
+    { href: "/docs/troubleshooting/youtube-sync-issues", label: "YouTube sync issues" },
+    { href: "/docs/troubleshooting/common-error-messages", label: "Common error messages" },
+  ]},
+];
+
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/docs";
+---
+<aside class="lg:sticky lg:top-20 self-start">
+  <nav aria-label="Documentation navigation" class="space-y-6 text-sm">
+    {sections.map((section) => (
+      <div>
+        <h3 class="text-xs uppercase tracking-wider text-muted font-semibold mb-2">
+          {section.title}
+        </h3>
+        <ul class="space-y-1">
+          {section.links.map((link) => {
+            const isCurrent = currentPath === link.href.replace(/\/$/, "");
+            return (
+              <li>
+                <a
+                  href={link.href}
+                  class={
+                    isCurrent
+                      ? "block px-2 py-1 bg-bg-alt font-medium border-l-2 border-primary"
+                      : "block px-2 py-1 hover:bg-bg-alt border-l-2 border-transparent"
+                  }
+                  aria-current={isCurrent ? "page" : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    ))}
+  </nav>
+</aside>

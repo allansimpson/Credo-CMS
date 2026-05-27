@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Documents">
+  <h1>Documents</h1>
+
+  <p>Documents are file uploads (PDFs, Word, etc.) with title, description, category, and optional members-only flag.</p>
+  <h2>Categories</h2>
+  <p>Configured via Site Settings → Content → DocumentCategoriesJson. Assign one category per document.</p>
+  <h2>Storage</h2>
+  <p>Files store in Azure Blob Storage. The container is private; downloads happen via signed URLs the API issues per request.</p>
+</BaseLayout>

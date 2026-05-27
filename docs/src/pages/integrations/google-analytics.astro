@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Google Analytics">
+  <h1>Google Analytics</h1>
+
+  <p>Phase 6 adds GA4 with a cookie consent banner.</p>
+  <h2>Setup</h2>
+  <p>Site Settings → Privacy &amp; Security → AnalyticsProvider = GA4. Set <em>Ga4MeasurementId</em> (format <code>G-XXXXXXXXXX</code>) from the GA4 console.</p>
+  <h2>Cookie banner</h2>
+  <p>When AnalyticsProvider=Ga4, a cookie consent banner appears on first visit. Banner position (BottomRight or BottomFull) is configurable. Until the visitor accepts, gtag.js does not load and no tracking occurs.</p>
+  <h2>Cookie policy link</h2>
+  <p>Set <em>CookiePolicyPageId</em> to a Page that documents your cookie usage; the banner links to it. The seeded Privacy Policy mentions cookies; copy + adapt for your jurisdiction.</p>
+</BaseLayout>

@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Prayer requests">
+  <h1>Prayer requests</h1>
+
+  <p>Prayer requests are member-submitted with optional anonymity, profanity filtering, and live updates via SignalR.</p>
+  <h2>Anonymous submission</h2>
+  <p>Members can mark requests <em>Anonymous</em>; the submitter id is hidden from non-privileged viewers. Admins / Editors / the submitter themselves still see who posted.</p>
+  <h2>Profanity filter</h2>
+  <p>Phase 4 ships an in-process check via the <code>Profanity.Detector</code> NuGet package. Custom wordlist + allowlist configurable in Site Settings → Members &amp; Community.</p>
+  <h2>Live updates</h2>
+  <p>SignalR pushes Created / Updated / StatusChanged / PrayedForCountChanged / UpdateAdded events to the <em>members</em> SignalR group so member views update without refresh.</p>
+</BaseLayout>

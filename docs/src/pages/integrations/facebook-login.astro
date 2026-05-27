@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Facebook login">
+  <h1>Facebook login</h1>
+
+  <p>Lets existing members link a Facebook account and sign in with it. Phase 4 introduced this.</p>
+  <h2>Setup</h2>
+  <p>Site Settings → Integrations → Facebook OAuth. Set <em>FacebookOAuthAppId</em> + <em>FacebookOAuthAppSecret</em>. Enable <em>FacebookLoginEnabled</em>.</p>
+  <h2>No account creation</h2>
+  <p>The flow is link-only: an existing member links their Facebook account from Profile → Account. Subsequent signins via Facebook resolve to the linked account. Unknown Facebook profiles are rejected (no auto-create).</p>
+</BaseLayout>

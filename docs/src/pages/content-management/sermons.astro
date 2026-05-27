@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Sermons">
+  <h1>Sermons</h1>
+
+  <p>Sermons are videos (YouTube-hosted) with optional transcript, Scripture references, and series association.</p>
+  <h2>YouTube auto-sync</h2>
+  <p>Configure a channel via Site Settings → Integrations → YouTube. The auto-sync background service polls the channel and creates new Sermon entries automatically. See <a href="/docs/integrations/youtube-sync">YouTube sync</a>.</p>
+  <h2>Manual entry</h2>
+  <p>For sermons not hosted on the configured channel, click "New sermon" in <code>/admin/sermons</code> and paste the YouTube video id. Title + description fetched automatically.</p>
+  <h2>Scripture references</h2>
+  <p>Each sermon can list one-or-more structured references (Book / Chapter / Verse). Browse-by-Book pages (<code>/sermons/by-book/genesis</code>) are auto-generated from these references.</p>
+  <h2>Transcripts</h2>
+  <p>Paste a transcript into the editor; SQL Server FTS indexes it so the public site-wide search finds sermons by phrase.</p>
+</BaseLayout>

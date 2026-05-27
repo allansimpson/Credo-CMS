@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Steps from "../../components/Steps.astro";
+import Step from "../../components/Step.astro";
+import Callout from "../../components/Callout.astro";
+---
+<BaseLayout title="Creating your first content">
+  <h1>Creating your first content</h1>
+  <p>Three quick exercises that exercise the content-management surface end to end.</p>
+  <h2>Exercise 1 — Publish a Page</h2>
+  <Steps>
+    <Step title="Open Pages" number={1}>Navigate to <code>/admin/pages</code> and click <strong>New page</strong>.</Step>
+    <Step title="Fill in basics" number={2}>Title, slug, hero image (optional), body content via the rich-text editor.</Step>
+    <Step title="Save as draft" number={3}>Saves create a versioned snapshot. You can preview from the editor.</Step>
+    <Step title="Publish" number={4}>Toggle <em>Published</em> and save. The page is now visible at <code>/{slug}</code>.</Step>
+  </Steps>
+  <h2>Exercise 2 — Post News</h2>
+  <p>Same shape as Pages but defaults to members-only. See <a href="/docs/content-management/news">News</a> for the email-on-publish toggle.</p>
+  <h2>Exercise 3 — Add a Sermon</h2>
+  <p>Sermons can auto-import from a configured YouTube channel (see <a href="/docs/integrations/youtube-sync">YouTube sync</a>) or be added manually. Each sermon supports structured Scripture references, transcript full-text search, and series cross-linking.</p>
+  <Callout type="tip">Sample content is seeded on first deploy so you have something to look at before creating your own.</Callout>
+</BaseLayout>

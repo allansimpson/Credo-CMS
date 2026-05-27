@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Events">
+  <h1>Events</h1>
+
+  <p>Events support single or recurring schedules, optional registration, and per-occurrence overrides.</p>
+  <h2>Recurrence</h2>
+  <p>The recurrence builder generates an iCal RRULE behind the scenes. Daily / weekly / monthly options with end-date or count termination.</p>
+  <h2>Registration</h2>
+  <p>Toggle <em>Requires registration</em> to add a registration form. Custom fields (text, dropdowns, etc.) are configurable per event. Capacity + waitlist supported.</p>
+  <h2>Calendar feeds</h2>
+  <p>Public events are exposed via <code>/events.ics</code>; members get a personalized feed at <code>/profile/calendar/feed.ics</code> via a signed token.</p>
+  <h2>Per-occurrence overrides</h2>
+  <p>For recurring events, individual occurrences can be canceled or edited (different time, different location) without affecting the rest of the series.</p>
+</BaseLayout>

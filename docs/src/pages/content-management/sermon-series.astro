@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Sermon Series">
+  <h1>Sermon Series</h1>
+
+  <p>A sermon series groups multiple sermons under a shared arc. Each series has a title, description, optional date range, optional banner image, and a list of member sermons.</p>
+  <h2>Authoring order</h2>
+  <p>Create the series first, then add sermons to it (either by editing each sermon and selecting the series, or by dragging in the series detail view).</p>
+  <h2>Public surface</h2>
+  <p>Series get their own detail page at <code>/sermons/series/{slug}</code> with all member sermons listed in order.</p>
+</BaseLayout>

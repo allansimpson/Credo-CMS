@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Groups">
+  <h1>Groups</h1>
+
+  <p>Groups support visibility (Public / MembersOnly / Hidden), joinability (Open / RequestToJoin / InviteOnly), and roster visibility settings.</p>
+  <h2>Join flow</h2>
+  <p>RequestToJoin groups send a SignalR notification + email digest to group leaders + Administrators. Approve or decline from the group detail page.</p>
+  <h2>Group leaders</h2>
+  <p>A member promoted to <em>Group Leader</em> gains approve/decline rights on join requests + roster management for that group only. Promoting requires Administrator (Editors and other Group Leaders cannot promote).</p>
+</BaseLayout>

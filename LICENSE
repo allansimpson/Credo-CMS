@@ -1,0 +1,8 @@
+TODO: Choose a license. Options:
+- All Rights Reserved (proprietary, default for closed-source)
+- MIT (permissive open source)
+- AGPLv3 (copyleft; useful if commercializing as SaaS)
+
+Until decided, this codebase is treated as proprietary. Project owner: pick a
+license before any external distribution or open-sourcing. The IMPLEMENTATION_NOTES
+file flags this decision as open.

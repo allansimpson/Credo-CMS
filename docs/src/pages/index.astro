@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Callout from "../components/Callout.astro";
+---
+<BaseLayout title="Credo CMS Docs" description="Operator documentation for Credo CMS.">
+  <h1>Welcome to Credo CMS Documentation</h1>
+  <p>
+    These docs are written for the people who run a Credo CMS site day-to-day:
+    administrators, editors, and the volunteers they delegate work to. They
+    cover content management, member care, communications, integrations,
+    administration, and troubleshooting.
+  </p>
+
+  <Callout type="tip" title="First time here?">
+    Start with <a href="/docs/getting-started/">Getting Started</a>. The
+    walkthroughs land you on a configured site with sample content in under
+    fifteen minutes.
+  </Callout>
+
+  <h2>Where to find things</h2>
+  <ul>
+    <li><strong>Getting Started</strong> — first login, Site Settings tour, creating your first content.</li>
+    <li><strong>Content Management</strong> — Pages, News, Blog, Sermons, Events, Classes, Documents, Leaders, Service Times.</li>
+    <li><strong>Members &amp; Groups</strong> — member accounts, the directory, group management, prayer requests, connect cards.</li>
+    <li><strong>Communications</strong> — email providers, templates, broadcasts, automated email-on-publish, scheduled publishing.</li>
+    <li><strong>Integrations</strong> — YouTube auto-sync, Facebook login, Cloudflare Turnstile, Tithe.ly giving, Google Analytics.</li>
+    <li><strong>Administration</strong> — users + roles, audit log, version history, deployment, backups.</li>
+    <li><strong>Troubleshooting</strong> — common scenarios with actionable fixes.</li>
+  </ul>
+
+  <h2>Search</h2>
+  <p>
+    The search box in the top right uses Pagefind — a static, build-time
+    search index that runs entirely client-side. No server roundtrip; the
+    docs site loads the index lazily after the first keystroke.
+  </p>
+
+  <Callout type="info" title="Permissions">
+    Documentation is gated behind the same authentication as the admin
+    shell. Only Editors and Administrators can read these pages. Member
+    and anonymous visitors get a generic 404 — the docs subtree's
+    existence isn't disclosed.
+  </Callout>
+</BaseLayout>

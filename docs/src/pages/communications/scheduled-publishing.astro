@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Scheduled publishing">
+  <h1>Scheduled publishing</h1>
+
+  <p>Set <em>Scheduled publish at</em> on a draft News or Blog post. The scheduled-publishing background service ticks every 60 seconds and flips due items to Published, then triggers email-on-publish if applicable.</p>
+  <h2>Cancel a schedule</h2>
+  <p>Edit the post, clear the date, save. The schedule is canceled.</p>
+  <h2>Visibility</h2>
+  <p>Status badge in the admin list shows "Scheduled for {date}" so you know what's queued.</p>
+</BaseLayout>

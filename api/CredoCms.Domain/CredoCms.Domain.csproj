@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>CredoCms.Domain</RootNamespace>
+    <AssemblyName>CredoCms.Domain</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Domain entities derive from IdentityUser<Guid>/IdentityRole<Guid>. The Stores
+         package provides those base types without dragging in EF Core. -->
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="10.0.0" />
+  </ItemGroup>
+
+</Project>

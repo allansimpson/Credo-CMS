@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Blog">
+  <h1>Blog</h1>
+
+  <p>Blog posts are author-bylined long-form content with categories, optional sermon-companion links, and read-time estimates.</p>
+  <h2>Categories</h2>
+  <p>Categories are admin-configured strings (Site Settings → Members &amp; Community → BlogCategoriesJson). Assign one per post.</p>
+  <h2>Pin</h2>
+  <p>Pin a post to keep it at the top of the public list regardless of publish date. Useful for "Welcome" / about-the-blog posts.</p>
+  <h2>Sermon companion links</h2>
+  <p>RelatedSermonId on a post creates a "Companion to {sermon title}" link both ways — the post detail page links to the sermon, and the sermon detail page surfaces companion posts.</p>
+  <h2>Scheduled publishing + email-on-publish</h2>
+  <p>Same as News, defaults to email-off. See <a href="/docs/communications/email-on-publish">Email-on-publish</a>.</p>
+</BaseLayout>

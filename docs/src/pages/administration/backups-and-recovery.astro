@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Backups & recovery">
+  <h1>Backups & recovery</h1>
+
+  <p>Azure SQL Database has automatic short-term backups (7-35 day retention configurable). Long-term retention requires explicit policy.</p>
+  <h2>Manual export</h2>
+  <p>From the Azure portal: SQL Database → Export → BACPAC to Blob Storage. Recommended monthly for off-site copies.</p>
+  <h2>Blob storage backup</h2>
+  <p>Blob storage has built-in soft-delete (default 7 days). For images + documents, this covers accidental deletion. For full backups, use Azure Backup or AzCopy snapshots.</p>
+  <h2>Restore</h2>
+  <p>Point-in-time restore from the Azure portal creates a new database; redirect the app's connection string to the restored DB. Document this procedure in your operator runbook with exact tier names + connection-string locations.</p>
+</BaseLayout>

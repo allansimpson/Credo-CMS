@@ -1,0 +1,72 @@
+---
+import "../styles/global.css";
+import SearchBar from "../components/SearchBar.astro";
+import Sidebar from "../components/Sidebar.astro";
+
+export interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+const fullTitle = title === "Credo CMS Docs" ? title : `${title} — Credo CMS Docs`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="stylesheet" href="/docs/pagefind/pagefind-ui.css" />
+  </head>
+  <body class="min-h-screen">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-2"
+    >
+      Skip to main content
+    </a>
+
+    <header class="border-b border-border bg-bg sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+        <a href="/docs/" class="font-semibold">Credo CMS Docs</a>
+        <div class="flex items-center gap-4">
+          <SearchBar />
+          <a href="/admin" class="text-sm text-muted hover:text-fg">Back to admin</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-[16rem_1fr] gap-8">
+      <Sidebar />
+      <main id="main-content" class="min-w-0">
+        <article class="prose-none">
+          <slot />
+        </article>
+      </main>
+    </div>
+
+    <footer class="border-t border-border mt-16 py-6 text-sm text-muted">
+      <div class="max-w-7xl mx-auto px-4">
+        Credo CMS — internal operator documentation. Editor + Administrator only.
+      </div>
+    </footer>
+
+    <script>
+      // Pagefind UI — loaded client-side from the build output.
+      const init = async () => {
+        const slot = document.getElementById("pagefind-search");
+        if (!slot) return;
+        // @ts-ignore — declared at runtime by the Pagefind UI bundle.
+        const { PagefindUI } = await import("/docs/pagefind/pagefind-ui.js");
+        new PagefindUI({ element: slot, showSubResults: true });
+      };
+      init().catch(() => {
+        const slot = document.getElementById("pagefind-search");
+        if (slot) slot.textContent = "Search index not built yet. Run `pagefind --site dist` after `astro build`.";
+      });
+    </script>
+  </body>
+</html>

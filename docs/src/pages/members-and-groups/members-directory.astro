@@ -1,0 +1,12 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Members directory">
+  <h1>Members directory</h1>
+
+  <p>The directory at <code>/members</code> shows opt-in members only. Each member controls what to share via Profile → Directory tab.</p>
+  <h2>Opt-in fields</h2>
+  <p>Members independently toggle: include-me-at-all, show email, show phone, show address, show photo. Opt-out is the default for everything.</p>
+  <h2>Privacy enforcement</h2>
+  <p>The directory API only returns fields the member opted in to share. Even an authenticated peer cannot enumerate non-listed members.</p>
+</BaseLayout>

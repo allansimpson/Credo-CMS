@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Email-on-publish">
+  <h1>Email-on-publish</h1>
+
+  <p>News and Blog posts can auto-create a broadcast on publish. Toggle <em>Send email on publish</em> in the editor before clicking Publish.</p>
+  <h2>News default</h2>
+  <p>ON — News is time-sensitive.</p>
+  <h2>Blog default</h2>
+  <p>OFF — Blog is less urgent; opt in per post.</p>
+  <h2>Target</h2>
+  <p>Site Settings → Email → News email target / Blog email target. Choose All Members or specific groups.</p>
+  <h2>Once-and-clear</h2>
+  <p>The <em>Send email on publish</em> flag clears after the broadcast is created so re-publishing the same item does not re-fire unless you explicitly re-enable it.</p>
+</BaseLayout>
