@@ -232,7 +232,13 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             pages.Count, news.Count, leaders.Count, documents.Count, series.Count, sermons.Count, events.Count);
     }
 
-    public async Task<SearchResults> SearchAsync(string query, bool includeMembersOnly, int page, int pageSize, CancellationToken ct = default)
+    public Task<SearchResults> SearchAsync(string query, bool includeMembersOnly, int page, int pageSize, CancellationToken ct = default)
+        => SearchCoreAsync(query, includeMembersOnly, includeUnpublished: false, page, pageSize, ct);
+
+    public Task<SearchResults> SearchAllAsync(string query, int page, int pageSize, CancellationToken ct = default)
+        => SearchCoreAsync(query, includeMembersOnly: true, includeUnpublished: true, page, pageSize, ct);
+
+    private async Task<SearchResults> SearchCoreAsync(string query, bool includeMembersOnly, bool includeUnpublished, int page, int pageSize, CancellationToken ct)
     {
         await using var scope = _scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -245,21 +251,39 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
 
         var trimmed = query.Trim();
 
-        IQueryable<SearchIndexEntry> q = db.SearchIndex.Where(x => x.IsPublished);
-        if (!includeMembersOnly) q = q.Where(x => !x.IsMembersOnly);
+        IQueryable<SearchIndexEntry> Filtered()
+        {
+            IQueryable<SearchIndexEntry> q = db.SearchIndex;
+            if (!includeUnpublished) q = q.Where(x => x.IsPublished);
+            if (!includeMembersOnly) q = q.Where(x => !x.IsMembersOnly);
+            return q;
+        }
 
         var fts = await IsFtsAvailableAsync(db, ct).ConfigureAwait(false);
+        int total = 0;
+        List<SearchIndexEntry> rows = new();
 
         if (fts)
         {
             try
             {
                 var ftsTerms = ToFtsTerms(trimmed);
-                q = q.Where(x => EF.Functions.Contains(x.Title, ftsTerms) || EF.Functions.Contains(x.BodyText, ftsTerms));
+                var qFts = Filtered().Where(x => EF.Functions.Contains(x.Title, ftsTerms) || EF.Functions.Contains(x.BodyText, ftsTerms));
+                total = await qFts.CountAsync(ct).ConfigureAwait(false);
+                rows = await qFts
+                    .OrderByDescending(x => x.IndexedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync(ct).ConfigureAwait(false);
             }
-            catch
+            catch (Exception ex)
             {
-                // Fall back if FTS query throws (e.g. invalid term shape).
+                // CONTAINS() throws at execution time when there's no full-text
+                // catalog on SearchIndex even though FTS is installed on the
+                // server. Disable FTS for the lifetime of the process and fall
+                // through to the LIKE path.
+                _logger.LogWarning(ex, "FTS query failed at execution; disabling FTS and falling back to LIKE.");
+                _ftsAvailable = false;
                 fts = false;
             }
         }
@@ -268,20 +292,20 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
         {
             // LIKE-based fallback. Split on whitespace; require all terms to
             // appear in either Title or BodyText.
+            var qLike = Filtered();
             var terms = trimmed.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var term in terms)
             {
                 var pattern = $"%{term}%";
-                q = q.Where(x => EF.Functions.Like(x.Title, pattern) || EF.Functions.Like(x.BodyText, pattern));
+                qLike = qLike.Where(x => EF.Functions.Like(x.Title, pattern) || EF.Functions.Like(x.BodyText, pattern));
             }
+            total = await qLike.CountAsync(ct).ConfigureAwait(false);
+            rows = await qLike
+                .OrderByDescending(x => x.IndexedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(ct).ConfigureAwait(false);
         }
-
-        var total = await q.CountAsync(ct).ConfigureAwait(false);
-        var rows = await q
-            .OrderByDescending(x => x.IndexedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(ct).ConfigureAwait(false);
 
         var items = rows.Select(r => new SearchResultItem(
             r.EntityType, r.EntityId, r.Title,
@@ -307,11 +331,28 @@ public sealed class SearchIndexer : ISearchIndexer, IDisposable
             try
             {
                 // SERVERPROPERTY('IsFullTextInstalled') = 1 in environments
-                // where the FTS service is available.
-                var installed = await db.Database
-                    .SqlQuery<int>($"SELECT CAST(SERVERPROPERTY('IsFullTextInstalled') AS int) AS Value")
-                    .FirstOrDefaultAsync(ct).ConfigureAwait(false);
-                _ftsAvailable = installed == 1;
+                // where the FTS service is available. ExecuteScalarAsync via
+                // the raw connection avoids EF's "FirstOrDefault without
+                // OrderBy" warning (the EF SqlQuery LINQ tree triggers it for
+                // single-scalar reads even though ordering is meaningless).
+                var conn = db.Database.GetDbConnection();
+                var openedHere = false;
+                if (conn.State != System.Data.ConnectionState.Open)
+                {
+                    await conn.OpenAsync(ct).ConfigureAwait(false);
+                    openedHere = true;
+                }
+                try
+                {
+                    await using var cmd = conn.CreateCommand();
+                    cmd.CommandText = "SELECT CAST(SERVERPROPERTY('IsFullTextInstalled') AS int)";
+                    var raw = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
+                    _ftsAvailable = raw is int v && v == 1;
+                }
+                finally
+                {
+                    if (openedHere) await conn.CloseAsync().ConfigureAwait(false);
+                }
                 _logger.LogInformation("FTS availability probe: {Available}", _ftsAvailable);
             }
             catch (Exception ex)

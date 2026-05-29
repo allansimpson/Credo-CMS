@@ -18,7 +18,12 @@ public interface INewsRepository
         DateTimeOffset nowUtc,
         int page,
         int pageSize,
+        string? category = null,
         CancellationToken ct = default);
+
+    /// <summary>Distinct category names currently used by non-deleted news
+    /// items. Powers usage-protection on Site Settings.</summary>
+    Task<List<string>> GetUsedCategoriesAsync(CancellationToken ct = default);
 
     Task AddAsync(NewsItem item, CancellationToken ct = default);
 

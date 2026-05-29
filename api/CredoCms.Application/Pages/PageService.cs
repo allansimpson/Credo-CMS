@@ -66,6 +66,16 @@ public sealed class PageService : IPageService
         return ToPublic(page);
     }
 
+    public async Task<PublicPageDto?> GetPreviewBySlugAsync(string slug, CancellationToken ct = default)
+    {
+        var page = await _repo.GetBySlugAsync(slug, ct).ConfigureAwait(false);
+        if (page is null || page.IsDeleted) return null;
+        // Preview prefers the unpublished draft if one exists; otherwise
+        // falls back to live content (so previewing a published page with no
+        // pending changes still works).
+        return page.HasUnpublishedDraft ? ToPublicFromDraft(page) : ToPublic(page);
+    }
+
     public Task<List<PublicPageDto>> ListPublicAsync(bool includeMembersOnly, CancellationToken ct = default)
         => _repo.ListPublicAsync(includeMembersOnly, ct);
 
@@ -92,6 +102,7 @@ public sealed class PageService : IPageService
             MetaDescription = request.MetaDescription,
             IsPublished = request.IsPublished,
             IsMembersOnly = request.IsMembersOnly,
+            Template = request.Template,
             CreatedAt = now,
             ModifiedAt = now,
             PublishedAt = request.IsPublished ? now : null,
@@ -107,6 +118,14 @@ public sealed class PageService : IPageService
         return new PageOperationResult(true, Array.Empty<string>(), ToDetail(page));
     }
 
+    /// <summary>
+    /// "Save draft" semantics. If the page is currently published, the edits
+    /// land on the Draft* columns and the live page is untouched. If the page
+    /// is a draft (never-published or previously unpublished), the edits land
+    /// directly on the live columns since there is no live version to protect.
+    /// Slug, IsPublished, and system-page rules apply identically in both
+    /// cases — slug is an identity field, not editorial content.
+    /// </summary>
     public async Task<PageOperationResult> UpdateAsync(Guid id, UpdatePageRequest request, CancellationToken ct = default)
     {
         var v = await _updateValidator.ValidateAsync(request, ct).ConfigureAwait(false);
@@ -127,32 +146,156 @@ public sealed class PageService : IPageService
                 new[] { $"A page with slug '{request.Slug}' already exists." }, null);
         }
 
-        var wasPublished = page.IsPublished;
-
+        var now = DateTimeOffset.UtcNow;
         page.Slug = request.Slug;
-        page.Title = request.Title;
-        page.BodyJson = request.BodyJson;
-        page.Excerpt = request.Excerpt ?? AutoExcerpt(request.BodyJson);
-        page.HeroImageUrl = request.HeroImageUrl;
-        page.HeroImageWebpUrl = request.HeroImageWebpUrl;
-        page.HeroImageAlt = request.HeroImageAlt;
-        page.MetaDescription = request.MetaDescription;
-        page.IsPublished = request.IsPublished;
-        page.IsMembersOnly = request.IsMembersOnly;
-        page.ModifiedAt = DateTimeOffset.UtcNow;
-        if (request.IsPublished && page.PublishedAt is null)
-            page.PublishedAt = page.ModifiedAt;
-        if (!request.IsPublished && wasPublished)
+        page.ModifiedAt = now;
+
+        if (page.IsPublished)
         {
-            // Unpublish — keep PublishedAt as the last-published date for audit clarity.
+            // Published page — stash edits into the Draft* columns. The live
+            // /{slug} continues to serve the unchanged published content.
+            page.HasUnpublishedDraft = true;
+            page.DraftTitle = request.Title;
+            page.DraftBodyJson = request.BodyJson;
+            page.DraftExcerpt = request.Excerpt ?? AutoExcerpt(request.BodyJson);
+            page.DraftHeroImageUrl = request.HeroImageUrl;
+            page.DraftHeroImageWebpUrl = request.HeroImageWebpUrl;
+            page.DraftHeroImageAlt = request.HeroImageAlt;
+            page.DraftMetaDescription = request.MetaDescription;
+            page.DraftIsMembersOnly = request.IsMembersOnly;
+            page.DraftTemplate = request.Template;
+            page.DraftSavedAt = now;
         }
+        else
+        {
+            // Unpublished page — write straight to the live columns. There's
+            // nothing live to protect, so the draft staging area would just
+            // be needless indirection.
+            page.Title = request.Title;
+            page.BodyJson = request.BodyJson;
+            page.Excerpt = request.Excerpt ?? AutoExcerpt(request.BodyJson);
+            page.HeroImageUrl = request.HeroImageUrl;
+            page.HeroImageWebpUrl = request.HeroImageWebpUrl;
+            page.HeroImageAlt = request.HeroImageAlt;
+            page.MetaDescription = request.MetaDescription;
+            page.IsMembersOnly = request.IsMembersOnly;
+            page.Template = request.Template;
+        }
+
+        await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
+        // Search index reflects published state only — reindex when live
+        // columns changed (i.e. unpublished page), otherwise skip.
+        if (!page.HasUnpublishedDraft)
+            await IndexAsync(page, ct).ConfigureAwait(false);
+        await InvalidateCacheAsync(ct).ConfigureAwait(false);
+        await _audit.WriteAsync(page.HasUnpublishedDraft ? "Page.DraftSaved" : "Page.Updated",
+            nameof(Page), page.Id.ToString(),
+            details: new { page.Slug, page.Title, page.IsPublished, page.HasUnpublishedDraft },
+            cancellationToken: ct).ConfigureAwait(false);
+
+        return new PageOperationResult(true, Array.Empty<string>(), ToDetail(page));
+    }
+
+    /// <summary>
+    /// Promotes the page to published. If a draft exists, copies the Draft*
+    /// values onto the live columns and clears the draft state. If no draft
+    /// exists, simply flips IsPublished to true (covers the "first publish"
+    /// case for a brand-new page).
+    /// </summary>
+    public async Task<PageOperationResult> PublishAsync(Guid id, CancellationToken ct = default)
+    {
+        var page = await _repo.GetByIdAsync(id, includeDeleted: false, ct).ConfigureAwait(false);
+        if (page is null) return new PageOperationResult(false, new[] { "Page not found." }, null);
+
+        var now = DateTimeOffset.UtcNow;
+        if (page.HasUnpublishedDraft)
+        {
+            // Promote draft → live. Falls back to current live value if a
+            // draft field is null (shouldn't happen given how UpdateAsync
+            // writes, but defensive).
+            page.Title = page.DraftTitle ?? page.Title;
+            page.BodyJson = page.DraftBodyJson ?? page.BodyJson;
+            page.Excerpt = page.DraftExcerpt ?? page.Excerpt;
+            page.HeroImageUrl = page.DraftHeroImageUrl;
+            page.HeroImageWebpUrl = page.DraftHeroImageWebpUrl;
+            page.HeroImageAlt = page.DraftHeroImageAlt;
+            page.MetaDescription = page.DraftMetaDescription;
+            page.IsMembersOnly = page.DraftIsMembersOnly ?? page.IsMembersOnly;
+            page.Template = page.DraftTemplate ?? page.Template;
+
+            page.HasUnpublishedDraft = false;
+            page.DraftTitle = null;
+            page.DraftBodyJson = null;
+            page.DraftExcerpt = null;
+            page.DraftHeroImageUrl = null;
+            page.DraftHeroImageWebpUrl = null;
+            page.DraftHeroImageAlt = null;
+            page.DraftMetaDescription = null;
+            page.DraftIsMembersOnly = null;
+            page.DraftTemplate = null;
+            page.DraftSavedAt = null;
+        }
+
+        page.IsPublished = true;
+        page.PublishedAt ??= now;
+        page.ModifiedAt = now;
 
         await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
         await IndexAsync(page, ct).ConfigureAwait(false);
         await InvalidateCacheAsync(ct).ConfigureAwait(false);
-        await _audit.WriteAsync("Page.Updated", nameof(Page), page.Id.ToString(),
-            details: new { page.Slug, page.Title, page.IsPublished, page.IsMembersOnly },
+        await _audit.WriteAsync("Page.Published", nameof(Page), page.Id.ToString(),
+            details: new { page.Slug, page.Title, page.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
+
+        return new PageOperationResult(true, Array.Empty<string>(), ToDetail(page));
+    }
+
+    /// <summary>Clears the Draft* columns and HasUnpublishedDraft flag. The
+    /// live page is untouched. Intended for "discard changes" in the editor.</summary>
+    public async Task<PageOperationResult> DiscardDraftAsync(Guid id, CancellationToken ct = default)
+    {
+        var page = await _repo.GetByIdAsync(id, includeDeleted: true, ct).ConfigureAwait(false);
+        if (page is null) return new PageOperationResult(false, new[] { "Page not found." }, null);
+
+        if (!page.HasUnpublishedDraft)
+            return new PageOperationResult(true, Array.Empty<string>(), ToDetail(page));
+
+        page.HasUnpublishedDraft = false;
+        page.DraftTitle = null;
+        page.DraftBodyJson = null;
+        page.DraftExcerpt = null;
+        page.DraftHeroImageUrl = null;
+        page.DraftHeroImageWebpUrl = null;
+        page.DraftHeroImageAlt = null;
+        page.DraftMetaDescription = null;
+        page.DraftIsMembersOnly = null;
+        page.DraftTemplate = null;
+        page.DraftSavedAt = null;
+        page.ModifiedAt = DateTimeOffset.UtcNow;
+
+        await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
+        await _audit.WriteAsync("Page.DraftDiscarded", nameof(Page), page.Id.ToString(),
+            details: new { page.Slug, page.Title }, cancellationToken: ct).ConfigureAwait(false);
+
+        return new PageOperationResult(true, Array.Empty<string>(), ToDetail(page));
+    }
+
+    /// <summary>Moves a published page back to draft state without touching
+    /// content. Public visitors will 404 until Publish is invoked again.</summary>
+    public async Task<PageOperationResult> UnpublishAsync(Guid id, CancellationToken ct = default)
+    {
+        var page = await _repo.GetByIdAsync(id, includeDeleted: false, ct).ConfigureAwait(false);
+        if (page is null) return new PageOperationResult(false, new[] { "Page not found." }, null);
+
+        page.IsPublished = false;
+        page.ModifiedAt = DateTimeOffset.UtcNow;
+
+        await _repo.UpdateAsync(page, ct).ConfigureAwait(false);
+        if (_search is not null)
+            await _search.SetPublishedAsync(nameof(Page), id, false, ct).ConfigureAwait(false);
+        await InvalidateCacheAsync(ct).ConfigureAwait(false);
+        await _audit.WriteAsync("Page.Unpublished", nameof(Page), page.Id.ToString(),
+            details: new { page.Slug, page.Title }, cancellationToken: ct).ConfigureAwait(false);
 
         return new PageOperationResult(true, Array.Empty<string>(), ToDetail(page));
     }
@@ -270,11 +413,41 @@ public sealed class PageService : IPageService
     internal static PageDetailDto ToDetail(Page p) => new(
         p.Id, p.Slug, p.Title, p.BodyJson, p.Excerpt,
         p.HeroImageUrl, p.HeroImageWebpUrl, p.HeroImageAlt, p.MetaDescription,
-        p.IsPublished, p.IsMembersOnly, p.IsDeleted, p.IsSystemPage,
-        p.CreatedAt, p.ModifiedAt, p.ModifiedByUserId, p.PublishedAt, p.DeletedAt);
+        p.IsPublished, p.IsMembersOnly, p.IsDeleted, p.IsSystemPage, p.Template,
+        p.CreatedAt, p.ModifiedAt, p.ModifiedByUserId, p.PublishedAt, p.DeletedAt,
+        p.HasUnpublishedDraft,
+        p.HasUnpublishedDraft
+            ? new PageDraftDto(
+                Title: p.DraftTitle ?? p.Title,
+                BodyJson: p.DraftBodyJson ?? p.BodyJson,
+                Excerpt: p.DraftExcerpt ?? p.Excerpt,
+                HeroImageUrl: p.DraftHeroImageUrl,
+                HeroImageWebpUrl: p.DraftHeroImageWebpUrl,
+                HeroImageAlt: p.DraftHeroImageAlt,
+                MetaDescription: p.DraftMetaDescription,
+                IsMembersOnly: p.DraftIsMembersOnly ?? p.IsMembersOnly,
+                Template: p.DraftTemplate ?? p.Template,
+                SavedAt: p.DraftSavedAt ?? p.ModifiedAt)
+            : null);
 
     internal static PublicPageDto ToPublic(Page p) => new(
         p.Id, p.Slug, p.Title, p.BodyJson, p.Excerpt,
         p.HeroImageUrl, p.HeroImageWebpUrl, p.HeroImageAlt, p.MetaDescription,
-        p.IsMembersOnly, p.PublishedAt ?? p.ModifiedAt);
+        p.IsMembersOnly, p.Template, p.PublishedAt ?? p.ModifiedAt);
+
+    /// <summary>Used by the admin preview endpoint when HasUnpublishedDraft
+    /// is true — projects the Draft* columns into the same public DTO shape
+    /// so the renderer doesn't need to care which slot the data came from.</summary>
+    internal static PublicPageDto ToPublicFromDraft(Page p) => new(
+        p.Id, p.Slug,
+        p.DraftTitle ?? p.Title,
+        p.DraftBodyJson ?? p.BodyJson,
+        p.DraftExcerpt ?? p.Excerpt,
+        p.DraftHeroImageUrl,
+        p.DraftHeroImageWebpUrl,
+        p.DraftHeroImageAlt,
+        p.DraftMetaDescription,
+        p.DraftIsMembersOnly ?? p.IsMembersOnly,
+        p.DraftTemplate ?? p.Template,
+        p.DraftSavedAt ?? p.ModifiedAt);
 }

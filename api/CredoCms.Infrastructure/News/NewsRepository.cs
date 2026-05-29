@@ -22,20 +22,38 @@ public sealed class NewsRepository : INewsRepository
             var s = query.Search.Trim();
             q = q.Where(n => EF.Functions.Like(n.Title, $"%{s}%") || EF.Functions.Like(n.Slug, $"%{s}%"));
         }
+        if (!string.IsNullOrWhiteSpace(query.Category))
+            q = q.Where(n => n.Category == query.Category);
 
         var total = await q.CountAsync(ct).ConfigureAwait(false);
         var page = Math.Max(1, query.Page);
         var pageSize = Math.Clamp(query.PageSize, 1, 200);
         var items = await q
-            .OrderByDescending(n => n.PublishedAt ?? n.ModifiedAt)
+            // Sort by CalendarDate first (the editorial / event-attached
+            // date) and fall back to PublishedAt / ModifiedAt when no
+            // calendar date is set. Keeps the admin + public lists in sync.
+            .OrderByDescending(n => n.CalendarDate ?? n.PublishedAt ?? n.ModifiedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(n => new NewsListItemDto(
-                n.Id, n.Slug, n.Title, n.Excerpt, n.IsPublished, n.IsMembersOnly,
+                n.Id, n.Slug, n.Title, n.Excerpt, n.Category,
+                n.IsPublished, n.IsMembersOnly,
                 n.PublishedAt, n.ExpiresAt, n.ModifiedAt))
             .ToListAsync(ct).ConfigureAwait(false);
 
         return new PagedResult<NewsListItemDto>(items, total, page, pageSize);
+    }
+
+    /// <summary>Distinct list of category names currently in use across all
+    /// non-deleted news items. Drives the SiteSettings remove-protection so
+    /// admins can't drop a category that still has items pointing at it.</summary>
+    public Task<List<string>> GetUsedCategoriesAsync(CancellationToken ct = default)
+    {
+        return _db.News
+            .Where(n => !n.IsDeleted && n.Category != null && n.Category != "")
+            .Select(n => n.Category!)
+            .Distinct()
+            .ToListAsync(ct);
     }
 
     public Task<NewsItem?> GetByIdAsync(Guid id, bool includeDeleted = false, CancellationToken ct = default)
@@ -59,22 +77,28 @@ public sealed class NewsRepository : INewsRepository
         DateTimeOffset nowUtc,
         int page,
         int pageSize,
+        string? category = null,
         CancellationToken ct = default)
     {
         IQueryable<NewsItem> q = _db.News.Where(n => n.IsPublished);
         q = q.Where(n => n.ExpiresAt == null || n.ExpiresAt > nowUtc);
         if (!includeMembersOnly) q = q.Where(n => !n.IsMembersOnly);
+        if (!string.IsNullOrWhiteSpace(category)) q = q.Where(n => n.Category == category);
 
         var total = await q.CountAsync(ct).ConfigureAwait(false);
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 50);
         var items = await q
-            .OrderByDescending(n => n.PublishedAt ?? n.ModifiedAt)
+            // Sort by CalendarDate first (the editorial / event-attached
+            // date) and fall back to PublishedAt / ModifiedAt when no
+            // calendar date is set. Keeps the admin + public lists in sync.
+            .OrderByDescending(n => n.CalendarDate ?? n.PublishedAt ?? n.ModifiedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(n => new PublicNewsItemDto(
                 n.Id, n.Slug, n.Title, n.Excerpt,
                 n.HeroImageUrl, n.HeroImageWebpUrl, n.HeroImageAlt,
+                n.Category,
                 n.IsMembersOnly,
                 (n.PublishedAt ?? n.ModifiedAt),
                 n.CalendarDate))

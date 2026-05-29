@@ -59,7 +59,7 @@ public sealed class SitemapController : ControllerBase
         // News — first page of public listings; full crawl beyond that is
         // discouraged for SEO reasons (event-style content has limited
         // long-tail value).
-        var news = await _news.ListPublicAsync(includeMembersOnly: false, page: 1, pageSize: 50, ct).ConfigureAwait(false);
+        var news = await _news.ListPublicAsync(includeMembersOnly: false, page: 1, pageSize: 50, category: null, ct: ct).ConfigureAwait(false);
         foreach (var n in news.Items)
             AppendUrl(sb, baseUrl, "/news/" + n.Slug, lastmod: n.PublishedAt, priority: 0.5);
 

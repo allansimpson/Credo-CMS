@@ -31,6 +31,11 @@ public interface ISermonRepository
     Task<bool> HardDeleteAsync(Guid id, CancellationToken ct = default);
 
     Task<List<SermonsByBookCount>> CountByBookAsync(bool includeMembersOnly, CancellationToken ct = default);
+    Task<SermonsByDayResponse> ListByDayAsync(SermonsByDayQuery query, bool includeMembersOnly, CancellationToken ct = default);
+
+    /// <summary>Year + month rollup of every published sermon visible to the
+    /// caller. Drives the side-rail's archive index.</summary>
+    Task<YearsResponse> ListYearStatsAsync(bool includeMembersOnly, CancellationToken ct = default);
 
     Task<SermonDetailDto?> ToDetailAsync(Sermon sermon, CancellationToken ct = default);
     Task<PublicSermonDto?> ToPublicAsync(Sermon sermon, CancellationToken ct = default);
@@ -45,6 +50,8 @@ public interface ISermonService
     Task<PublicSermonDto?> GetPublicBySlugAsync(string slug, bool includeMembersOnly, CancellationToken ct = default);
     Task<PagedResult<SermonListItemDto>> ListPublicAsync(SermonListQuery query, bool includeMembersOnly, CancellationToken ct = default);
     Task<List<SermonsByBookCount>> CountByBookAsync(bool includeMembersOnly, CancellationToken ct = default);
+    Task<SermonsByDayResponse> ListPublicByDayAsync(SermonsByDayQuery query, bool includeMembersOnly, CancellationToken ct = default);
+    Task<YearsResponse> ListYearStatsAsync(bool includeMembersOnly, CancellationToken ct = default);
 
     Task<SermonOperationResult> CreateAsync(CreateSermonRequest request, CancellationToken ct = default);
     Task<SermonOperationResult> UpdateAsync(Guid id, UpdateSermonRequest request, CancellationToken ct = default);
@@ -66,6 +73,7 @@ public sealed partial class CreateSermonRequestValidator : AbstractValidator<Cre
             .Matches(YouTubeIdRegex()).WithMessage("YouTube video ID must be 6–20 alphanumeric or '_-' characters.");
         RuleFor(x => x.SpeakerNameFreeText).MaximumLength(200);
         RuleFor(x => x.YouTubeChannelId).MaximumLength(50);
+        RuleFor(x => x.ServiceType).IsInEnum();
     }
 }
 
@@ -76,6 +84,7 @@ public sealed class UpdateSermonRequestValidator : AbstractValidator<UpdateSermo
         RuleFor(x => x.Slug).ValidSlug();
         RuleFor(x => x.Title).NotEmpty().MaximumLength(200);
         RuleFor(x => x.SpeakerNameFreeText).MaximumLength(200);
+        RuleFor(x => x.ServiceType).IsInEnum();
     }
 }
 
@@ -144,6 +153,12 @@ public sealed class SermonService : ISermonService
     public Task<List<SermonsByBookCount>> CountByBookAsync(bool includeMembersOnly, CancellationToken ct = default)
         => _repo.CountByBookAsync(includeMembersOnly, ct);
 
+    public Task<SermonsByDayResponse> ListPublicByDayAsync(SermonsByDayQuery query, bool includeMembersOnly, CancellationToken ct = default)
+        => _repo.ListByDayAsync(query, includeMembersOnly, ct);
+
+    public Task<YearsResponse> ListYearStatsAsync(bool includeMembersOnly, CancellationToken ct = default)
+        => _repo.ListYearStatsAsync(includeMembersOnly, ct);
+
     public async Task<SermonOperationResult> CreateAsync(CreateSermonRequest request, CancellationToken ct = default)
     {
         var v = await _createValidator.ValidateAsync(request, ct).ConfigureAwait(false);
@@ -156,7 +171,7 @@ public sealed class SermonService : ISermonService
         if (existingByVideo is not null)
             return new(false, new[] { $"A sermon for YouTube video '{request.YouTubeVideoId}' already exists." }, null);
 
-        if (request.AttachmentDocumentIds.Count > 0
+        if (request.AttachmentDocumentIds is { Count: > 0 }
             && !await _repo.AreAllPublicPdfsAsync(request.AttachmentDocumentIds, ct).ConfigureAwait(false))
         {
             return new(false, new[] { "Attachments must be public, non-deleted PDF documents." }, null);
@@ -181,6 +196,7 @@ public sealed class SermonService : ISermonService
             SpeakerLeaderId = request.SpeakerLeaderId,
             SpeakerNameFreeText = request.SpeakerNameFreeText,
             SermonSeriesId = request.SermonSeriesId,
+            ServiceType = request.ServiceType,
             IsPublished = request.IsPublished,
             IsMembersOnly = request.IsMembersOnly,
             CreatedAt = now,
@@ -188,9 +204,9 @@ public sealed class SermonService : ISermonService
         };
         await _repo.AddAsync(sermon, ct).ConfigureAwait(false);
 
-        await PersistTagsAsync(sermon.Id, request.Tags, ct).ConfigureAwait(false);
-        await _repo.ReplaceAttachmentsAsync(sermon.Id, request.AttachmentDocumentIds, ct).ConfigureAwait(false);
-        await _scriptureRefs.ReplaceAllAsync(EntityType, sermon.Id, request.ScriptureReferences, ct).ConfigureAwait(false);
+        await PersistTagsAsync(sermon.Id, request.Tags ?? [], ct).ConfigureAwait(false);
+        await _repo.ReplaceAttachmentsAsync(sermon.Id, request.AttachmentDocumentIds ?? [], ct).ConfigureAwait(false);
+        await _scriptureRefs.ReplaceAllAsync(EntityType, sermon.Id, request.ScriptureReferences ?? [], ct).ConfigureAwait(false);
         await _audit.WriteAsync("Sermon.Created", EntityType, sermon.Id.ToString(),
             details: new { sermon.Slug, sermon.Title, sermon.YouTubeVideoId, sermon.IsPublished },
             cancellationToken: ct).ConfigureAwait(false);
@@ -212,7 +228,7 @@ public sealed class SermonService : ISermonService
             return new(false, new[] { $"Slug '{request.Slug}' is already in use." }, null);
         }
 
-        if (request.AttachmentDocumentIds.Count > 0
+        if (request.AttachmentDocumentIds is { Count: > 0 }
             && !await _repo.AreAllPublicPdfsAsync(request.AttachmentDocumentIds, ct).ConfigureAwait(false))
         {
             return new(false, new[] { "Attachments must be public, non-deleted PDF documents." }, null);
@@ -229,15 +245,16 @@ public sealed class SermonService : ISermonService
         sermon.SpeakerLeaderId = request.SpeakerLeaderId;
         sermon.SpeakerNameFreeText = request.SpeakerNameFreeText;
         sermon.SermonSeriesId = request.SermonSeriesId;
+        sermon.ServiceType = request.ServiceType;
         sermon.IsPublished = request.IsPublished;
         sermon.IsMembersOnly = request.IsMembersOnly;
         sermon.ModifiedAt = DateTimeOffset.UtcNow;
 
         await _repo.UpdateAsync(sermon, ct).ConfigureAwait(false);
 
-        await PersistTagsAsync(sermon.Id, request.Tags, ct).ConfigureAwait(false);
-        await _repo.ReplaceAttachmentsAsync(sermon.Id, request.AttachmentDocumentIds, ct).ConfigureAwait(false);
-        await _scriptureRefs.ReplaceAllAsync(EntityType, sermon.Id, request.ScriptureReferences, ct).ConfigureAwait(false);
+        await PersistTagsAsync(sermon.Id, request.Tags ?? [], ct).ConfigureAwait(false);
+        await _repo.ReplaceAttachmentsAsync(sermon.Id, request.AttachmentDocumentIds ?? [], ct).ConfigureAwait(false);
+        await _scriptureRefs.ReplaceAllAsync(EntityType, sermon.Id, request.ScriptureReferences ?? [], ct).ConfigureAwait(false);
         await _audit.WriteAsync("Sermon.Updated", EntityType, id.ToString(),
             details: new { sermon.Slug, sermon.Title, sermon.IsPublished, sermon.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);

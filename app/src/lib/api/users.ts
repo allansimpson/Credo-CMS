@@ -50,6 +50,9 @@ export const usersApi = {
   sendPasswordReset: (id: string) =>
     apiPost<UserDetail>(`/api/admin/users/${id}/send-password-reset`),
 
+  resendInvitation: (id: string) =>
+    apiPost<UserDetail>(`/api/admin/users/${id}/resend-invitation`),
+
   hardDelete: (id: string, req: HardDeleteUserRequest) =>
     apiDelete<void>(`/api/admin/users/${id}`, req),
 };

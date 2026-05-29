@@ -63,12 +63,27 @@
 
   --radius: 0;
 
+  /* Motion scale — used by drawer reveals, dropdowns, tab fades, modals.
+     Default ease is a soft-overshoot quint matched to the editorial feel. */
+  --motion-sm: 120ms;
+  --motion-md: 200ms;
+  --motion-lg: 320ms;
+  --motion-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+
   /* Typography (clarification #2) ------------------------------------- */
   /* Inter Tight (400/500/600/700) and JetBrains Mono (400/500/600) loaded
      via index.html <link> tags from Google Fonts. system-ui kept as fallback. */
   --font-heading: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Form controls — recolor native checkbox + radio fills to the warm
+   editorial accent instead of the browser default blue. Applies to every
+   native input in the system theme without touching individual call sites. */
+[data-theme="system"] input[type="checkbox"],
+[data-theme="system"] input[type="radio"] {
+  accent-color: hsl(var(--accent));
 }
 
 /* Dark mode (clarification #1) — exact hex values from Claude Design.

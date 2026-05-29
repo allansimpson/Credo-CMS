@@ -25,6 +25,18 @@ public sealed class PagesController : ControllerBase
         return page is null ? NotFound() : Ok(page);
     }
 
+    /// <summary>
+    /// Returns the public DTO for a page regardless of published/members-only
+    /// state. Used by the editor's "Preview" button so admins can see drafts
+    /// rendered through the public template machinery.
+    /// </summary>
+    [HttpGet("preview/{slug}")]
+    public async Task<ActionResult<PublicPageDto>> GetPreviewAsync(string slug, CancellationToken ct)
+    {
+        var page = await _pages.GetPreviewBySlugAsync(slug, ct);
+        return page is null ? NotFound() : Ok(page);
+    }
+
     [HttpPost]
     public async Task<ActionResult<PageDetailDto>> CreateAsync([FromBody] CreatePageRequest request, CancellationToken ct)
     {
@@ -61,6 +73,36 @@ public sealed class PagesController : ControllerBase
         return result.Succeeded
             ? Ok(result.Page)
             : BadRequest(new { errors = result.Errors });
+    }
+
+    [HttpPost("{id:guid}/publish")]
+    public async Task<ActionResult<PageDetailDto>> PublishAsync(Guid id, CancellationToken ct)
+    {
+        var result = await _pages.PublishAsync(id, ct);
+        if (result.Succeeded) return Ok(result.Page);
+        if (result.Errors.Any(e => e.Contains("not found", StringComparison.OrdinalIgnoreCase)))
+            return NotFound(new { errors = result.Errors });
+        return BadRequest(new { errors = result.Errors });
+    }
+
+    [HttpPost("{id:guid}/unpublish")]
+    public async Task<ActionResult<PageDetailDto>> UnpublishAsync(Guid id, CancellationToken ct)
+    {
+        var result = await _pages.UnpublishAsync(id, ct);
+        if (result.Succeeded) return Ok(result.Page);
+        if (result.Errors.Any(e => e.Contains("not found", StringComparison.OrdinalIgnoreCase)))
+            return NotFound(new { errors = result.Errors });
+        return BadRequest(new { errors = result.Errors });
+    }
+
+    [HttpPost("{id:guid}/discard-draft")]
+    public async Task<ActionResult<PageDetailDto>> DiscardDraftAsync(Guid id, CancellationToken ct)
+    {
+        var result = await _pages.DiscardDraftAsync(id, ct);
+        if (result.Succeeded) return Ok(result.Page);
+        if (result.Errors.Any(e => e.Contains("not found", StringComparison.OrdinalIgnoreCase)))
+            return NotFound(new { errors = result.Errors });
+        return BadRequest(new { errors = result.Errors });
     }
 
     [HttpDelete("{id:guid}/hard")]

@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import listPlugin from "@fullcalendar/list";
@@ -31,8 +32,9 @@ export function EventsCalendarOverviewPage() {
         <h1 className="text-2xl font-bold">Events calendar</h1>
         <div className="flex items-center gap-3">
           {loading && <span className="text-xs text-muted">Loading…</span>}
-          <Link to="/admin/events" className="text-sm text-primary hover:underline">
-            ← Back to events list
+          <Link to="/admin/events" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+            <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+            Back to events list
           </Link>
         </div>
       </div>

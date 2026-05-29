@@ -1,5 +1,9 @@
+using System.Text.Json;
 using CredoCms.Application.Common;
+using CredoCms.Application.Events;
+using CredoCms.Application.News;
 using CredoCms.Application.Pages;
+using CredoCms.Application.Sermons;
 using CredoCms.Domain.Settings;
 
 namespace CredoCms.Application.SiteSettingsManagement;
@@ -16,12 +20,20 @@ public sealed class SiteSettingsService : ISiteSettingsService
     private readonly ISiteSettingsRepository _repo;
     private readonly IAuditLogger _audit;
     private readonly IPageRepository? _pages;
+    private readonly IEventRepository? _events;
+    private readonly INewsRepository? _news;
+    private readonly ISermonSeriesRepository? _sermonSeries;
 
-    public SiteSettingsService(ISiteSettingsRepository repo, IAuditLogger audit, IPageRepository? pages = null)
+    public SiteSettingsService(ISiteSettingsRepository repo, IAuditLogger audit,
+        IPageRepository? pages = null, IEventRepository? events = null,
+        INewsRepository? news = null, ISermonSeriesRepository? sermonSeries = null)
     {
         _repo = repo;
         _audit = audit;
         _pages = pages;
+        _events = events;
+        _news = news;
+        _sermonSeries = sermonSeries;
     }
 
     public async Task<PublicSiteSettingsDto> GetPublicAsync(CancellationToken ct = default)
@@ -61,6 +73,50 @@ public sealed class SiteSettingsService : ISiteSettingsService
     {
         var s = await _repo.GetAsync(ct);
 
+        // Protect event categories — block removal of any category still in use.
+        if (_events is not null && s.EventCategoriesJson != request.EventCategoriesJson)
+        {
+            var newCats = ParseCategories(request.EventCategoriesJson);
+            var usedCats = await _events.GetUsedCategoriesAsync(ct).ConfigureAwait(false);
+            var stillUsedButRemoved = usedCats.Where(c => !newCats.Contains(c, StringComparer.OrdinalIgnoreCase)).ToList();
+            if (stillUsedButRemoved.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot remove event categories that are still in use: {string.Join(", ", stillUsedButRemoved)}. " +
+                    "Remove or recategorize the affected events first.");
+            }
+        }
+
+        // Same protection for news categories — admins must clear or move
+        // any items off a category before they can drop it from the list.
+        if (_news is not null && s.NewsCategoriesJson != request.NewsCategoriesJson)
+        {
+            var newCats = ParseCategories(request.NewsCategoriesJson);
+            var usedCats = await _news.GetUsedCategoriesAsync(ct).ConfigureAwait(false);
+            var stillUsedButRemoved = usedCats.Where(c => !newCats.Contains(c, StringComparer.OrdinalIgnoreCase)).ToList();
+            if (stillUsedButRemoved.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot remove news categories that are still in use: {string.Join(", ", stillUsedButRemoved)}. " +
+                    "Remove or recategorize the affected news items first.");
+            }
+        }
+
+        // Same protection for sermon contexts — admins must reassign any
+        // series off a context before they can drop it from the list.
+        if (_sermonSeries is not null && s.SermonContextsJson != request.SermonContextsJson)
+        {
+            var newContexts = ParseCategories(request.SermonContextsJson);
+            var usedContexts = await _sermonSeries.GetUsedContextsAsync(ct).ConfigureAwait(false);
+            var stillUsedButRemoved = usedContexts.Where(c => !newContexts.Contains(c, StringComparer.OrdinalIgnoreCase)).ToList();
+            if (stillUsedButRemoved.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot remove sermon contexts that are still in use: {string.Join(", ", stillUsedButRemoved)}. " +
+                    "Reassign the affected sermon series to another context first.");
+            }
+        }
+
         s.ChurchName = request.ChurchName;
         s.Tagline = request.Tagline;
         s.LogoUrl = request.LogoUrl;
@@ -81,7 +137,10 @@ public sealed class SiteSettingsService : ISiteSettingsService
 
         s.LeadersPageLabel = request.LeadersPageLabel;
         s.LeaderCategoriesJson = request.LeaderCategoriesJson;
+        s.EventCategoriesJson = request.EventCategoriesJson;
+        s.NewsCategoriesJson = request.NewsCategoriesJson;
         s.DocumentCategoriesJson = request.DocumentCategoriesJson;
+        s.SermonContextsJson = request.SermonContextsJson;
         s.MaxDocumentSizeBytes = request.MaxDocumentSizeBytes;
         s.MaxImageSizeBytes = request.MaxImageSizeBytes;
         s.ImageMaxWidth = request.ImageMaxWidth;
@@ -177,7 +236,7 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.FacebookUrl, s.InstagramUrl, s.YouTubeUrl, s.XUrl, s.TikTokUrl,
         s.OtherSocialLabel, s.OtherSocialUrl, s.FooterText,
         s.DefaultVersionRetentionCount,
-        s.LeadersPageLabel, s.LeaderCategoriesJson, s.DocumentCategoriesJson,
+        s.LeadersPageLabel, s.LeaderCategoriesJson, s.EventCategoriesJson, s.NewsCategoriesJson, s.DocumentCategoriesJson, s.SermonContextsJson,
         s.MaxDocumentSizeBytes, s.MaxImageSizeBytes,
         s.ImageMaxWidth, s.ImageQuality,
         s.MembersWelcomeText,
@@ -208,4 +267,11 @@ public sealed class SiteSettingsService : ISiteSettingsService
         s.Template,
         s.CreatedAt, s.ModifiedAt, s.ModifiedByUserId,
         Convert.ToBase64String(s.RowVersion));
+
+    private static List<string> ParseCategories(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new();
+        try { return JsonSerializer.Deserialize<List<string>>(json) ?? new(); }
+        catch { return new(); }
+    }
 }

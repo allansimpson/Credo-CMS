@@ -12,6 +12,7 @@ export interface EventListItem {
   endsAt: string | null;
   allDay: boolean;
   location: string | null;
+  category: string | null;
   visibility: EventVisibility | null;
   registrationMode: EventRegistrationMode;
   hasRecurrence: boolean;
@@ -29,6 +30,7 @@ export interface EventDetail {
   endsAt: string | null;
   allDay: boolean;
   location: string | null;
+  category: string | null;
   heroImageUrl: string | null;
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
@@ -59,6 +61,7 @@ export interface PublicEventListItem {
   endsAt: string | null;
   allDay: boolean;
   location: string | null;
+  category: string | null;
   heroImageUrl: string | null;
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
@@ -77,6 +80,7 @@ export interface PublicEvent {
   endsAt: string | null;
   allDay: boolean;
   location: string | null;
+  category: string | null;
   heroImageUrl: string | null;
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
@@ -98,6 +102,7 @@ export type EventRequest = Omit<EventDetail, "id" | "createdAt" | "modifiedAt" |
 
 export interface EventListQuery {
   search?: string;
+  category?: string;
   visibility?: EventVisibility;
   registrationMode?: EventRegistrationMode;
   hasRecurrence?: boolean;
@@ -109,6 +114,7 @@ export interface EventListQuery {
 function buildQuery(q: EventListQuery): string {
   const usp = new URLSearchParams();
   if (q.search) usp.set("search", q.search);
+  if (q.category) usp.set("category", q.category);
   if (q.visibility !== undefined) usp.set("visibility", String(q.visibility));
   if (q.registrationMode !== undefined) usp.set("registrationMode", String(q.registrationMode));
   if (q.hasRecurrence !== undefined) usp.set("hasRecurrence", String(q.hasRecurrence));
@@ -132,9 +138,14 @@ export const eventsApi = {
     apiPost<void>(`/api/admin/events/${id}/skip-occurrence`, { date, reason }),
 
   // Public
-  listPublic: (page = 1, pageSize = 12) =>
-    apiGet<PagedResult<PublicEventListItem>>(`/api/public/events?page=${page}&pageSize=${pageSize}`,
-      { emitUnauthorized: false }),
+  listPublic: (page = 1, pageSize = 12, category?: string) => {
+    const usp = new URLSearchParams();
+    usp.set("page", String(page));
+    usp.set("pageSize", String(pageSize));
+    if (category) usp.set("category", category);
+    return apiGet<PagedResult<PublicEventListItem>>(`/api/public/events?${usp.toString()}`,
+      { emitUnauthorized: false });
+  },
   getPublic: (slug: string) =>
     apiGet<PublicEvent>(`/api/public/events/${encodeURIComponent(slug)}`,
       { emitUnauthorized: false }),

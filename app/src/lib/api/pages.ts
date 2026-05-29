@@ -45,9 +45,26 @@ export const pagesApi = {
   hardDelete: (id: string) =>
     apiDelete<void>(`/api/admin/pages/${id}/hard`),
 
+  /** Promote the page (and its draft, if any) to published. */
+  publish: (id: string) =>
+    apiPost<PageDetail>(`/api/admin/pages/${id}/publish`),
+
+  /** Move a published page back to draft state. */
+  unpublish: (id: string) =>
+    apiPost<PageDetail>(`/api/admin/pages/${id}/unpublish`),
+
+  /** Discard pending draft changes without affecting the live page. */
+  discardDraft: (id: string) =>
+    apiPost<PageDetail>(`/api/admin/pages/${id}/discard-draft`),
+
   // Public
   listPublic: () => apiGet<PublicPage[]>("/api/public/pages", { emitUnauthorized: false }),
 
   getPublic: (slug: string) =>
     apiGet<PublicPage>(`/api/public/pages/${encodeURIComponent(slug)}`, { emitUnauthorized: false }),
+
+  /** Admin preview — returns the public shape but bypasses the published /
+   * members-only filter so the editor can render drafts. */
+  getPreview: (slug: string) =>
+    apiGet<PublicPage>(`/api/admin/pages/preview/${encodeURIComponent(slug)}`),
 };

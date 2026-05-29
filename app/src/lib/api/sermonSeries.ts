@@ -24,6 +24,9 @@ export interface SermonSeriesListItem {
   bannerImageAlt: string | null;
   startDate: string; // ISO date
   endDate: string | null;
+  context: string | null;
+  scopeLabel: string | null;
+  plannedParts: number | null;
   isDeleted: boolean;
   modifiedAt: string;
 }
@@ -38,6 +41,9 @@ export interface SermonSeriesDetail {
   bannerImageAlt: string | null;
   startDate: string;
   endDate: string | null;
+  context: string | null;
+  scopeLabel: string | null;
+  plannedParts: number | null;
   isDeleted: boolean;
   scriptureReferences: ScriptureReferenceDto[];
   createdAt: string;
@@ -59,6 +65,33 @@ export interface PublicSermonSeries {
   scriptureReferences: ScriptureReferenceDto[];
 }
 
+/** Richer projection for the public by-series page — adds counts, the
+ * derived plain-text description, derived scope label, the flagship
+ * "latest sermon" pointer, and the active/complete status. */
+export interface PublicSermonSeriesWithStats {
+  id: string;
+  slug: string;
+  title: string;
+  bannerImageUrl: string | null;
+  bannerImageWebpUrl: string | null;
+  bannerImageAlt: string | null;
+  startDate: string;
+  endDate: string | null;
+  scriptureReferences: ScriptureReferenceDto[];
+  description: string;
+  context: string;
+  scopeLabel: string;
+  sermonCount: number;
+  plannedParts: number | null;
+  latestSermon: {
+    slug: string;
+    title: string;
+    publishedAt: string;
+    dateLabel: string;
+  } | null;
+  status: "active" | "complete";
+}
+
 export interface SermonSeriesRequest {
   slug: string;
   title: string;
@@ -68,6 +101,9 @@ export interface SermonSeriesRequest {
   bannerImageAlt: string | null;
   startDate: string;
   endDate: string | null;
+  context: string | null;
+  scopeLabel: string | null;
+  plannedParts: number | null;
   scriptureReferences: ScriptureReferenceInputDto[];
 }
 
@@ -97,6 +133,9 @@ export const sermonSeriesApi = {
   hardDelete: (id: string) => apiDelete<void>(`/api/admin/sermon-series/${id}/hard`),
 
   listPublic: () => apiGet<PublicSermonSeries[]>("/api/public/sermons/series", { emitUnauthorized: false }),
+  /** Richer projection used by the public by-series browse page. */
+  listPublicWithStats: () =>
+    apiGet<PublicSermonSeriesWithStats[]>("/api/public/sermons/series/with-stats", { emitUnauthorized: false }),
   getPublic: (slug: string) =>
     apiGet<PublicSermonSeries>(`/api/public/sermons/series/${encodeURIComponent(slug)}`,
       { emitUnauthorized: false }),

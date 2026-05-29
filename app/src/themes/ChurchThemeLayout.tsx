@@ -36,7 +36,7 @@ export function ChurchThemeLayout({ children }: { children: ReactNode }) {
   const initialTemplate = settings?.template === 1 ? "quiet" : "editorial";
 
   return (
-    <div data-theme="church" data-template={initialTemplate} className="min-h-full">
+    <div data-theme="church" data-template={initialTemplate} className="min-h-full bg-background text-foreground">
       {/* Accessibility skip-to-main-content link. sr-only by default;
           visible on keyboard focus. The public layout's <main> carries
           id="main-content". */}

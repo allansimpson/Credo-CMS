@@ -69,6 +69,13 @@ public sealed class UsersController : ControllerBase
         return result.Succeeded ? Ok(result.User) : BadRequest(new { errors = result.Errors });
     }
 
+    [HttpPost("{id:guid}/resend-invitation")]
+    public async Task<ActionResult<UserDetailDto>> ResendInvitationAsync(Guid id, CancellationToken ct)
+    {
+        var result = await _users.ResendInvitationEmailAsync(id, ct);
+        return result.Succeeded ? Ok(result.User) : BadRequest(new { errors = result.Errors });
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> HardDeleteAsync(Guid id, [FromBody] HardDeleteUserRequest request, CancellationToken ct)
     {

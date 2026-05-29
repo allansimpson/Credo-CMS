@@ -58,6 +58,11 @@ public sealed class UpdateSiteSettingsRequestValidator : AbstractValidator<Updat
             .Must(BeNonEmptyStringArrayJson)
             .WithMessage("Document categories must be a non-empty JSON array of strings.");
 
+        RuleFor(x => x.SermonContextsJson)
+            .NotEmpty()
+            .Must(BeNonEmptyStringArrayJson)
+            .WithMessage("Sermon contexts must be a non-empty JSON array of strings.");
+
         RuleFor(x => x.MaxDocumentSizeBytes).InclusiveBetween(MinDocumentBytes, MaxDocumentBytesCeiling);
         RuleFor(x => x.MaxImageSizeBytes).InclusiveBetween(MinImageBytes, MaxImageBytesCeiling);
 

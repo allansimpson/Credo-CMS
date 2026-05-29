@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { profileRegistrationsApi, type MyRegistration } from "@/lib/api/eventRegistration";
 
 const STATUS_LABEL: Record<number, string> = {
@@ -34,7 +35,10 @@ export function ProfileRegistrationsPage() {
 
   return (
     <article className="mx-auto max-w-3xl px-4 py-8">
-      <Link to="/profile" className="text-sm text-primary hover:underline">← Profile</Link>
+      <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+        <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+        Profile
+      </Link>
       <h1 className="mt-2 text-2xl font-bold">My event registrations</h1>
 
       {error && <p className="mt-4 text-sm text-danger">{error}</p>}
@@ -46,7 +50,10 @@ export function ProfileRegistrationsPage() {
       {items && items.length === 0 && (
         <p className="mt-6 text-muted">
           You don't have any current registrations.
-          {" "}<Link to="/events" className="text-primary hover:underline">Browse upcoming events →</Link>
+          {" "}<Link to="/events" className="inline-flex items-center gap-1.5 text-primary hover:underline">
+            Browse upcoming events
+            <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+          </Link>
         </p>
       )}
 

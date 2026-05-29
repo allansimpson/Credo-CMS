@@ -28,6 +28,7 @@ public sealed class CreatePageRequestValidator : AbstractValidator<CreatePageReq
         RuleFor(x => x.HeroImageWebpUrl).MaximumLength(2000);
         RuleFor(x => x.HeroImageAlt).MaximumLength(300);
         RuleFor(x => x.MetaDescription).MaximumLength(300);
+        RuleFor(x => x.Template).IsInEnum();
     }
 }
 
@@ -43,5 +44,6 @@ public sealed class UpdatePageRequestValidator : AbstractValidator<UpdatePageReq
         RuleFor(x => x.HeroImageWebpUrl).MaximumLength(2000);
         RuleFor(x => x.HeroImageAlt).MaximumLength(300);
         RuleFor(x => x.MetaDescription).MaximumLength(300);
+        RuleFor(x => x.Template).IsInEnum();
     }
 }

@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import { homepageApi, type HomepageDto } from "@/lib/api/homepage";
 import type { PublicTemplate } from "@/types/api";
@@ -11,6 +13,7 @@ import {
   Headline,
   ImageSlot,
 } from "@/components/public";
+import { SeoTags } from "@/components/shared/SeoTags";
 
 // Members-only welcome text is the only place the home page reaches for
 // the TipTap renderer. Lazy so anonymous visitors don't pay the cost.
@@ -30,6 +33,7 @@ const TipTapReadOnly = lazy(() =>
  */
 export function HomePage() {
   const { settings } = useSiteSettings();
+  const { user } = useAuth();
   const [data, setData] = useState<HomepageDto | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -48,8 +52,14 @@ export function HomePage() {
   const ctaLabel = data?.site.homepageHeroCtaLabel ?? settings?.homepageHeroCtaLabel ?? "Plan your visit";
   const ctaLink = data?.site.homepageHeroCtaLink ?? settings?.homepageHeroCtaLink ?? "#service-times";
 
+  const resolvedChurchName = data?.site.churchName ?? settings?.churchName ?? null;
+
   return (
     <>
+      <SeoTags
+        title={resolvedChurchName ? `Home · ${resolvedChurchName}` : null}
+        description={tagline}
+      />
       <Hero
         churchName={churchName}
         tagline={tagline}
@@ -63,7 +73,7 @@ export function HomePage() {
 
       <ImNewStrip isEditorial={isEditorial} />
 
-      <UpcomingEventsBlock data={data} loaded={loaded} />
+      {user && <UpcomingEventsBlock data={data} loaded={loaded} />}
 
       <LatestNewsBlock data={data} loaded={loaded} />
 
@@ -340,9 +350,10 @@ function UpcomingEventsBlock({ data, loaded }: BlockProps) {
           </div>
           <Link
             to="/events"
-            className="text-sm font-medium underline underline-offset-4 hover:text-accent"
+            className="inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4 hover:text-accent"
           >
-            View all events →
+            View all events
+            <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
           </Link>
         </div>
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -402,9 +413,10 @@ function LatestNewsBlock({ data, loaded }: BlockProps) {
           </div>
           <Link
             to="/news"
-            className="text-sm font-medium underline underline-offset-4 hover:text-accent"
+            className="inline-flex items-center gap-1.5 text-sm font-medium underline underline-offset-4 hover:text-accent"
           >
-            All news →
+            All news
+            <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
           </Link>
         </div>
         <div className="mt-8 grid gap-6 md:grid-cols-3">

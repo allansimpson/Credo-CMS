@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { eventsApi, type PublicEvent } from "@/lib/api/events";
 import {
   eventRegistrationApi,
@@ -76,8 +77,9 @@ export function EventRegisterPage() {
         <SeoTags title={`Register · ${event.title}`} description={event.title} />
         <h1 className="text-2xl font-bold">{event.title}</h1>
         <p className="mt-4 text-muted">Registration is not currently open for this event.</p>
-        <Link to={`/events/${event.slug}`} className="mt-4 inline-block text-sm text-primary hover:underline">
-          ← Back to event
+        <Link to={`/events/${event.slug}`} className="mt-4 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+          <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+          Back to event
         </Link>
       </article>
     );

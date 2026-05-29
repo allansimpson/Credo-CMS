@@ -1012,6 +1012,10 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                     b.Property<int?>("Capacity")
                         .HasColumnType("int");
 
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1729,6 +1733,10 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("CalendarDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1840,9 +1848,47 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("DraftBodyJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DraftExcerpt")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DraftHeroImageAlt")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("DraftHeroImageUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DraftHeroImageWebpUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool?>("DraftIsMembersOnly")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("DraftMetaDescription")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTimeOffset?>("DraftSavedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int?>("DraftTemplate")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DraftTitle")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Excerpt")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("HasUnpublishedDraft")
+                        .HasColumnType("bit");
 
                     b.Property<string>("HeroImageAlt")
                         .HasMaxLength(300)
@@ -1885,6 +1931,9 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("Template")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -2225,6 +2274,9 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("SermonSeriesId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("ServiceType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -2340,6 +2392,10 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("Context")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -2360,6 +2416,13 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ModifiedByUserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("PlannedParts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ScopeLabel")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -2622,6 +2685,10 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("EventCategoriesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("FacebookLoginEnabled")
                         .HasColumnType("bit");
 
@@ -2704,6 +2771,10 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ModifiedByUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("NewsCategoriesJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NewsEmailTargetGroupIdsJson")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -2752,6 +2823,10 @@ namespace CredoCms.Infrastructure.Persistence.Migrations
                     b.Property<string>("SendGridWebhookSecret")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("SermonContextsJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("ShowRecentPastOnPublicClasses")
                         .HasColumnType("bit");

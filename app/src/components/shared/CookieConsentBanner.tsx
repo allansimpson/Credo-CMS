@@ -43,7 +43,7 @@ export function CookieConsentBanner() {
   // Inject gtag.js when consent flips to accepted and a measurement id is set.
   useEffect(() => {
     if (consent !== "accepted") return;
-    if (!settings || settings.analyticsProvider !== 1) return;
+    if (!settings || settings.analyticsProvider !== "Ga4") return;
     const id = settings.ga4MeasurementId;
     if (!id || typeof document === "undefined") return;
     if (document.querySelector(`script[data-ga4="${id}"]`)) return; // already loaded
@@ -60,12 +60,12 @@ export function CookieConsentBanner() {
     document.head.appendChild(init);
   }, [consent, settings]);
 
-  if (!settings || settings.analyticsProvider !== 1) return null;
+  if (!settings || settings.analyticsProvider !== "Ga4") return null;
   if (!settings.ga4ConsentBannerEnabled) return null;
   if (consent !== null) return null;
 
-  const positionClasses = settings.ga4ConsentBannerPosition === 1
-    ? "left-0 right-0 bottom-0" // BottomFull
+  const positionClasses = settings.ga4ConsentBannerPosition === "BottomFull"
+    ? "left-0 right-0 bottom-0"
     : "right-4 bottom-4 max-w-sm w-full sm:max-w-md"; // BottomRight
 
   const handleAccept = () => {

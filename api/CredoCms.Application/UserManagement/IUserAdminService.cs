@@ -12,6 +12,12 @@ public interface IUserAdminService
     Task<UserMutationResult> ReactivateAsync(Guid id, CancellationToken ct = default);
     Task<UserMutationResult> ForceLogoutAsync(Guid id, CancellationToken ct = default);
     Task<UserMutationResult> SendPasswordResetEmailAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>Generates a fresh email-confirmation token and re-sends the
+    /// invitation message — for admins troubleshooting "I never got the
+    /// email" reports. The prior token stays valid until its natural
+    /// expiry; the new one works too.</summary>
+    Task<UserMutationResult> ResendInvitationEmailAsync(Guid id, CancellationToken ct = default);
     Task<UserMutationResult> HardDeleteAsync(Guid id, HardDeleteUserRequest request, CancellationToken ct = default);
 
     /// <summary>Admin override for the per-user profile fields. Bypasses the

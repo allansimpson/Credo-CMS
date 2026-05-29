@@ -25,6 +25,25 @@ export class ApiError extends Error {
     this.body = body;
   }
 
+  /** Returns a map of fieldName → error messages from FluentValidation responses. */
+  getFieldErrors(): Record<string, string[]> {
+    if (this.body && typeof this.body === "object" && "errors" in this.body) {
+      const errors = (this.body as { errors: unknown }).errors;
+      if (errors && typeof errors === "object" && !Array.isArray(errors)) {
+        const result: Record<string, string[]> = {};
+        for (const [field, messages] of Object.entries(errors as Record<string, unknown>)) {
+          if (Array.isArray(messages)) {
+            result[field] = messages.filter((m): m is string => typeof m === "string");
+          } else if (typeof messages === "string") {
+            result[field] = [messages];
+          }
+        }
+        return result;
+      }
+    }
+    return {};
+  }
+
   /** Returns user-facing error messages from a typical API error envelope. */
   getMessages(): string[] {
     if (this.body && typeof this.body === "object" && "errors" in this.body) {

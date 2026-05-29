@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MessageSquare, Plus } from "lucide-react";
+import { Heart, MessageSquare, Plus, ArrowRight } from "lucide-react";
 import { ChurchThemeLayout } from "@/themes/ChurchThemeLayout";
 import { PublicNavBar } from "@/components/shared/PublicNavBar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
@@ -214,9 +214,10 @@ function PrayerCard({
         )}
         <Link
           to={`/prayer-requests/${request.id}`}
-          className="ml-auto text-xs text-primary hover:underline"
+          className="ml-auto inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
         >
-          Open →
+          Open
+          <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-3.5 w-3.5 translate-y-px" />
         </Link>
       </footer>
     </article>

@@ -44,7 +44,7 @@ const SIZE_CLASSES: Record<PublicBtnSize, string> = {
 
 function buildClassName(variant: PublicBtnVariant, size: PublicBtnSize, className?: string) {
   return [
-    "inline-flex items-center justify-center gap-2 font-medium transition-colors",
+    "inline-flex items-center justify-center gap-2 font-semibold transition-colors",
     VARIANT_CLASSES[variant],
     SIZE_CLASSES[size],
     className ?? "",

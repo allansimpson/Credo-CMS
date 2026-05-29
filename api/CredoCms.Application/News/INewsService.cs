@@ -13,7 +13,8 @@ public interface INewsService
     Task<PublicNewsDetailDto?> GetPublicBySlugAsync(string slug, bool includeMembersOnly, CancellationToken ct = default);
 
     Task<PagedResult<PublicNewsItemDto>> ListPublicAsync(
-        bool includeMembersOnly, int page, int pageSize, CancellationToken ct = default);
+        bool includeMembersOnly, int page, int pageSize, string? category = null,
+        CancellationToken ct = default);
 
     Task<NewsOperationResult> CreateAsync(CreateNewsItemRequest request, CancellationToken ct = default);
 

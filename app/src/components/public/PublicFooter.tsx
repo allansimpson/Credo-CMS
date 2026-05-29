@@ -67,7 +67,7 @@ export function PublicFooter({ template }: PublicFooterProps) {
 
   const isQuiet = template === 1;
   const churchName = settings.churchName;
-  const showCookiePreferences = settings.analyticsProvider === 1;
+  const showCookiePreferences = settings.analyticsProvider === "Ga4";
 
   const socialLinks: SocialLink[] = [
     { url: settings.facebookUrl, icon: Facebook, label: "Facebook" },
@@ -152,7 +152,14 @@ function EditorialFooter({
 
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
-          <Eyebrow accent tone="inverse">{churchName}</Eyebrow>
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center bg-accent text-xs font-bold text-accent-foreground">
+              H
+            </span>
+            <span className="text-[11px] font-medium uppercase tracking-[0.18em] text-inset-foreground">
+              {churchName}
+            </span>
+          </div>
           {tagline ? (
             <p className="mt-3 text-sm leading-6 text-inset-foreground/80">{tagline}</p>
           ) : null}
@@ -204,7 +211,6 @@ function EditorialFooter({
                 Cookie preferences
               </button>
             ) : null}
-            <span className="text-inset-foreground/50">Built on Credo CMS</span>
           </div>
           <SocialIcons
             churchName={churchName}

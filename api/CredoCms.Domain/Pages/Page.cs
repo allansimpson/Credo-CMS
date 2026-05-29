@@ -52,6 +52,27 @@ public sealed class Page : IVersionedEntity
 
     public bool IsSystemPage { get; set; }
 
+    public PageTemplate Template { get; set; } = PageTemplate.Standard;
+
+    // ── Draft / publish workflow ─────────────────────────────────────────
+    // When HasUnpublishedDraft is true, the Draft* columns hold work-in-
+    // progress edits that have not yet been promoted to the live page.
+    // The public endpoint always reads the non-Draft columns, so visitors
+    // see the last published version until Publish copies draft → live.
+
+    public bool HasUnpublishedDraft { get; set; }
+
+    public string? DraftTitle { get; set; }
+    public string? DraftBodyJson { get; set; }
+    [MaxLength(500)] public string? DraftExcerpt { get; set; }
+    [MaxLength(2000)] public string? DraftHeroImageUrl { get; set; }
+    [MaxLength(2000)] public string? DraftHeroImageWebpUrl { get; set; }
+    [MaxLength(300)] public string? DraftHeroImageAlt { get; set; }
+    [MaxLength(300)] public string? DraftMetaDescription { get; set; }
+    public bool? DraftIsMembersOnly { get; set; }
+    public PageTemplate? DraftTemplate { get; set; }
+    public DateTimeOffset? DraftSavedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public Guid? ModifiedByUserId { get; set; }

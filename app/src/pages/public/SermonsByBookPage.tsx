@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { publicSermonsApi } from "@/lib/api/publicSermons";
 import type { SermonListItem } from "@/lib/api/sermons";
 import { SeoTags } from "@/components/shared/SeoTags";
@@ -31,7 +32,10 @@ export function SermonsByBookPage() {
     <div className="mx-auto max-w-5xl px-4 py-8">
       <SeoTags title={`Sermons in ${info.name}`} description={`Sermons referencing ${info.name}.`} />
       <p className="text-sm">
-        <Link to="/sermons/by-book" className="text-primary hover:underline">← All books</Link>
+        <Link to="/sermons/by-book" className="inline-flex items-center gap-1.5 text-primary hover:underline">
+          <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+          All books
+        </Link>
       </p>
       <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{info.name}</h1>
       <p className="mt-1 text-sm text-muted">

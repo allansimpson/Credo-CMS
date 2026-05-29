@@ -56,7 +56,7 @@ public sealed class HomepageService : IHomepageService
     {
         var site = await _settings.GetPublicAsync(ct).ConfigureAwait(false);
         var serviceTimes = await _serviceTimes.ListPublicAsync(ct).ConfigureAwait(false);
-        var newsResults = await _news.ListPublicAsync(isAuthenticatedMember, page: 1, pageSize: 3, ct).ConfigureAwait(false);
+        var newsResults = await _news.ListPublicAsync(isAuthenticatedMember, page: 1, pageSize: 3, category: null, ct: ct).ConfigureAwait(false);
         var banner = await _banner.GetActivePublicAsync(ct).ConfigureAwait(false);
 
         // Latest published sermon — used as "This Sunday" on the home page.
@@ -73,7 +73,8 @@ public sealed class HomepageService : IHomepageService
         var eventsResults = await _events.ListPublicAsync(
             page: 1, pageSize: 4,
             includeMembersOnly: isAuthenticatedMember,
-            ct).ConfigureAwait(false);
+            category: null,
+            ct: ct).ConfigureAwait(false);
 
         // Members welcome text only flows down when the caller is auth'd.
         string? welcome = null;

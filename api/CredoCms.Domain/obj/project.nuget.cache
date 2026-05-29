@@ -1,17 +1,20 @@
 {
   "version": 2,
-  "dgSpecHash": "4WMPnLQ6NiE=",
-  "success": false,
+  "dgSpecHash": "lZ6eJUi4NfE=",
+  "success": true,
   "projectFilePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain\\CredoCms.Domain.csproj",
-  "expectedPackageFiles": [],
-  "logs": [
-    {
-      "code": "NU1105",
-      "level": "Error",
-      "message": "Unable to read project information for 'CredoCms.Domain': Invalid framework identifier ''.",
-      "projectPath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain\\CredoCms.Domain.csproj",
-      "filePath": "C:\\CODE\\Credo-CMS\\api\\CredoCms.Domain\\CredoCms.Domain.csproj",
-      "targetGraphs": []
-    }
-  ]
+  "expectedPackageFiles": [
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.aspnetcore.cryptography.internal\\10.0.0\\microsoft.aspnetcore.cryptography.internal.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.aspnetcore.cryptography.keyderivation\\10.0.0\\microsoft.aspnetcore.cryptography.keyderivation.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.caching.abstractions\\10.0.0\\microsoft.extensions.caching.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\10.0.0\\microsoft.extensions.dependencyinjection.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.0\\microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.identity.core\\10.0.0\\microsoft.extensions.identity.core.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.identity.stores\\10.0.0\\microsoft.extensions.identity.stores.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.logging\\10.0.0\\microsoft.extensions.logging.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.0\\microsoft.extensions.logging.abstractions.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.options\\10.0.0\\microsoft.extensions.options.10.0.0.nupkg.sha512",
+    "C:\\Users\\allan\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.0\\microsoft.extensions.primitives.10.0.0.nupkg.sha512"
+  ],
+  "logs": []
 }

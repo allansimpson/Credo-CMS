@@ -36,8 +36,9 @@ public sealed class PublicEventsController : ControllerBase
     public Task<PagedResult<PublicEventListItemDto>> ListAsync(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 12,
+        [FromQuery] string? category = null,
         CancellationToken ct = default)
-        => _events.ListPublicAsync(page, pageSize, IsAuthenticatedMember(), ct);
+        => _events.ListPublicAsync(page, pageSize, IsAuthenticatedMember(), category, ct);
 
     [HttpGet("{slug}")]
     [OutputCache(PolicyName = "MembersAuthVary", Duration = 120,

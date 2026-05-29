@@ -1,6 +1,7 @@
 using CredoCms.Api;
 using CredoCms.Api.Caching;
 using CredoCms.Api.Composition;
+using CredoCms.Api.Development;
 using CredoCms.Api.Hubs;
 using CredoCms.Api.Middleware;
 using CredoCms.Application;
@@ -77,6 +78,13 @@ try
                 .AllowAnyMethod()
                 .AllowCredentials());
         });
+
+        // Auto-start a local smtp4dev mail catcher so admins can verify the
+        // invite/broadcast flows without configuring an external SMTP. Opt
+        // out via "Smtp4Dev:Enabled": false in appsettings.Development.json.
+        builder.Services.Configure<Smtp4DevOptions>(
+            builder.Configuration.GetSection("Smtp4Dev"));
+        builder.Services.AddHostedService<Smtp4DevHostedService>();
     }
 
     var aiConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];

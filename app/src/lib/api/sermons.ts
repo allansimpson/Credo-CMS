@@ -3,6 +3,8 @@ import type { ScriptureReferenceDto, ScriptureReferenceInputDto } from "@/lib/ap
 import type { TagDto } from "@/lib/api/tags";
 import type { PagedResult } from "@/types/api";
 
+export type ServiceType = "AmBibleClass" | "AmWorship" | "PmWorship" | "WednesdayNight" | "Special";
+
 export interface SermonListItem {
   id: string;
   slug: string;
@@ -16,6 +18,11 @@ export interface SermonListItem {
   speakerName: string | null;
   sermonSeriesTitle: string | null;
   sermonSeriesId: string | null;
+  serviceType: ServiceType;
+  /** Powers the admin table's inline "Watch" modal — no per-click fetch. */
+  youTubeVideoId: string;
+  /** Video length in seconds, captured during YouTube sync. */
+  durationSeconds: number | null;
 }
 
 export interface SermonAttachmentDto {
@@ -41,6 +48,7 @@ export interface SermonDetail {
   speakerLeaderId: string | null;
   speakerNameFreeText: string | null;
   sermonSeriesId: string | null;
+  serviceType: ServiceType;
   isPublished: boolean;
   isMembersOnly: boolean;
   isDeleted: boolean;
@@ -70,6 +78,7 @@ export interface PublicSermon {
   sermonSeriesTitle: string | null;
   sermonSeriesSlug: string | null;
   isMembersOnly: boolean;
+  serviceType: ServiceType;
   tags: TagDto[];
   attachments: SermonAttachmentDto[];
   scriptureReferences: ScriptureReferenceDto[];
@@ -96,6 +105,7 @@ export interface CreateSermonRequest {
   speakerLeaderId: string | null;
   speakerNameFreeText: string | null;
   sermonSeriesId: string | null;
+  serviceType: ServiceType;
   isPublished: boolean;
   isMembersOnly: boolean;
   tags: SermonTagInput[];
@@ -115,6 +125,7 @@ export interface UpdateSermonRequest {
   speakerLeaderId: string | null;
   speakerNameFreeText: string | null;
   sermonSeriesId: string | null;
+  serviceType: ServiceType;
   isPublished: boolean;
   isMembersOnly: boolean;
   tags: SermonTagInput[];

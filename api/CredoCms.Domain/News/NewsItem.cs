@@ -42,6 +42,12 @@ public sealed class NewsItem : IVersionedEntity
     [MaxLength(300)]
     public string? MetaDescription { get; set; }
 
+    /// <summary>Optional category for filtering (e.g., "Preachers Notes",
+    /// "Announcements"). Must match one configured in
+    /// <c>SiteSettings.NewsCategoriesJson</c>.</summary>
+    [MaxLength(100)]
+    public string? Category { get; set; }
+
     public bool IsPublished { get; set; }
 
     public bool IsMembersOnly { get; set; } = true;

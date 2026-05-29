@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { eventsApi, type EventDetail } from "@/lib/api/events";
 import {
   eventRegistrationApi,
@@ -58,8 +59,9 @@ export function EventRegistrationsAdminPage() {
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <Link to={`/admin/events/${eventId}`} className="text-xs text-muted hover:underline">
-            ← Back to event
+          <Link to={`/admin/events/${eventId}`} className="inline-flex items-center gap-1.5 text-xs text-muted hover:underline">
+            <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-3.5 w-3.5 translate-y-px" />
+            Back to event
           </Link>
           <h1 className="text-2xl font-bold">{evt.title}</h1>
           <p className="text-sm text-muted">Registration management</p>

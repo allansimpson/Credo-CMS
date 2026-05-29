@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
+import { ChevronUp, ChevronDown, X } from "lucide-react";
 import { siteSettingsApi } from "@/lib/api/siteSettings";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
-import type { SiteSettings, UpdateSiteSettingsRequest } from "@/types/api";
+import type {
+  AdminNotificationFrequency,
+  EmailProvider,
+  SiteSettings,
+  UpdateSiteSettingsRequest,
+} from "@/types/api";
 import { TipTapEditor } from "@/components/shared/TipTapEditor";
 import { ImageUpload } from "@/components/shared/ImageUpload";
+import { useToast } from "@/components/shared/admin/Toast";
+import { ApiError } from "@/lib/apiClient";
 import {
   MetaLabel,
   PageHeader,
@@ -25,6 +33,7 @@ type TabId = typeof TABS[number]["id"];
 
 export function SettingsPage() {
   const [active, setActive] = useState<TabId>("branding");
+  const [errorTabs, setErrorTabs] = useState<Set<TabId>>(new Set());
 
   return (
     <div className="space-y-8">
@@ -40,13 +49,17 @@ export function SettingsPage() {
                   type="button"
                   onClick={() => setActive(t.id)}
                   className={cn(
-                    "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
+                    "flex w-full items-center justify-between border-l-2 px-3 py-2 text-left text-sm transition-colors",
                     active === t.id
                       ? "border-accent bg-panel-alt font-semibold text-foreground"
                       : "border-transparent text-fg-soft hover:bg-panel-alt hover:text-foreground",
+                    errorTabs.has(t.id) && active !== t.id && "border-danger text-danger",
                   )}
                 >
                   {t.label}
+                  {errorTabs.has(t.id) && (
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-danger" />
+                  )}
                 </button>
               </li>
             ))}
@@ -54,13 +67,13 @@ export function SettingsPage() {
         </nav>
 
         <div className="min-w-0">
-          {active === "branding" && <BrandingTab />}
-          {active === "content" && <ContentTab />}
-          {active === "members" && <MembersTab />}
-          {active === "email" && <PlaceholderTab name="Email & Notifications" />}
-          {active === "integrations" && <IntegrationsTab />}
+          {active === "branding" && <BrandingTab onErrorTabs={setErrorTabs} />}
+          {active === "content" && <ContentTab onErrorTabs={setErrorTabs} />}
+          {active === "members" && <MembersTab onErrorTabs={setErrorTabs} />}
+          {active === "email" && <EmailTab onErrorTabs={setErrorTabs} />}
+          {active === "integrations" && <IntegrationsTab onErrorTabs={setErrorTabs} />}
           {active === "privacy" && <PlaceholderTab name="Privacy & Security" />}
-          {active === "advanced" && <AdvancedTab />}
+          {active === "advanced" && <AdvancedTab onErrorTabs={setErrorTabs} />}
         </div>
       </div>
     </div>
@@ -106,7 +119,10 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     defaultVersionRetentionCount: s.defaultVersionRetentionCount,
     leadersPageLabel: s.leadersPageLabel,
     leaderCategoriesJson: s.leaderCategoriesJson,
+    eventCategoriesJson: s.eventCategoriesJson,
+    newsCategoriesJson: s.newsCategoriesJson,
     documentCategoriesJson: s.documentCategoriesJson,
+    sermonContextsJson: s.sermonContextsJson,
     maxDocumentSizeBytes: s.maxDocumentSizeBytes,
     maxImageSizeBytes: s.maxImageSizeBytes,
     imageMaxWidth: s.imageMaxWidth,
@@ -141,10 +157,83 @@ function buildRequest(s: SiteSettings): UpdateSiteSettingsRequest {
     ga4ConsentBannerEnabled: s.ga4ConsentBannerEnabled,
     ga4ConsentBannerPosition: s.ga4ConsentBannerPosition,
     cookiePolicyPageId: s.cookiePolicyPageId,
+    // Email & notifications — round-tripped even though the UI tab is placeholder.
+    emailProvider: s.emailProvider,
+    emailFromAddress: s.emailFromAddress,
+    emailFromName: s.emailFromName,
+    emailReplyToAddress: s.emailReplyToAddress,
+    sendGridApiKey: s.sendGridApiKey,
+    sendGridWebhookSecret: s.sendGridWebhookSecret,
+    smtpHost: s.smtpHost,
+    smtpPort: s.smtpPort,
+    smtpUsername: s.smtpUsername,
+    smtpPassword: s.smtpPassword,
+    smtpUseSsl: s.smtpUseSsl,
+    emailEnabled: s.emailEnabled,
+    testEmailRecipient: s.testEmailRecipient,
+    newsEmailTargetMode: s.newsEmailTargetMode,
+    newsEmailTargetGroupIdsJson: s.newsEmailTargetGroupIdsJson,
+    blogEmailTargetMode: s.blogEmailTargetMode,
+    blogEmailTargetGroupIdsJson: s.blogEmailTargetGroupIdsJson,
+    emailSubjectPrefixNews: s.emailSubjectPrefixNews,
+    emailSubjectPrefixBlog: s.emailSubjectPrefixBlog,
+    adminNotificationFrequency: s.adminNotificationFrequency,
+    smsProvider: s.smsProvider,
+    twilioAccountSid: s.twilioAccountSid,
+    twilioAuthToken: s.twilioAuthToken,
+    twilioFromNumber: s.twilioFromNumber,
+    unsubscribeSigningKey: s.unsubscribeSigningKey,
     // Public Site design handoff
     template: s.template,
     rowVersion: s.rowVersion,
   };
+}
+
+type FieldErrors = Record<string, string[]>;
+
+const FIELD_TAB_MAP: Record<string, TabId> = {
+  ChurchName: "branding", Tagline: "branding", LogoUrl: "branding",
+  PrimaryColor: "branding", AccentColor: "branding",
+  ContactEmail: "branding", ContactPhone: "branding", ContactAddress: "branding",
+  FacebookUrl: "branding", InstagramUrl: "branding", YouTubeUrl: "branding",
+  XUrl: "branding", TikTokUrl: "branding", OtherSocialLabel: "branding", OtherSocialUrl: "branding",
+  FooterText: "branding", DefaultVersionRetentionCount: "branding",
+  HomepageHeroCtaLabel: "content", HomepageHeroCtaLink: "content",
+  LeadersPageLabel: "content", LeaderCategoriesJson: "content",
+  DocumentCategoriesJson: "content", MembersWelcomeText: "content",
+  EventCategoriesJson: "content", NewsCategoriesJson: "content", SermonContextsJson: "content",
+  GetInvolvedPageLabel: "members", ClassesPageLabel: "members",
+  ClassAudienceAgeGroupsJson: "members", BlogCategoriesJson: "members", BlogPageLabel: "members",
+  ProfanityWordlist: "members", ProfanityAllowlist: "members",
+  PrayerRequestArchiveDays: "members", PrayerRequestRequireApproval: "members",
+  ConnectCardInterestsJson: "members", ConnectCardPageLabel: "members",
+  CloudflareTurnstileSiteKey: "integrations", CloudflareTurnstileSecretKey: "integrations",
+  FacebookOAuthAppId: "integrations", FacebookOAuthAppSecret: "integrations",
+  EmailProvider: "email", EmailFromAddress: "email", EmailFromName: "email",
+  EmailReplyToAddress: "email", SendGridApiKey: "email", SendGridWebhookSecret: "email",
+  SmtpHost: "email", SmtpPort: "email", SmtpUsername: "email", SmtpPassword: "email",
+  SmtpUseSsl: "email", EmailEnabled: "email", TestEmailRecipient: "email",
+  EmailSubjectPrefixNews: "email", EmailSubjectPrefixBlog: "email",
+  AdminNotificationFrequency: "email",
+  MaxDocumentSizeBytes: "advanced", MaxImageSizeBytes: "advanced",
+  ImageMaxWidth: "advanced", ImageQuality: "advanced", DefaultMetaDescription: "advanced",
+};
+
+function tabsWithErrors(fieldErrors: FieldErrors): Set<TabId> {
+  const tabs = new Set<TabId>();
+  for (const field of Object.keys(fieldErrors)) {
+    const tab = FIELD_TAB_MAP[field];
+    if (tab) tabs.add(tab);
+  }
+  return tabs;
+}
+
+function fieldError(fieldErrors: FieldErrors, ...fields: string[]): string | undefined {
+  for (const f of fields) {
+    const errs = fieldErrors[f];
+    if (errs?.length) return errs[0];
+  }
+  return undefined;
 }
 
 interface SettingsFormState {
@@ -152,6 +241,7 @@ interface SettingsFormState {
   setSettings: (s: SiteSettings) => void;
   loading: boolean;
   errors: string[];
+  fieldErrors: FieldErrors;
   success: boolean;
   submitting: boolean;
   submit: () => Promise<void>;
@@ -162,8 +252,9 @@ function useSettingsForm(): SettingsFormState {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
-  const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     siteSettingsApi.getAdmin()
@@ -175,39 +266,54 @@ function useSettingsForm(): SettingsFormState {
     if (!settings) return;
     setSubmitting(true);
     setErrors([]);
-    setSuccess(false);
+    setFieldErrors({});
     try {
       const updated = await siteSettingsApi.update(buildRequest(settings));
       setSettings(updated);
-      setSuccess(true);
+      toast("success", "Settings saved.");
       await reload();
     } catch (err) {
-      const messages =
-        typeof err === "object" && err !== null && "getMessages" in err
-          ? (err as { getMessages: () => string[] }).getMessages()
-          : ["Failed to save."];
-      setErrors(messages);
+      if (err instanceof ApiError) {
+        const fe = err.getFieldErrors();
+        if (Object.keys(fe).length > 0) {
+          setFieldErrors(fe);
+          toast("error", "Please fix the highlighted fields below before saving.");
+        } else {
+          const messages = err.getMessages();
+          setErrors(messages);
+          toast("error", messages[0] ?? "Failed to save.");
+        }
+      } else {
+        setErrors(["Failed to save."]);
+        toast("error", "Failed to save.");
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  return { settings, setSettings, loading, errors, success, submitting, submit };
+  return { settings, setSettings, loading, errors, fieldErrors, submitting, submit };
 }
 
-function FormBanner({ errors, success }: { errors: string[]; success: boolean }) {
+function FormBanner({ errors, fieldErrors }: { errors: string[]; fieldErrors: FieldErrors }) {
+  const hasFieldErrors = Object.keys(fieldErrors).length > 0;
   return (
     <>
       {errors.length > 0 && (
-        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+        <div role="alert" className="border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
           <ul className="list-disc pl-5">
             {errors.map((err) => <li key={err}>{err}</li>)}
           </ul>
         </div>
       )}
-      {success && (
-        <div role="status" className="rounded-md border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800">
-          Settings saved.
+      {hasFieldErrors && (
+        <div role="alert" className="border border-danger/30 bg-danger/10 p-3 text-sm text-danger">
+          <p className="font-semibold">Please fix the highlighted fields below before saving.</p>
+          <ul className="mt-2 list-disc pl-5 text-xs">
+            {Object.entries(fieldErrors).map(([field, msgs]) => (
+              <li key={field}><strong>{field}</strong>: {msgs.join("; ")}</li>
+            ))}
+          </ul>
         </div>
       )}
     </>
@@ -226,23 +332,26 @@ function SubmitButton({ submitting }: { submitting: boolean }) {
   );
 }
 
-function BrandingTab() {
-  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+function BrandingTab({ onErrorTabs }: { onErrorTabs: (s: Set<TabId>) => void }) {
+  const { settings, setSettings, loading, errors, fieldErrors, submitting, submit } = useSettingsForm();
+
+  useEffect(() => { onErrorTabs(tabsWithErrors(fieldErrors)); }, [fieldErrors, onErrorTabs]);
 
   if (loading) return <p className="text-muted">Loading…</p>;
   if (!settings) return <p className="text-danger">Could not load settings.</p>;
 
+  const fe = (f: string) => fieldError(fieldErrors, f);
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormBanner errors={errors} success={success} />
+      <FormBanner errors={errors} fieldErrors={fieldErrors} />
 
       <Section number="01" title="Identity">
-        <Field label="Church name" required>
+        <Field label="Church name" required error={fe("ChurchName")}>
           <input value={settings.churchName} required onChange={(e) => setSettings({ ...settings, churchName: e.target.value })} className="input" />
         </Field>
-        <Field label="Tagline">
+        <Field label="Tagline" error={fe("Tagline")}>
           <input value={settings.tagline ?? ""} onChange={(e) => setSettings({ ...settings, tagline: e.target.value })} className="input" />
         </Field>
       </Section>
@@ -311,25 +420,35 @@ function BrandingTab() {
   );
 }
 
-function ContentTab() {
-  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+function ContentTab({ onErrorTabs }: { onErrorTabs: (s: Set<TabId>) => void }) {
+  const { settings, setSettings, loading, errors, fieldErrors, submitting, submit } = useSettingsForm();
+  useEffect(() => { onErrorTabs(tabsWithErrors(fieldErrors)); }, [fieldErrors, onErrorTabs]);
 
   if (loading) return <p className="text-muted">Loading…</p>;
   if (!settings) return <p className="text-danger">Could not load settings.</p>;
 
   const leaderCats = parseCategories(settings.leaderCategoriesJson);
+  const eventCats = parseCategories(settings.eventCategoriesJson);
+  const newsCats = parseCategories(settings.newsCategoriesJson);
   const docCats = parseCategories(settings.documentCategoriesJson);
+  const sermonContexts = parseCategories(settings.sermonContextsJson);
 
   const setLeaderCats = (next: string[]) =>
     setSettings({ ...settings, leaderCategoriesJson: JSON.stringify(next) });
+  const setEventCats = (next: string[]) =>
+    setSettings({ ...settings, eventCategoriesJson: JSON.stringify(next) });
+  const setNewsCats = (next: string[]) =>
+    setSettings({ ...settings, newsCategoriesJson: JSON.stringify(next) });
   const setDocCats = (next: string[]) =>
     setSettings({ ...settings, documentCategoriesJson: JSON.stringify(next) });
+  const setSermonContexts = (next: string[]) =>
+    setSettings({ ...settings, sermonContextsJson: JSON.stringify(next) });
 
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormBanner errors={errors} success={success} />
+      <FormBanner errors={errors} fieldErrors={fieldErrors} />
 
       <Section number="01" title="Homepage hero">
         <Field label="CTA button label" required>
@@ -367,7 +486,34 @@ function ContentTab() {
         </Field>
       </Section>
 
-      <Section number="03" title="Documents">
+      <Section number="03" title="Events">
+        <Field
+          label="Event categories"
+          hint="Drives the admin event-category dropdown and the public /events filter chips. Categories in use by an event cannot be removed until the events are removed or recategorized."
+        >
+          <CategoryListEditor values={eventCats} onChange={setEventCats} />
+        </Field>
+      </Section>
+
+      <Section number="04" title="News">
+        <Field
+          label="News categories"
+          hint="Drives the admin news-category dropdown. Categories in use by a news item cannot be removed until the items are removed or recategorized."
+        >
+          <CategoryListEditor values={newsCats} onChange={setNewsCats} />
+        </Field>
+      </Section>
+
+      <Section number="05" title="Sermons">
+        <Field
+          label="Sermon contexts"
+          hint="Teaching tracks shown on the admin Sermon Series editor and used as the colored marker on the public by-series page. Colors are assigned by position in this list, so reordering shifts the palette. A context still pinned to a series cannot be removed until the series is reassigned."
+        >
+          <CategoryListEditor values={sermonContexts} onChange={setSermonContexts} />
+        </Field>
+      </Section>
+
+      <Section number="06" title="Documents">
         <Field label="Document categories" hint="Drives admin filtering and public grouping on /documents.">
           <CategoryListEditor values={docCats} onChange={setDocCats} />
         </Field>
@@ -392,8 +538,9 @@ function ContentTab() {
   );
 }
 
-function MembersTab() {
-  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+function MembersTab({ onErrorTabs }: { onErrorTabs: (s: Set<TabId>) => void }) {
+  const { settings, setSettings, loading, errors, fieldErrors, submitting, submit } = useSettingsForm();
+  useEffect(() => { onErrorTabs(tabsWithErrors(fieldErrors)); }, [fieldErrors, onErrorTabs]);
 
   if (loading) return <p className="text-muted">Loading…</p>;
   if (!settings) return <p className="text-danger">Could not load settings.</p>;
@@ -410,7 +557,7 @@ function MembersTab() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormBanner errors={errors} success={success} />
+      <FormBanner errors={errors} fieldErrors={fieldErrors} />
 
       <Section number="01" title="Public page labels">
         <Field label="Get involved page label" required>
@@ -528,8 +675,224 @@ function MembersTab() {
   );
 }
 
-function IntegrationsTab() {
-  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+// Mirrors api/CredoCms.Domain/Email/EmailEnums.cs — keep in sync. Values are
+// the enum *names* because the API serializes with JsonStringEnumConverter.
+const EMAIL_PROVIDER_OPTIONS: Array<{ value: EmailProvider; label: string }> = [
+  { value: "None", label: "None (log only)" },
+  { value: "SendGrid", label: "SendGrid" },
+  { value: "Smtp", label: "SMTP" },
+];
+
+const ADMIN_NOTIFICATION_OPTIONS: Array<{ value: AdminNotificationFrequency; label: string }> = [
+  { value: "Off", label: "Off" },
+  { value: "Every30Minutes", label: "Every 30 minutes" },
+  { value: "Hourly", label: "Hourly" },
+  { value: "Daily", label: "Daily" },
+];
+
+function EmailTab({ onErrorTabs }: { onErrorTabs: (s: Set<TabId>) => void }) {
+  const { settings, setSettings, loading, errors, fieldErrors, submitting, submit } = useSettingsForm();
+  const { toast } = useToast();
+  const [testing, setTesting] = useState(false);
+  const [overrideTo, setOverrideTo] = useState("");
+
+  useEffect(() => { onErrorTabs(tabsWithErrors(fieldErrors)); }, [fieldErrors, onErrorTabs]);
+
+  if (loading) return <p className="text-muted">Loading…</p>;
+  if (!settings) return <p className="text-danger">Could not load settings.</p>;
+
+  const fe = (f: string) => fieldError(fieldErrors, f);
+  const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); void submit(); };
+
+  const provider = settings.emailProvider;
+  const isSendGrid = provider === "SendGrid";
+  const isSmtp = provider === "Smtp";
+
+  const handleTest = async () => {
+    setTesting(true);
+    try {
+      const result = await siteSettingsApi.testEmail({
+        provider: settings.emailProvider,
+        emailFromAddress: settings.emailFromAddress,
+        emailFromName: settings.emailFromName,
+        emailReplyToAddress: settings.emailReplyToAddress,
+        sendGridApiKey: settings.sendGridApiKey,
+        smtpHost: settings.smtpHost,
+        smtpPort: settings.smtpPort,
+        smtpUsername: settings.smtpUsername,
+        smtpPassword: settings.smtpPassword,
+        smtpUseSsl: settings.smtpUseSsl,
+        testEmailRecipient: settings.testEmailRecipient,
+        overrideToAddress: overrideTo.trim() || null,
+      });
+      if (result.success) {
+        toast("success", result.note ?? "Test email sent.");
+      } else {
+        toast("error", result.errorMessage ?? "Test email failed.");
+      }
+    } catch {
+      toast("error", "Test email request failed.");
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <FormBanner errors={errors} fieldErrors={fieldErrors} />
+
+      <Section number="01" title="Provider">
+        <Field label="Email provider" required error={fe("EmailProvider")}
+          hint="Choose how outbound mail is routed. 'None' logs to the API console so you can preview without sending — useful for dev.">
+          <select
+            aria-label="Email provider"
+            value={settings.emailProvider}
+            onChange={(e) => setSettings({ ...settings, emailProvider: e.target.value as EmailProvider })}
+            className="input"
+          >
+            {EMAIL_PROVIDER_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Email enabled" hint="Master kill switch. Off means the LoggingEmailService short-circuits even when a provider is selected — keeps fresh deploys from accidentally sending mail.">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={settings.emailEnabled}
+              onChange={(e) => setSettings({ ...settings, emailEnabled: e.target.checked })} />
+            Enable outbound email
+          </label>
+        </Field>
+      </Section>
+
+      <Section number="02" title="From / reply-to">
+        <Field label="From address" required error={fe("EmailFromAddress")}>
+          <input type="email" value={settings.emailFromAddress} required
+            aria-label="From address"
+            onChange={(e) => setSettings({ ...settings, emailFromAddress: e.target.value })}
+            className="input" />
+        </Field>
+        <Field label="From name" required error={fe("EmailFromName")}>
+          <input value={settings.emailFromName} required
+            aria-label="From name"
+            onChange={(e) => setSettings({ ...settings, emailFromName: e.target.value })}
+            className="input" />
+        </Field>
+        <Field label="Reply-to address" hint="Optional. Leave blank to fall back to the From address." error={fe("EmailReplyToAddress")}>
+          <input type="email" value={settings.emailReplyToAddress ?? ""}
+            aria-label="Reply-to address"
+            onChange={(e) => setSettings({ ...settings, emailReplyToAddress: e.target.value || null })}
+            className="input" />
+        </Field>
+      </Section>
+
+      {isSendGrid && (
+        <Section number="03" title="SendGrid">
+          <Field label="API key" required error={fe("SendGridApiKey")}
+            hint="Stored masked in the UI; the saved value is sent on every save regardless.">
+            <input type="password" value={settings.sendGridApiKey ?? ""}
+              onChange={(e) => setSettings({ ...settings, sendGridApiKey: e.target.value || null })}
+              className="input" autoComplete="off" />
+          </Field>
+          <Field label="Webhook secret" hint="Used to verify SendGrid event webhook signatures. Optional but recommended for production." error={fe("SendGridWebhookSecret")}>
+            <input type="password" value={settings.sendGridWebhookSecret ?? ""}
+              onChange={(e) => setSettings({ ...settings, sendGridWebhookSecret: e.target.value || null })}
+              className="input" autoComplete="off" />
+          </Field>
+        </Section>
+      )}
+
+      {isSmtp && (
+        <Section number="03" title="SMTP">
+          <Field label="Host" required error={fe("SmtpHost")}>
+            <input value={settings.smtpHost ?? ""} required
+              onChange={(e) => setSettings({ ...settings, smtpHost: e.target.value || null })}
+              className="input" placeholder="smtp.example.com" />
+          </Field>
+          <Field label="Port" required error={fe("SmtpPort")}>
+            <input type="number" min={1} max={65535} value={settings.smtpPort}
+              aria-label="SMTP port"
+              onChange={(e) => setSettings({ ...settings, smtpPort: Number(e.target.value) })}
+              className="input" placeholder="587" />
+          </Field>
+          <Field label="Username" error={fe("SmtpUsername")}>
+            <input value={settings.smtpUsername ?? ""}
+              onChange={(e) => setSettings({ ...settings, smtpUsername: e.target.value || null })}
+              className="input" autoComplete="off" />
+          </Field>
+          <Field label="Password" error={fe("SmtpPassword")}>
+            <input type="password" value={settings.smtpPassword ?? ""}
+              onChange={(e) => setSettings({ ...settings, smtpPassword: e.target.value || null })}
+              className="input" autoComplete="off" />
+          </Field>
+          <Field label="Use SSL/TLS">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={settings.smtpUseSsl}
+                onChange={(e) => setSettings({ ...settings, smtpUseSsl: e.target.checked })} />
+              Encrypt the connection (typically on for port 587/465)
+            </label>
+          </Field>
+        </Section>
+      )}
+
+      <Section number={isSendGrid || isSmtp ? "04" : "03"} title="Subject prefixes">
+        <Field label="News broadcasts" hint='Prepended to "News" auto-broadcast subjects, e.g. "[News] Sunday recap".' error={fe("EmailSubjectPrefixNews")}>
+          <input value={settings.emailSubjectPrefixNews}
+            aria-label="News email subject prefix"
+            onChange={(e) => setSettings({ ...settings, emailSubjectPrefixNews: e.target.value })}
+            className="input" />
+        </Field>
+        <Field label="Blog broadcasts" hint='Prepended to "Blog" auto-broadcast subjects.' error={fe("EmailSubjectPrefixBlog")}>
+          <input value={settings.emailSubjectPrefixBlog}
+            aria-label="Blog email subject prefix"
+            onChange={(e) => setSettings({ ...settings, emailSubjectPrefixBlog: e.target.value })}
+            className="input" />
+        </Field>
+      </Section>
+
+      <Section number={isSendGrid || isSmtp ? "05" : "04"} title="Admin notifications">
+        <Field label="Digest frequency" hint="How often the API's digest job emails admins about new connect cards, prayer requests, etc." error={fe("AdminNotificationFrequency")}>
+          <select
+            aria-label="Admin notification frequency"
+            value={settings.adminNotificationFrequency}
+            onChange={(e) => setSettings({ ...settings, adminNotificationFrequency: e.target.value as AdminNotificationFrequency })}
+            className="input"
+          >
+            {ADMIN_NOTIFICATION_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </Field>
+      </Section>
+
+      <Section number={isSendGrid || isSmtp ? "06" : "05"} title="Test send">
+        <Field label="Default test recipient" hint="Optional. Used when no override is supplied below." error={fe("TestEmailRecipient")}>
+          <input type="email" value={settings.testEmailRecipient ?? ""}
+            onChange={(e) => setSettings({ ...settings, testEmailRecipient: e.target.value || null })}
+            className="input" placeholder="you@example.org" />
+        </Field>
+        <Field label="Send a one-off test"
+          hint="Uses the values on this form (even if you haven't saved). Sends to the override address below, or to your admin email if blank.">
+          <div className="flex flex-wrap items-center gap-2">
+            <input type="email" value={overrideTo}
+              onChange={(e) => setOverrideTo(e.target.value)}
+              className="input flex-1" placeholder="override@example.org (optional)" />
+            <button type="button" disabled={testing} onClick={handleTest}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-panel-alt disabled:opacity-50">
+              {testing ? "Sending…" : "Send test"}
+            </button>
+          </div>
+        </Field>
+      </Section>
+
+      <SubmitButton submitting={submitting} />
+      <Styles />
+    </form>
+  );
+}
+
+function IntegrationsTab({ onErrorTabs }: { onErrorTabs: (s: Set<TabId>) => void }) {
+  const { settings, setSettings, loading, errors, fieldErrors, submitting, submit } = useSettingsForm();
+  useEffect(() => { onErrorTabs(tabsWithErrors(fieldErrors)); }, [fieldErrors, onErrorTabs]);
 
   if (loading) return <p className="text-muted">Loading…</p>;
   if (!settings) return <p className="text-danger">Could not load settings.</p>;
@@ -538,7 +901,7 @@ function IntegrationsTab() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormBanner errors={errors} success={success} />
+      <FormBanner errors={errors} fieldErrors={fieldErrors} />
 
       <Section number="01" title="Cloudflare Turnstile">
         <Field label="Site key (public)" hint="Rendered into the connect-card page's Turnstile widget.">
@@ -596,8 +959,9 @@ function IntegrationsTab() {
   );
 }
 
-function AdvancedTab() {
-  const { settings, setSettings, loading, errors, success, submitting, submit } = useSettingsForm();
+function AdvancedTab({ onErrorTabs }: { onErrorTabs: (s: Set<TabId>) => void }) {
+  const { settings, setSettings, loading, errors, fieldErrors, submitting, submit } = useSettingsForm();
+  useEffect(() => { onErrorTabs(tabsWithErrors(fieldErrors)); }, [fieldErrors, onErrorTabs]);
   const [rebuildState, setRebuildState] = useState<"idle" | "queued">("idle");
 
   if (loading) return <p className="text-muted">Loading…</p>;
@@ -619,7 +983,7 @@ function AdvancedTab() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <FormBanner errors={errors} success={success} />
+      <FormBanner errors={errors} fieldErrors={fieldErrors} />
 
       <Section number="01" title="Image uploads">
         <Field label="Max width (px)" hint="Wider images are resized down on upload. Range: 800–5000.">
@@ -628,6 +992,7 @@ function AdvancedTab() {
             min={800}
             max={5000}
             value={settings.imageMaxWidth}
+            aria-label="Max image width in pixels"
             onChange={(e) => setSettings({ ...settings, imageMaxWidth: Number(e.target.value) })}
             className="input"
           />
@@ -638,6 +1003,7 @@ function AdvancedTab() {
             min={60}
             max={95}
             value={settings.imageQuality}
+            aria-label="JPEG and WebP quality"
             onChange={(e) => setSettings({ ...settings, imageQuality: Number(e.target.value) })}
             className="input"
           />
@@ -648,6 +1014,7 @@ function AdvancedTab() {
             min={1}
             max={50}
             value={Math.round(settings.maxImageSizeBytes / (1024 * 1024))}
+            aria-label="Max image size in megabytes"
             onChange={(e) =>
               setSettings({ ...settings, maxImageSizeBytes: Number(e.target.value) * 1024 * 1024 })
             }
@@ -663,6 +1030,7 @@ function AdvancedTab() {
             min={1}
             max={200}
             value={Math.round(settings.maxDocumentSizeBytes / (1024 * 1024))}
+            aria-label="Max document size in megabytes"
             onChange={(e) =>
               setSettings({ ...settings, maxDocumentSizeBytes: Number(e.target.value) * 1024 * 1024 })
             }
@@ -676,6 +1044,7 @@ function AdvancedTab() {
           <textarea
             value={settings.defaultMetaDescription ?? ""}
             maxLength={300}
+            aria-label="Default meta description"
             onChange={(e) => setSettings({ ...settings, defaultMetaDescription: e.target.value })}
             className="input min-h-20 py-2"
           />
@@ -740,9 +1109,15 @@ function CategoryListEditor({ values, onChange }: CategoryListEditorProps) {
             className="input flex-1"
             aria-label={`Category ${i + 1}`}
           />
-          <button type="button" onClick={() => moveUp(i)} aria-label="Move up" className="iconbtn">↑</button>
-          <button type="button" onClick={() => moveDown(i)} aria-label="Move down" className="iconbtn">↓</button>
-          <button type="button" onClick={() => remove(i)} aria-label="Remove" className="iconbtn text-danger">✕</button>
+          <button type="button" onClick={() => moveUp(i)} aria-label="Move up" className="iconbtn inline-flex items-center justify-center">
+            <ChevronUp aria-hidden="true" strokeWidth={1.75} className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => moveDown(i)} aria-label="Move down" className="iconbtn inline-flex items-center justify-center">
+            <ChevronDown aria-hidden="true" strokeWidth={1.75} className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => remove(i)} aria-label="Remove" className="iconbtn inline-flex items-center justify-center text-danger">
+            <X aria-hidden="true" strokeWidth={1.75} className="h-4 w-4" />
+          </button>
         </div>
       ))}
       <button
@@ -782,14 +1157,17 @@ function Section({
   );
 }
 
-function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, hint, required, error, children }: { label: string; hint?: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium">
+      <span className={cn("mb-1 block text-sm font-medium", error && "text-danger")}>
         {label}{required && <span className="text-danger"> *</span>}
       </span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
+      <div className={error ? "[&_.input]:border-danger [&_.input]:ring-1 [&_.input]:ring-danger/30" : ""}>
+        {children}
+      </div>
+      {error && <span className="mt-1 block text-xs text-danger">{error}</span>}
+      {!error && hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
     </label>
   );
 }

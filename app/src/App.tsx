@@ -35,6 +35,8 @@ const PageEditorPage = lazy(() =>
 const DynamicPagePage = lazy(() =>
   import("@/pages/public/DynamicPagePage").then((m) => ({ default: m.DynamicPagePage }))
 );
+// Page template components (About, ImNew, Beliefs, Contact) are now lazy-loaded
+// inside DynamicPagePage via the TEMPLATE_COMPONENTS registry.
 const NewsListPage = lazy(() =>
   import("@/pages/admin/NewsListPage").then((m) => ({ default: m.NewsListPage }))
 );
@@ -106,6 +108,9 @@ const SermonsByBookPage = lazy(() =>
 );
 const SermonDetailPage = lazy(() =>
   import("@/pages/public/SermonDetailPage").then((m) => ({ default: m.SermonDetailPage }))
+);
+const SermonsSegmentDispatcher = lazy(() =>
+  import("@/pages/public/SermonsSegmentDispatcher").then((m) => ({ default: m.SermonsSegmentDispatcher }))
 );
 const EventsListPage = lazy(() =>
   import("@/pages/admin/EventsListPage").then((m) => ({ default: m.EventsListPage }))
@@ -349,7 +354,7 @@ export default function App() {
               path="sermons/:slug"
               element={
                 <Suspense fallback={<p className="mx-auto max-w-4xl p-8 text-muted">Loading…</p>}>
-                  <SermonDetailPage />
+                  <SermonsSegmentDispatcher />
                 </Suspense>
               }
             />
@@ -406,7 +411,9 @@ export default function App() {
               }
             />
 
-            {/* Dynamic content pages. The :slug param matches a single non-slash
+            {/* Dynamic content pages. Template-aware: pages with a non-Standard
+                template (About, ImNew, Beliefs, Contact) are dispatched to their
+                custom layout components inside DynamicPagePage. The :slug param matches a single non-slash
                 segment, so all database-backed Pages (about, beliefs, privacy-policy,
                 terms-of-service, etc.) resolve here. Member-only filtering and 404s
                 for missing/unpublished slugs happen inside DynamicPagePage. */}

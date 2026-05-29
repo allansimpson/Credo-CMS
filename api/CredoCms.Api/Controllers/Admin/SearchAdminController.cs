@@ -7,7 +7,6 @@ namespace CredoCms.Api.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/search")]
-[Authorize(Policy = AuthorizationPolicies.AdministratorOnly)]
 public sealed class SearchAdminController : ControllerBase
 {
     private readonly ISearchIndexer _search;
@@ -18,7 +17,21 @@ public sealed class SearchAdminController : ControllerBase
         _search = search; _audit = audit;
     }
 
+    /// <summary>Admin global search. Returns matches across all entity types
+    /// (Page, NewsItem, Sermon, SermonSeries, Event, Leader, Document) and
+    /// includes unpublished/draft entries — admins need to find work in
+    /// progress.</summary>
+    [HttpGet]
+    [Authorize(Policy = AuthorizationPolicies.AdminShell)]
+    public Task<SearchResults> SearchAsync(
+        [FromQuery] string q = "",
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken ct = default)
+        => _search.SearchAllAsync(q, page, pageSize, ct);
+
     [HttpPost("rebuild")]
+    [Authorize(Policy = AuthorizationPolicies.AdministratorOnly)]
     public async Task<IActionResult> RebuildAsync(CancellationToken ct)
     {
         await _search.RebuildAllAsync(ct);

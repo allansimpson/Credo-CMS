@@ -16,6 +16,7 @@ internal sealed class SermonConfiguration : IEntityTypeConfiguration<Sermon>
         builder.Property(x => x.DescriptionJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.Transcript).HasColumnType("nvarchar(max)");
         builder.Property(x => x.TranscriptSource).HasConversion<int>();
+        builder.Property(x => x.ServiceType).HasConversion<int>();
         builder.HasQueryFilter(x => !x.IsDeleted);
         builder.AsTemporal("Sermons");
     }

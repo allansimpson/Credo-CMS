@@ -29,7 +29,9 @@ public sealed class SermonSeriesRepository : ISermonSeriesRepository
             .Select(s => new SermonSeriesListItemDto(
                 s.Id, s.Slug, s.Title,
                 s.BannerImageUrl, s.BannerImageWebpUrl, s.BannerImageAlt,
-                s.StartDate, s.EndDate, s.IsDeleted, s.ModifiedAt))
+                s.StartDate, s.EndDate,
+                s.Context, s.ScopeLabel, s.PlannedParts,
+                s.IsDeleted, s.ModifiedAt))
             .ToListAsync(ct).ConfigureAwait(false);
 
         return new PagedResult<SermonSeriesListItemDto>(items, total, page, pageSize);
@@ -60,6 +62,32 @@ public sealed class SermonSeriesRepository : ISermonSeriesRepository
                 s.BannerImageUrl, s.BannerImageWebpUrl, s.BannerImageAlt,
                 s.StartDate, s.EndDate,
                 new List<Application.Scripture.ScriptureReferenceDto>()))
+            .ToListAsync(ct).ConfigureAwait(false);
+    }
+
+    public Task<List<string>> GetUsedContextsAsync(CancellationToken ct = default)
+    {
+        return _db.SermonSeries
+            .Where(s => !s.IsDeleted && s.Context != null && s.Context != "")
+            .Select(s => s.Context!)
+            .Distinct()
+            .ToListAsync(ct);
+    }
+
+    public async Task<List<SermonSeriesPublicStatsRow>> GetPublicStatsAsync(CancellationToken ct = default)
+    {
+        // Single query that aggregates by series id over the public-
+        // visible sermons (published, not deleted, not members-only) and
+        // pulls the latest's slug+title+publishedAt for the hero label.
+        return await _db.Sermons
+            .Where(x => x.IsPublished && !x.IsDeleted && !x.IsMembersOnly && x.SermonSeriesId != null)
+            .GroupBy(x => x.SermonSeriesId!.Value)
+            .Select(g => new SermonSeriesPublicStatsRow(
+                g.Key,
+                g.Count(),
+                g.OrderByDescending(x => x.PublishedAt).Select(x => x.Slug).First(),
+                g.OrderByDescending(x => x.PublishedAt).Select(x => x.Title).First(),
+                g.OrderByDescending(x => x.PublishedAt).Select(x => (DateTimeOffset?)x.PublishedAt).First()))
             .ToListAsync(ct).ConfigureAwait(false);
     }
 

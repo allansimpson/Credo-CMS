@@ -24,5 +24,8 @@ public interface ISearchIndexer
     Task SetPublishedAsync(string entityType, Guid entityId, bool isPublished, CancellationToken ct = default);
     Task RebuildAllAsync(CancellationToken ct = default);
     Task<SearchResults> SearchAsync(string query, bool includeMembersOnly, int page, int pageSize, CancellationToken ct = default);
+    /// <summary>Admin variant — also includes unpublished entries.
+    /// Members-only filter is implicitly off; admins see everything.</summary>
+    Task<SearchResults> SearchAllAsync(string query, int page, int pageSize, CancellationToken ct = default);
     Task<int> CountAsync(CancellationToken ct = default);
 }

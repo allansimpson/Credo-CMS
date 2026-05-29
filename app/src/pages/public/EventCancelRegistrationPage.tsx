@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { eventRegistrationApi } from "@/lib/api/eventRegistration";
 import { ApiError } from "@/lib/apiClient";
 import { SeoTags } from "@/components/shared/SeoTags";
@@ -61,8 +62,9 @@ export function EventCancelRegistrationPage() {
             </ul>
           </div>
           <Link to={slug ? `/events/${slug}` : "/events"}
-            className="mt-4 inline-block text-sm text-primary hover:underline">
-            ← Back to event
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+            <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+            Back to event
           </Link>
         </>
       )}
@@ -102,8 +104,9 @@ export function EventCancelRegistrationPage() {
         <>
           <p className="mt-4 text-sm">Your registration has been cancelled.</p>
           <Link to={slug ? `/events/${slug}` : "/events"}
-            className="mt-4 inline-block text-sm text-primary hover:underline">
-            ← Back to event
+            className="mt-4 inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+            <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+            Back to event
           </Link>
         </>
       )}

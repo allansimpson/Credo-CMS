@@ -63,6 +63,8 @@ public sealed class Sermon : IVersionedEntity
 
     public Guid? SermonSeriesId { get; set; }
 
+    public ServiceType ServiceType { get; set; } = ServiceType.AmWorship;
+
     public bool IsPublished { get; set; }
 
     public bool IsMembersOnly { get; set; }

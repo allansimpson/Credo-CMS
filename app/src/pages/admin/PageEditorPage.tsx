@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Eye, Globe, History } from "lucide-react";
+import { Eye, Globe, History, AlertTriangle } from "lucide-react";
 import { pagesApi } from "@/lib/api/pages";
 import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
@@ -26,6 +26,7 @@ interface FormState {
   metaDescription: string;
   isPublished: boolean;
   isMembersOnly: boolean;
+  template: import("@/types/api").PageTemplate;
 }
 
 const emptyForm: FormState = {
@@ -39,6 +40,7 @@ const emptyForm: FormState = {
   metaDescription: "",
   isPublished: false,
   isMembersOnly: false,
+  template: "Standard",
 };
 
 export function PageEditorPage() {
@@ -54,6 +56,27 @@ export function PageEditorPage() {
   const [success, setSuccess] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [slugAutoGen, setSlugAutoGen] = useState(isNew);
+  const [pendingNavTarget, setPendingNavTarget] = useState<string | null>(null);
+
+  const applyPageToForm = useCallback((p: PageDetail) => {
+    // If an unpublished draft exists, the editor loads draft fields so the
+    // admin picks up where they left off. Live columns are still visible
+    // via the "What visitors see" indicator in the sidebar.
+    const src = p.hasUnpublishedDraft && p.draft ? p.draft : p;
+    setForm({
+      slug: p.slug,
+      title: src.title,
+      bodyJson: src.bodyJson,
+      excerpt: src.excerpt ?? "",
+      heroImageUrl: src.heroImageUrl,
+      heroImageWebpUrl: src.heroImageWebpUrl,
+      heroImageAlt: src.heroImageAlt,
+      metaDescription: src.metaDescription ?? "",
+      isPublished: p.isPublished,
+      isMembersOnly: src.isMembersOnly,
+      template: src.template ?? "Standard",
+    });
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -61,18 +84,7 @@ export function PageEditorPage() {
     pagesApi.get(id!).then((p) => {
       if (cancelled) return;
       setOriginal(p);
-      setForm({
-        slug: p.slug,
-        title: p.title,
-        bodyJson: p.bodyJson,
-        excerpt: p.excerpt ?? "",
-        heroImageUrl: p.heroImageUrl,
-        heroImageWebpUrl: p.heroImageWebpUrl,
-        heroImageAlt: p.heroImageAlt,
-        metaDescription: p.metaDescription ?? "",
-        isPublished: p.isPublished,
-        isMembersOnly: p.isMembersOnly,
-      });
+      applyPageToForm(p);
       setSlugAutoGen(false);
       setDirty(false);
       setLoading(false);
@@ -82,12 +94,70 @@ export function PageEditorPage() {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [id, isNew]);
+  }, [id, isNew, applyPageToForm]);
 
   const update = (patch: Partial<FormState>) => {
     setForm((f) => ({ ...f, ...patch }));
     setDirty(true);
     setSuccess(false);
+  };
+
+  // ── Unsaved-changes guard ──────────────────────────────────────────────
+  // Tab close / refresh: browser-native beforeunload prompt.
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Setting returnValue is what triggers the prompt in modern browsers.
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // In-app navigation: intercept anchor clicks that would leave the editor.
+  // React Router's useBlocker isn't available without a data-router setup,
+  // so we listen at the document level. External / new-tab / hash links and
+  // anchors with explicit data-allow-nav are passed through.
+  useEffect(() => {
+    if (!dirty) return;
+    const handler = (e: MouseEvent) => {
+      if (e.defaultPrevented) return;
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const anchor = (e.target as HTMLElement | null)?.closest("a");
+      if (!anchor) return;
+      const href = anchor.getAttribute("href");
+      if (!href) return;
+      if (anchor.target === "_blank") return;
+      if (href.startsWith("http://") || href.startsWith("https://") || href.startsWith("//")) return;
+      if (href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) return;
+      if (anchor.dataset.allowNav === "true") return;
+      // Same-document SPA link with pending changes — intercept.
+      e.preventDefault();
+      setPendingNavTarget(href);
+    };
+    document.addEventListener("click", handler, true);
+    return () => document.removeEventListener("click", handler, true);
+  }, [dirty]);
+
+  const cancelPendingNav = () => setPendingNavTarget(null);
+
+  const continueWithoutSaving = () => {
+    const target = pendingNavTarget;
+    setDirty(false);
+    setPendingNavTarget(null);
+    if (target) navigate(target);
+  };
+
+  const saveDraftAndContinue = async () => {
+    const target = pendingNavTarget;
+    const saved = await saveDraft();
+    if (saved && target) {
+      setPendingNavTarget(null);
+      navigate(target);
+    } else if (!saved) {
+      // Save failed — keep the modal open so the user can retry or discard.
+    }
   };
 
   const handleTitleChange = (next: string) =>
@@ -109,32 +179,106 @@ export function PageEditorPage() {
     metaDescription: form.metaDescription || null,
     isPublished: form.isPublished,
     isMembersOnly: form.isMembersOnly,
+    template: form.template,
   });
 
-  const submit = async (publish?: boolean) => {
+  /** Save the current form. For a published page, the backend stashes the
+   * edits in the Draft* columns so the live page is untouched. For an
+   * unpublished page (or a brand-new one), edits go straight to the live
+   * columns since there's no live version to protect. */
+  const saveDraft = async (): Promise<PageDetail | null> => {
     setSubmitting(true);
     setErrors([]);
     setSuccess(false);
     const body = buildBody();
-    if (typeof publish === "boolean") body.isPublished = publish;
-
     try {
       if (isNew) {
         const created = await pagesApi.create(body);
         navigate(`/admin/pages/${created.id}`);
-      } else {
-        const updated = await pagesApi.update(id!, body);
-        setOriginal(updated);
-        setForm((f) => ({ ...f, isPublished: updated.isPublished }));
-        setSuccess(true);
-        setDirty(false);
+        return created;
       }
+      const updated = await pagesApi.update(id!, body);
+      setOriginal(updated);
+      applyPageToForm(updated);
+      setSuccess(true);
+      setDirty(false);
+      return updated;
     } catch (err) {
       const messages =
         typeof err === "object" && err !== null && "getMessages" in err
           ? (err as { getMessages: () => string[] }).getMessages()
           : ["Save failed."];
       setErrors(messages);
+      return null;
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  /** Save current edits then promote to live. Two requests: update writes
+   * the draft, publish copies draft → live. */
+  const publishNow = async () => {
+    if (isNew) {
+      // Brand-new page: create published immediately.
+      const created = await saveDraft();
+      if (!created) return;
+      await pagesApi.publish(created.id).catch(() => {/* surfaced by next get */});
+      const fresh = await pagesApi.get(created.id);
+      setOriginal(fresh);
+      applyPageToForm(fresh);
+      setSuccess(true);
+      setDirty(false);
+      return;
+    }
+    setSubmitting(true);
+    setErrors([]);
+    setSuccess(false);
+    try {
+      if (dirty) {
+        const updated = await pagesApi.update(id!, buildBody());
+        setOriginal(updated);
+      }
+      const published = await pagesApi.publish(id!);
+      setOriginal(published);
+      applyPageToForm(published);
+      setSuccess(true);
+      setDirty(false);
+    } catch (err) {
+      const messages =
+        typeof err === "object" && err !== null && "getMessages" in err
+          ? (err as { getMessages: () => string[] }).getMessages()
+          : ["Publish failed."];
+      setErrors(messages);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const discardDraft = async () => {
+    if (!id || !original?.hasUnpublishedDraft) return;
+    if (!window.confirm("Discard pending draft changes? The live page will stay as it is.")) return;
+    setSubmitting(true);
+    try {
+      const updated = await pagesApi.discardDraft(id);
+      setOriginal(updated);
+      applyPageToForm(updated);
+      setSuccess(true);
+      setDirty(false);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const unpublish = async () => {
+    if (!id || !original?.isPublished) return;
+    if (!window.confirm("Take the live page offline? Visitors will see a 404 at /" + form.slug + " until you publish again.")) return;
+    setSubmitting(true);
+    try {
+      const updated = await pagesApi.unpublish(id);
+      setOriginal(updated);
+      applyPageToForm(updated);
+      setSuccess(true);
+      setDirty(false);
     } finally {
       setSubmitting(false);
     }
@@ -182,6 +326,7 @@ export function PageEditorPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {dirty && <Chip tone="warn" dot>Unsaved changes</Chip>}
+          {!dirty && original?.hasUnpublishedDraft && <Chip tone="warn" dot>Draft pending</Chip>}
           {success && <Chip tone="success" dot>Saved</Chip>}
           <span className="font-mono text-[11px] text-muted">
             Last saved · {lastSavedLabel}
@@ -190,25 +335,36 @@ export function PageEditorPage() {
           {!isNew && (
             <Btn
               iconLeft={<Eye className="h-3.5 w-3.5" />}
-              onClick={() => window.open(`/${form.slug}`, "_blank")}
+              onClick={() => window.open(`/${form.slug}?preview=1`, "_blank")}
             >
               Preview
             </Btn>
           )}
+          {!isNew && original?.hasUnpublishedDraft && (
+            <Btn
+              type="button"
+              disabled={submitting}
+              onClick={() => void discardDraft()}
+            >
+              Discard draft
+            </Btn>
+          )}
           <Btn
             type="submit"
-            disabled={submitting}
-            onClick={() => void submit(false)}
+            disabled={submitting || (!dirty && !isNew)}
+            onClick={() => void saveDraft()}
           >
             {submitting ? "Saving…" : "Save draft"}
           </Btn>
           <Btn
             type="button"
             variant="accent"
-            disabled={submitting}
-            onClick={() => void submit(true)}
+            disabled={submitting || (!isNew && !dirty && !original?.hasUnpublishedDraft && original?.isPublished === true)}
+            onClick={() => void publishNow()}
           >
-            Publish
+            {original?.isPublished && original?.hasUnpublishedDraft
+              ? "Publish changes"
+              : "Publish"}
           </Btn>
         </div>
       </header>
@@ -337,11 +493,21 @@ export function PageEditorPage() {
             </header>
             <div className="space-y-4 p-5 text-sm">
               <div className="flex items-center justify-between">
-                <span>Status</span>
-                {form.isPublished
+                <span>Live status</span>
+                {original?.isPublished
                   ? <Chip tone="success" dot>Published</Chip>
                   : <Chip tone="warn" dot>Draft</Chip>}
               </div>
+              {original?.hasUnpublishedDraft && (
+                <div className="flex items-center justify-between border-t border-border-soft pt-3">
+                  <span className="text-xs">
+                    Pending draft saved{" "}
+                    {original.draft?.savedAt
+                      ? new Date(original.draft.savedAt).toLocaleString()
+                      : ""}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span>Members only</span>
                 <SwitchFlat
@@ -350,19 +516,44 @@ export function PageEditorPage() {
                   onChange={(v) => update({ isMembersOnly: v })}
                 />
               </div>
-              <div className="flex items-center justify-between">
-                <span>Published</span>
-                <SwitchFlat
-                  label="Published"
-                  checked={form.isPublished}
-                  onChange={(v) => update({ isPublished: v })}
-                />
-              </div>
+              {!isNew && original?.isPublished && (
+                <button
+                  type="button"
+                  onClick={() => void unpublish()}
+                  disabled={submitting}
+                  className="block w-full border border-danger/30 bg-card px-3 py-2 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+                >
+                  Unpublish
+                </button>
+              )}
               {original?.isSystemPage && (
                 <p className="border-t border-border-soft pt-3 text-xs text-muted">
                   System page — slug locked
                 </p>
               )}
+            </div>
+          </section>
+
+          <section className="border border-border bg-panel">
+            <header className="border-b border-border-soft px-5 py-3">
+              <h3 className="font-heading text-sm font-semibold">Template</h3>
+            </header>
+            <div className="p-5">
+              <select
+                aria-label="Page template"
+                value={form.template}
+                onChange={(e) => update({ template: e.target.value as FormState["template"] })}
+                className="w-full border border-border bg-background px-3 py-2 text-sm focus-visible:border-accent focus-visible:outline-none"
+              >
+                <option value="Standard">Standard</option>
+                <option value="About">About</option>
+                <option value="ImNew">I'm New</option>
+                <option value="Beliefs">Beliefs</option>
+                <option value="Contact">Contact</option>
+              </select>
+              <p className="mt-2 text-[11px] text-muted">
+                Controls the public page layout. Standard uses the default rich-text renderer.
+              </p>
             </div>
           </section>
 
@@ -391,7 +582,78 @@ export function PageEditorPage() {
           )}
         </aside>
       </div>
+
+      {pendingNavTarget && (
+        <UnsavedChangesModal
+          submitting={submitting}
+          onStay={cancelPendingNav}
+          onDiscard={continueWithoutSaving}
+          onSaveAndLeave={() => void saveDraftAndContinue()}
+        />
+      )}
     </form>
+  );
+}
+
+function UnsavedChangesModal({
+  submitting,
+  onStay,
+  onDiscard,
+  onSaveAndLeave,
+}: {
+  submitting: boolean;
+  onStay: () => void;
+  onDiscard: () => void;
+  onSaveAndLeave: () => void;
+}) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="unsaved-changes-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
+    >
+      <div className="w-full max-w-md border bg-popover text-foreground shadow-xl">
+        <div className="flex items-start gap-3 border-b border-border-soft px-5 py-4">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-warn" />
+          <div className="min-w-0">
+            <h2 id="unsaved-changes-title" className="font-heading text-base font-semibold">
+              Unsaved changes
+            </h2>
+            <p className="mt-1 text-sm text-fg-soft">
+              You have edits that haven&rsquo;t been saved. Save them as a draft to come
+              back to later, discard them, or stay on this page.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-3">
+          <button
+            type="button"
+            onClick={onStay}
+            disabled={submitting}
+            className="border bg-card px-3 py-2 text-xs font-medium hover:bg-panel-alt disabled:opacity-50"
+          >
+            Stay on this page
+          </button>
+          <button
+            type="button"
+            onClick={onDiscard}
+            disabled={submitting}
+            className="border border-danger/30 bg-card px-3 py-2 text-xs font-medium text-danger hover:bg-danger/10 disabled:opacity-50"
+          >
+            Discard changes
+          </button>
+          <button
+            type="button"
+            onClick={onSaveAndLeave}
+            disabled={submitting}
+            className="bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {submitting ? "Saving…" : "Save as draft & leave"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

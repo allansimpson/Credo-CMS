@@ -81,10 +81,30 @@ public class SiteSettings
     public string LeaderCategoriesJson { get; set; } =
         "[\"Pastoral Staff\",\"Elders\",\"Deacons\",\"Ministry Directors\"]";
 
+    /// <summary>JSON-encoded list of event category names. Used by the public events page filter chips.</summary>
+    [Required]
+    public string EventCategoriesJson { get; set; } =
+        "[\"Worship\",\"Formation\",\"Service\",\"Music\",\"Welcome\",\"Special\"]";
+
+    /// <summary>JSON-encoded list of news category names. Drives the admin
+    /// editor's category dropdown and (eventually) the public news filter.</summary>
+    [Required]
+    public string NewsCategoriesJson { get; set; } =
+        "[\"Preachers Notes\",\"Announcements\",\"Stories\"]";
+
     /// <summary>JSON-encoded list of document category names.</summary>
     [Required]
     public string DocumentCategoriesJson { get; set; } =
         "[\"Bulletins\",\"Forms\",\"Policies\",\"Board Minutes\",\"Resources\"]";
+
+    /// <summary>JSON-encoded list of sermon teaching-track contexts (e.g.
+    /// "AM Worship", "Wednesday Night"). Drives the admin Sermon Series
+    /// context dropdown and the colored dot on the public by-series page —
+    /// the dot color is assigned by index position in this list, so
+    /// reordering rotates the palette mapping.</summary>
+    [Required]
+    public string SermonContextsJson { get; set; } =
+        "[\"AM Worship\",\"AM Bible Class\",\"PM Worship\",\"Wednesday Night\"]";
 
     /// <summary>Maximum size in bytes for an uploaded PDF (default 25 MB).</summary>
     public long MaxDocumentSizeBytes { get; set; } = 25L * 1024 * 1024;

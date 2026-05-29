@@ -17,6 +17,7 @@ internal sealed class PageConfiguration : IEntityTypeConfiguration<Page>
             .HasFilter("[IsDeleted] = 0");
 
         builder.Property(x => x.BodyJson).HasColumnType("nvarchar(max)");
+        builder.Property(x => x.Template).HasConversion<int>();
 
         // Soft-delete query filter — Application reads only see non-deleted rows
         // by default. Restore + admin "deleted" tab use IgnoreQueryFilters().

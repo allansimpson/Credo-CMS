@@ -9,7 +9,7 @@ namespace CredoCms.Application.Events;
 public sealed record EventListItemDto(
     Guid Id, string Slug, string Title,
     DateTimeOffset StartsAt, DateTimeOffset? EndsAt, bool AllDay,
-    string? Location,
+    string? Location, string? Category,
     EventVisibility? Visibility,
     EventRegistrationMode RegistrationMode,
     bool HasRecurrence,
@@ -20,7 +20,7 @@ public sealed record EventListItemDto(
 public sealed record EventDetailDto(
     Guid Id, string Slug, string Title, string? DescriptionJson,
     DateTimeOffset StartsAt, DateTimeOffset? EndsAt, bool AllDay,
-    string? Location,
+    string? Location, string? Category,
     string? HeroImageUrl, string? HeroImageWebpUrl, string? HeroImageAlt,
     EventVisibility? Visibility,
     string? RecurrenceRule, DateTimeOffset? RecurrenceEndDate, int? RecurrenceCount,
@@ -36,7 +36,7 @@ public sealed record EventDetailDto(
 public sealed record PublicEventListItemDto(
     Guid Id, string Slug, string Title,
     DateTimeOffset StartsAt, DateTimeOffset? EndsAt, bool AllDay,
-    string? Location,
+    string? Location, string? Category,
     string? HeroImageUrl, string? HeroImageWebpUrl, string? HeroImageAlt,
     EventVisibility? Visibility,
     EventRegistrationMode RegistrationMode,
@@ -46,7 +46,7 @@ public sealed record PublicEventListItemDto(
 public sealed record PublicEventDto(
     Guid Id, string Slug, string Title, string? DescriptionJson,
     DateTimeOffset StartsAt, DateTimeOffset? EndsAt, bool AllDay,
-    string? Location,
+    string? Location, string? Category,
     string? HeroImageUrl, string? HeroImageWebpUrl, string? HeroImageAlt,
     EventVisibility? Visibility,
     string? RecurrenceRule, DateTimeOffset? RecurrenceEndDate, int? RecurrenceCount,
@@ -69,7 +69,8 @@ public sealed record CreateEventRequest(
     DateTimeOffset? RegistrationOpensAt, DateTimeOffset? RegistrationClosesAt,
     string? RegistrationConfirmationMessageJson,
     string? ExternalRegistrationUrl,
-    bool IsPublished);
+    bool IsPublished,
+    string? Category = null);
 
 public sealed record UpdateEventRequest(
     string Slug, string Title, string? DescriptionJson,
@@ -83,13 +84,15 @@ public sealed record UpdateEventRequest(
     DateTimeOffset? RegistrationOpensAt, DateTimeOffset? RegistrationClosesAt,
     string? RegistrationConfirmationMessageJson,
     string? ExternalRegistrationUrl,
-    bool IsPublished);
+    bool IsPublished,
+    string? Category = null);
 
 public sealed record EventListQuery(
     string? Search = null,
     EventVisibility? Visibility = null,
     EventRegistrationMode? RegistrationMode = null,
     bool? HasRecurrence = null,
+    string? Category = null,
     bool IncludeDeleted = false,
     int Page = 1,
     int PageSize = 25);
@@ -110,6 +113,7 @@ public interface IEventRepository
     Task UpsertOverrideAsync(EventOccurrenceOverride ov, CancellationToken ct = default);
     Task RemoveOverrideAsync(Guid id, CancellationToken ct = default);
     Task<List<Event>> ListPublicAsync(bool includeMembersOnly, CancellationToken ct = default);
+    Task<List<string>> GetUsedCategoriesAsync(CancellationToken ct = default);
 }
 
 public sealed record EventOperationResult(bool Succeeded, string[] Errors, EventDetailDto? Event);
@@ -119,7 +123,7 @@ public interface IEventService
     Task<PagedResult<EventListItemDto>> ListAsync(EventListQuery query, CancellationToken ct = default);
     Task<EventDetailDto?> GetAsync(Guid id, bool includeDeleted = false, CancellationToken ct = default);
     Task<PublicEventDto?> GetPublicBySlugAsync(string slug, bool includeMembersOnly, CancellationToken ct = default);
-    Task<PagedResult<PublicEventListItemDto>> ListPublicAsync(int page, int pageSize, bool includeMembersOnly, CancellationToken ct = default);
+    Task<PagedResult<PublicEventListItemDto>> ListPublicAsync(int page, int pageSize, bool includeMembersOnly, string? category, CancellationToken ct = default);
 
     Task<EventOperationResult> CreateAsync(CreateEventRequest request, CancellationToken ct = default);
     Task<EventOperationResult> UpdateAsync(Guid id, UpdateEventRequest request, CancellationToken ct = default);
@@ -202,12 +206,14 @@ public sealed class EventService : IEventService
         => _repo.ListAsync(query, ct);
 
     public async Task<PagedResult<PublicEventListItemDto>> ListPublicAsync(
-        int page, int pageSize, bool includeMembersOnly, CancellationToken ct = default)
+        int page, int pageSize, bool includeMembersOnly, string? category, CancellationToken ct = default)
     {
         var pageNum = Math.Max(1, page);
         var size = Math.Clamp(pageSize, 1, 100);
 
         var all = await _repo.ListPublicAsync(includeMembersOnly, ct).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(category))
+            all = all.Where(e => string.Equals(e.Category, category, StringComparison.OrdinalIgnoreCase)).ToList();
 
         // Compute next-occurrence for each event so list ordering reflects the
         // upcoming schedule rather than original StartsAt.
@@ -234,7 +240,7 @@ public sealed class EventService : IEventService
             .Select(t => new PublicEventListItemDto(
                 t.evt.Id, t.evt.Slug, t.evt.Title,
                 t.evt.StartsAt, t.evt.EndsAt, t.evt.AllDay,
-                t.evt.Location,
+                t.evt.Location, t.evt.Category,
                 t.evt.HeroImageUrl, t.evt.HeroImageWebpUrl, t.evt.HeroImageAlt,
                 t.evt.Visibility, t.evt.RegistrationMode,
                 t.evt.RecurrenceRule, t.nextAt))
@@ -265,7 +271,7 @@ public sealed class EventService : IEventService
 
         return new PublicEventDto(
             evt.Id, evt.Slug, evt.Title, evt.DescriptionJson,
-            evt.StartsAt, evt.EndsAt, evt.AllDay, evt.Location,
+            evt.StartsAt, evt.EndsAt, evt.AllDay, evt.Location, evt.Category,
             evt.HeroImageUrl, evt.HeroImageWebpUrl, evt.HeroImageAlt,
             evt.Visibility, evt.RecurrenceRule, evt.RecurrenceEndDate, evt.RecurrenceCount,
             evt.RegistrationMode, evt.Capacity, evt.WaitlistEnabled,
@@ -307,6 +313,7 @@ public sealed class EventService : IEventService
             RegistrationClosesAt = request.RegistrationClosesAt,
             RegistrationConfirmationMessageJson = request.RegistrationConfirmationMessageJson,
             ExternalRegistrationUrl = request.ExternalRegistrationUrl,
+            Category = request.Category,
             IsPublished = request.IsPublished,
             CreatedAt = now,
             ModifiedAt = now,
@@ -346,6 +353,7 @@ public sealed class EventService : IEventService
         evt.RegistrationClosesAt = request.RegistrationClosesAt;
         evt.RegistrationConfirmationMessageJson = request.RegistrationConfirmationMessageJson;
         evt.ExternalRegistrationUrl = request.ExternalRegistrationUrl;
+        evt.Category = request.Category;
         evt.IsPublished = request.IsPublished;
         evt.ModifiedAt = DateTimeOffset.UtcNow;
 
@@ -421,7 +429,7 @@ public sealed class EventService : IEventService
 
     private static EventDetailDto ToDetail(Event e) => new(
         e.Id, e.Slug, e.Title, e.DescriptionJson,
-        e.StartsAt, e.EndsAt, e.AllDay, e.Location,
+        e.StartsAt, e.EndsAt, e.AllDay, e.Location, e.Category,
         e.HeroImageUrl, e.HeroImageWebpUrl, e.HeroImageAlt,
         e.Visibility,
         e.RecurrenceRule, e.RecurrenceEndDate, e.RecurrenceCount,

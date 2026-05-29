@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { ChurchThemeLayout } from "@/themes/ChurchThemeLayout";
 import { PublicNavBar } from "@/components/shared/PublicNavBar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
@@ -545,9 +546,10 @@ function AccountTab() {
         </p>
         <Link
           to="/profile/calendar-feed"
-          className="inline-flex h-9 items-center justify-center border bg-card px-3 text-sm hover:bg-panel-alt"
+          className="inline-flex h-9 items-center justify-center gap-1.5 border bg-card px-3 text-sm hover:bg-panel-alt"
         >
-          Manage feed URL →
+          Manage feed URL
+          <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
         </Link>
       </fieldset>
 
@@ -555,9 +557,10 @@ function AccountTab() {
         <legend className="px-2 text-sm font-semibold">My event registrations</legend>
         <Link
           to="/profile/registrations"
-          className="inline-flex h-9 items-center justify-center border bg-card px-3 text-sm hover:bg-panel-alt"
+          className="inline-flex h-9 items-center justify-center gap-1.5 border bg-card px-3 text-sm hover:bg-panel-alt"
         >
-          View registrations →
+          View registrations
+          <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
         </Link>
       </fieldset>
 
@@ -568,9 +571,10 @@ function AccountTab() {
         </p>
         <Link
           to="/profile/groups"
-          className="inline-flex h-9 items-center justify-center border bg-card px-3 text-sm hover:bg-panel-alt"
+          className="inline-flex h-9 items-center justify-center gap-1.5 border bg-card px-3 text-sm hover:bg-panel-alt"
         >
-          View groups →
+          View groups
+          <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
         </Link>
       </fieldset>
 

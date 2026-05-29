@@ -20,22 +20,26 @@ export interface EyebrowProps {
  * for Quiet via the parent.
  */
 export function Eyebrow({ accent = false, tone = "default", children, className }: EyebrowProps) {
+  // When `accent` is set, the dash is shown AND the label adopts the accent
+  // tone + a bolder weight (matches the design's editorial eyebrow style).
   const toneClass =
-    tone === "accent"
+    accent || tone === "accent"
       ? "text-accent"
       : tone === "inverse"
         ? "text-inset-foreground/80"
         : "text-muted";
+  const weightClass = accent ? "font-bold" : "font-medium";
   return (
     <p
       className={[
-        "inline-flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.18em]",
+        "inline-flex items-center gap-3 text-[11px] uppercase tracking-[0.18em]",
+        weightClass,
         toneClass,
         className ?? "",
       ].join(" ")}
     >
       {accent ? (
-        <span aria-hidden="true" className="inline-block h-px w-8 bg-accent" />
+        <span aria-hidden="true" className="inline-block h-px w-8 shrink-0 bg-accent" />
       ) : null}
       <span>{children}</span>
     </p>

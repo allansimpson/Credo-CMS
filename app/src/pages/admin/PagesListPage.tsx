@@ -69,7 +69,7 @@ export function PagesListPage() {
             size="lg"
             onClick={() => navigate("/admin/pages/new")}
           >
-            New page
+            Compose Page
           </Btn>
         }
       />

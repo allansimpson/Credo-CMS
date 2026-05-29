@@ -11,6 +11,7 @@ import type {
 
 export interface NewsListQuery {
   search?: string;
+  category?: string;
   includeDeleted?: boolean;
   page?: number;
   pageSize?: number;
@@ -19,6 +20,7 @@ export interface NewsListQuery {
 function buildQuery(q: NewsListQuery): string {
   const usp = new URLSearchParams();
   if (q.search) usp.set("search", q.search);
+  if (q.category) usp.set("category", q.category);
   if (q.includeDeleted) usp.set("includeDeleted", "true");
   if (q.page) usp.set("page", String(q.page));
   if (q.pageSize) usp.set("pageSize", String(q.pageSize));
@@ -38,9 +40,14 @@ export const newsApi = {
   hardDelete: (id: string) => apiDelete<void>(`/api/admin/news/${id}/hard`),
 
   // Public
-  listPublic: (page = 1, pageSize = 10) =>
-    apiGet<PagedResult<PublicNewsItem>>(`/api/public/news?page=${page}&pageSize=${pageSize}`,
-      { emitUnauthorized: false }),
+  listPublic: (page = 1, pageSize = 10, category?: string) => {
+    const usp = new URLSearchParams();
+    usp.set("page", String(page));
+    usp.set("pageSize", String(pageSize));
+    if (category) usp.set("category", category);
+    return apiGet<PagedResult<PublicNewsItem>>(`/api/public/news?${usp.toString()}`,
+      { emitUnauthorized: false });
+  },
   getPublic: (slug: string) =>
     apiGet<PublicNewsDetail>(`/api/public/news/${encodeURIComponent(slug)}`,
       { emitUnauthorized: false }),

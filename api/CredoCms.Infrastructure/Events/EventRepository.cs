@@ -20,6 +20,8 @@ public sealed class EventRepository : IEventRepository
         if (query.RegistrationMode is { } rm) q = q.Where(e => e.RegistrationMode == rm);
         if (query.HasRecurrence is { } hr)
             q = hr ? q.Where(e => e.RecurrenceRule != null) : q.Where(e => e.RecurrenceRule == null);
+        if (!string.IsNullOrWhiteSpace(query.Category))
+            q = q.Where(e => e.Category == query.Category);
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
             var pattern = $"%{query.Search.Trim()}%";
@@ -37,7 +39,7 @@ public sealed class EventRepository : IEventRepository
             .Select(e => new EventListItemDto(
                 e.Id, e.Slug, e.Title,
                 e.StartsAt, e.EndsAt, e.AllDay,
-                e.Location, e.Visibility, e.RegistrationMode,
+                e.Location, e.Category, e.Visibility, e.RegistrationMode,
                 e.RecurrenceRule != null,
                 e.IsPublished, e.IsDeleted, e.ModifiedAt))
             .ToListAsync(ct).ConfigureAwait(false);
@@ -132,5 +134,14 @@ public sealed class EventRepository : IEventRepository
         var q = _db.Events.Where(e => e.IsPublished);
         if (!includeMembersOnly) q = q.Where(e => e.Visibility != EventVisibility.MembersOnly);
         return q.OrderBy(e => e.StartsAt).ToListAsync(ct);
+    }
+
+    public Task<List<string>> GetUsedCategoriesAsync(CancellationToken ct = default)
+    {
+        return _db.Events
+            .Where(e => !e.IsDeleted && e.Category != null && e.Category != "")
+            .Select(e => e.Category!)
+            .Distinct()
+            .ToListAsync(ct);
     }
 }

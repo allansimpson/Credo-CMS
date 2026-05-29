@@ -30,24 +30,15 @@ export function AnnouncementBar() {
 
   return (
     <div role="region" aria-label="Site announcement"
-      className={`flex flex-wrap items-center justify-center gap-3 px-4 py-2 text-sm ${palette}`}>
-      <span className="font-medium">{banner.message}</span>
+      className={`flex items-center justify-center gap-2 px-4 py-2 text-xs ${palette}`}>
+      <span className="font-semibold uppercase tracking-[0.12em] text-accent">This Sunday</span>
+      <span aria-hidden className="opacity-40">·</span>
+      <span>{banner.message}</span>
       {banner.linkUrl && (
-        <a href={banner.linkUrl} className="underline" rel="noreferrer">
+        <a href={banner.linkUrl} className="ml-1 underline underline-offset-2" rel="noreferrer">
           {banner.linkLabel ?? "Learn more"}
         </a>
       )}
-      <button
-        type="button"
-        aria-label="Dismiss"
-        onClick={() => {
-          window.sessionStorage.setItem(DISMISSED_KEY, "true");
-          setDismissed(true);
-        }}
-        className="ml-auto rounded px-2 py-0.5 text-xs hover:bg-black/10"
-      >
-        Dismiss
-      </button>
     </div>
   );
 }
@@ -57,6 +48,6 @@ function severityClasses(s: AnnouncementSeverity): string {
     case 2: return "bg-red-600 text-white";
     case 1: return "bg-amber-500 text-amber-50";
     case 0:
-    default: return "bg-sky-600 text-white";
+    default: return "bg-inset text-inset-foreground";
   }
 }

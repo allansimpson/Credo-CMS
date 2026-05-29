@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Lock, Users } from "lucide-react";
+import { Lock, Users, ArrowRight } from "lucide-react";
 import { ChurchThemeLayout } from "@/themes/ChurchThemeLayout";
 import { PublicNavBar } from "@/components/shared/PublicNavBar";
 import { PublicFooter } from "@/components/shared/PublicFooter";
@@ -111,8 +111,9 @@ function GroupCard({
           {group.meetingInfo && (
             <p className="mt-2 text-xs text-muted">{group.meetingInfo}</p>
           )}
-          <p className="mt-auto pt-3 text-sm font-medium text-primary">
-            {ctaLabel} →
+          <p className="mt-auto inline-flex items-center gap-1.5 pt-3 text-sm font-medium text-primary">
+            {ctaLabel}
+            <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
           </p>
         </div>
       </Link>

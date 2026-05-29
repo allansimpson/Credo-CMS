@@ -1,4 +1,7 @@
+using System.Text.Json;
 using CredoCms.Domain.Announcements;
+using CredoCms.Domain.Bible;
+using CredoCms.Domain.Scripture;
 using CredoCms.Domain.Blog;
 using CredoCms.Domain.Classes;
 using CredoCms.Domain.Common;
@@ -71,13 +74,14 @@ public sealed class DataSeeder
         await SeedEmailTemplatesAsync(ct).ConfigureAwait(false);
         await SeedSampleBroadcastAsync(ct).ConfigureAwait(false);
         await SeedSampleVolunteerRolesAsync(ct).ConfigureAwait(false);
-        // Demo-content seeds — keep the test site believable end-to-end.
         await SeedSampleClassesAsync(ct).ConfigureAwait(false);
         await SeedSampleDocumentsAsync(ct).ConfigureAwait(false);
         await SeedSampleDirectoryMembersAsync(ct).ConfigureAwait(false);
         await SeedSamplePrayerRequestsAsync(ct).ConfigureAwait(false);
         await SeedSampleConnectCardsAsync(ct).ConfigureAwait(false);
     }
+
+    // ── Infrastructure seeds ─────────────────────────────────────────────────
 
     private async Task SeedRolesAsync(CancellationToken ct)
     {
@@ -173,30 +177,33 @@ public sealed class DataSeeder
         }
     }
 
+    // ── Site configuration ───────────────────────────────────────────────────
+
     private async Task SeedSiteSettingsAsync(CancellationToken ct)
     {
         var exists = await _db.SiteSettings.AnyAsync(s => s.Id == SystemConstants.SiteSettingsId, ct).ConfigureAwait(false);
         if (exists) return;
 
-        // Public Site design handoff: seed with Hope Community Church
-        // demo fixtures so a fresh `dotnet ef database update` produces
-        // a runnable demo of both templates. Operators replace this with
-        // their actual church info via Site Settings → Branding.
         var now = DateTimeOffset.UtcNow;
         _db.SiteSettings.Add(new SiteSettings
         {
             Id = SystemConstants.SiteSettingsId,
             ChurchName = "Hope Community Church",
-            Tagline = "A church for people who never thought they'd be in one.",
-            ContactAddress = "412 W 12th Street, Cedar Falls, IA 50613",
-            ContactPhone = "(319) 555-0100",
-            ContactEmail = "hello@hopecommunity.example",
+            Tagline = "A church for people who never thought they’d be in one.",
+            ContactAddress = "412 Maple Avenue, Cedar Falls, IA 50613",
+            ContactPhone = "(319) 555-0184",
+            ContactEmail = "office@hopecommunity.church",
             PrimaryColor = "#b8531a",
             AccentColor = "#b8531a",
+            FooterText = "A community of ordinary people learning to follow Jesus together. Cedar Falls, Iowa, since 1894.",
             DefaultVersionRetentionCount = 20,
             HomepageHeroCtaLabel = "Plan a visit",
             HomepageHeroCtaLink = "/im-new",
             Template = PublicTemplate.Editorial,
+            LeaderCategoriesJson = JsonSerializer.Serialize(new[] { "Ministers", "Staff", "Elders", "Deacons" }),
+            BlogCategoriesJson = JsonSerializer.Serialize(new[] { "Announcements", "Devotionals", "Stories" }),
+            MembersWelcomeText = Doc(
+                P("Welcome back. Here’s what’s happening in your community this week.")),
             CreatedAt = now,
             ModifiedAt = now,
             ModifiedByUserId = SystemConstants.SystemUserId,
@@ -217,28 +224,30 @@ public sealed class DataSeeder
         _db.AnnouncementBanner.Add(new AnnouncementBanner
         {
             Id = SystemConstants.AnnouncementBannerId,
-            IsActive = false,
+            IsActive = true,
             Severity = AnnouncementSeverity.Info,
-            Message = "",
+            Message = "Communion Sunday — services at 9:00 & 11:00 AM",
+            LinkUrl = "/im-new",
+            LinkLabel = "Plan your visit",
             CreatedAt = now,
             ModifiedAt = now,
             ModifiedByUserId = SystemConstants.SystemUserId,
         });
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded inactive AnnouncementBanner singleton");
+        _logger.LogInformation("Seeded active AnnouncementBanner (Communion Sunday)");
     }
+
+    // ── Pages ────────────────────────────────────────────────────────────────
 
     private async Task SeedSystemPagesAsync(CancellationToken ct)
     {
         if (await _db.Pages.AnyAsync(p => p.IsSystemPage, ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
-        // Slugs match the "/privacy-policy" and "/terms-of-service" public
-        // routes and the footer links in the SPA.
         _db.Pages.AddRange(
-            SamplePage("privacy-policy", "Privacy Policy", isSystem: true, now: now,
-                paragraph: "This is a placeholder Privacy Policy. Please replace with the policy that governs your church's data practices."),
-            SamplePage("terms-of-service", "Terms of Service", isSystem: true, now: now,
+            SimplePage("privacy-policy", "Privacy Policy", isSystem: true, now: now,
+                paragraph: "This is a placeholder Privacy Policy. Please replace with the policy that governs your church’s data practices."),
+            SimplePage("terms-of-service", "Terms of Service", isSystem: true, now: now,
                 paragraph: "Placeholder Terms of Service. Replace with the terms that apply to your site."));
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded system pages (Privacy, Terms).");
@@ -249,16 +258,101 @@ public sealed class DataSeeder
         if (await _db.Pages.AnyAsync(p => p.Slug == "about" && !p.IsSystemPage, ct).ConfigureAwait(false))
             return;
         var now = DateTimeOffset.UtcNow;
+
+        // ── About ────────────────────────────────────────────────────────
+        var aboutBody = Doc(
+            P("We’re not a movement, a brand, or a destination. We’re the church that’s been on this corner since 1894 — through harvests, depressions, two world wars, and a hundred small Sundays. We expect to be here next Sunday too. You’re invited."),
+            H2("A short history"),
+            P("In the spring of 1894, a handful of Norwegian and German farming families pooled their savings to buy two acres at the edge of what was then a town of three hundred. They built a one-room frame chapel in a single summer, painted it white, and called it Hope."),
+            P("By 1922 they had outgrown it twice. The current sanctuary — limestone foundations, oak pews, the rose window — was finished in 1924 and dedicated on the feast of St. Andrew. Most of those pews are still there."),
+            P("Through the Depression the church kept a soup line in the basement five days a week. During the second war, fourteen of our members did not come home; their names are carved into the back wall."),
+            P("The last fifty years have been quieter — fewer farmers, more teachers and nurses, two waves of new neighbours from Mexico and Sudan, a slow growing-up into the kind of church that holds doors instead of guarding them. We’re still that, mostly. We’re still trying."));
+
+        // ── I'm New ──────────────────────────────────────────────────────
+        var imNewBody = Doc(
+            P("Visiting a new church is a strange thing. Here is everything we’d want to know if it were us — what to wear, where to park, what to do with the kids, and how long it lasts."),
+            H2("The visit, hour by hour"),
+            H3("8:30 — Coffee & doughnuts in the lobby"),
+            P("Park anywhere. Walk in the front doors. A greeter will hand you a bulletin and point you at the coffee."),
+            H3("8:50 — Kids check-in opens"),
+            P("Right wing. We take a quick photo of you and your child for safety. They’ll have a name tag and you’ll have a matching pickup tag."),
+            H3("9:00 — Traditional service begins"),
+            P("Hymns, scripture, sermon, prayer, communion every other week. About 70 minutes. Sit anywhere — back row is fine."),
+            H3("10:15 — Mid-morning fellowship"),
+            P("More coffee. A few greeters in maroon name tags will introduce themselves. No pressure to stick around."),
+            H3("11:00 — Contemporary service"),
+            P("Same shape, different music. A band. The same sermon. Communion every other week, opposite the 9am."),
+            H3("12:15 — Newcomers lunch (optional)"),
+            P("First Sunday of every month. A simple meal in the fellowship hall, on us. A great way to meet the pastors."),
+            H2("Things people ask us"),
+            P(Bold("What should I wear? "), Txt("Whatever you wore on Saturday. Most people land somewhere between jeans and slacks.")),
+            P(Bold("Will I be asked to give money? "), Txt("There’s an offering, but if you’re visiting we genuinely don’t expect anything from you. Just be here.")),
+            P(Bold("How long is the service? "), Txt("About 70 minutes. We try to start and end on time.")),
+            P(Bold("Where do I park? "), Txt("Anywhere in the lot off Maple. Front-row spaces are reserved for visitors and accessibility.")),
+            P(Bold("I have small children — what do I do? "), Txt("Drop-off for ages 0–12 is in the right wing, opens at 8:50. Or keep them with you; we love a noisy sanctuary.")),
+            P(Bold("Is the building accessible? "), Txt("Yes — a ramped main entrance, an elevator, accessible restrooms, and a hearing loop in the sanctuary.")));
+
+        // ── What We Believe ──────────────────────────────────────────────
+        var beliefsBody = Doc(
+            P("We aren’t reinventing anything. What follows is a short summary of the historic Christian faith — written for normal people, not theologians."),
+            H2("God"),
+            P("One God, eternally existing in three persons — Father, Son, and Holy Spirit — perfect in love, holiness, and faithfulness."),
+            H2("The Scriptures"),
+            P("The Old and New Testaments are the inspired and authoritative Word of God, sufficient for faith and practice."),
+            H2("Jesus Christ"),
+            P("Truly God and truly human; born of the virgin Mary; crucified, buried, raised on the third day, and ascended to the right hand of the Father."),
+            H2("Salvation"),
+            P("Salvation is by grace alone, through faith alone, in Christ alone — a gift of God, not the result of our works, given for the joy of those who receive it."),
+            H2("The Holy Spirit"),
+            P("The Holy Spirit indwells every believer, conforming us to Christ, gifting us for service, and uniting us to the Church."),
+            H2("The Church"),
+            P("The Church is the family of God, gathered locally to worship, to teach, to break bread, and to live as a foretaste of the new creation."),
+            H2("The Last Things"),
+            P("Christ will return bodily to judge the living and the dead, and his kingdom will have no end. We wait in hope."),
+            H2("The Historic Creeds"),
+            P("We pray the Apostles’ Creed weekly and the Nicene Creed at communion. They aren’t ours; they’re the Church’s. We’re glad to belong to a faith that’s older than us."));
+
         _db.Pages.AddRange(
-            SamplePage("about", "About Us", now: now,
-                paragraph: "We are a community of believers committed to following Jesus together. Replace this text with your church's story."),
-            SamplePage("plan-your-visit", "Plan Your Visit", now: now,
-                paragraph: "Visiting for the first time? Here's what to expect when you join us on Sunday."),
-            SamplePage("what-we-believe", "What We Believe", now: now,
-                paragraph: "Our beliefs in summary. Replace with your statement of faith."));
+            new Page
+            {
+                Id = Guid.NewGuid(), Slug = "about", Title = "About Us",
+                BodyJson = aboutBody,
+                Excerpt = "One hundred and thirty years of stubborn, ordinary hope.",
+                Template = PageTemplate.About,
+                IsPublished = true, CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+            },
+            new Page
+            {
+                Id = Guid.NewGuid(), Slug = "im-new", Title = "I’m New",
+                BodyJson = imNewBody,
+                Excerpt = "We saved you a seat. Here’s everything you need to know for your first visit.",
+                Template = PageTemplate.ImNew,
+                IsPublished = true, CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+            },
+            new Page
+            {
+                Id = Guid.NewGuid(), Slug = "what-we-believe", Title = "What We Believe",
+                BodyJson = beliefsBody,
+                Excerpt = "An old faith, plainly said.",
+                Template = PageTemplate.Beliefs,
+                IsPublished = true, CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+            },
+            new Page
+            {
+                Id = Guid.NewGuid(), Slug = "contact", Title = "Contact",
+                BodyJson = Doc(
+                    P("Have a question, a prayer request, or just want to say hello? We’d love to hear from you."),
+                    P("The church office is open Monday through Thursday, 9:00 AM to 4:00 PM, and Friday mornings until noon. You can also reach us by phone or email anytime.")),
+                Excerpt = "Drop us a line.",
+                Template = PageTemplate.Contact,
+                IsPublished = true, CreatedAt = now, ModifiedAt = now, PublishedAt = now,
+            });
+
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample pages (About, Plan Your Visit, What We Believe).");
+        _logger.LogInformation("Seeded sample pages (About, I’m New, What We Believe, Contact).");
     }
+
+    // ── Service times ────────────────────────────────────────────────────────
 
     private async Task SeedSampleServiceTimesAsync(CancellationToken ct)
     {
@@ -268,45 +362,47 @@ public sealed class DataSeeder
             new ServiceTime
             {
                 Id = Guid.NewGuid(),
-                Name = "Sunday Worship",
+                Name = "Traditional Worship",
                 DayOfWeek = DayOfWeek.Sunday,
                 StartTime = new TimeOnly(9, 0),
-                EndTime = new TimeOnly(10, 30),
-                Location = "Main Sanctuary",
+                EndTime = new TimeOnly(10, 10),
+                Location = "Sanctuary",
                 DisplayOrder = 0,
                 IsActive = true,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
             },
             new ServiceTime
             {
                 Id = Guid.NewGuid(),
-                Name = "Sunday School",
+                Name = "Contemporary Worship",
                 DayOfWeek = DayOfWeek.Sunday,
                 StartTime = new TimeOnly(11, 0),
-                EndTime = new TimeOnly(12, 0),
-                Location = "Education Wing",
+                EndTime = new TimeOnly(12, 10),
+                Location = "Sanctuary",
                 DisplayOrder = 1,
                 IsActive = true,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
             },
             new ServiceTime
             {
                 Id = Guid.NewGuid(),
-                Name = "Wednesday Bible Study",
-                DayOfWeek = DayOfWeek.Wednesday,
-                StartTime = new TimeOnly(19, 0),
-                EndTime = new TimeOnly(20, 30),
-                Location = "Fellowship Hall",
-                DisplayOrder = 0,
+                Name = "Evening Prayer",
+                DayOfWeek = DayOfWeek.Sunday,
+                StartTime = new TimeOnly(18, 30),
+                EndTime = new TimeOnly(19, 30),
+                Location = "Chapel",
+                DisplayOrder = 2,
                 IsActive = true,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
             });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample service times.");
+        _logger.LogInformation("Seeded sample service times (Traditional, Contemporary, Evening Prayer).");
     }
+
+    // ── Leaders & staff ──────────────────────────────────────────────────────
 
     private async Task SeedSampleLeadersAsync(CancellationToken ct)
     {
@@ -316,261 +412,484 @@ public sealed class DataSeeder
             new Leader
             {
                 Id = Guid.NewGuid(),
-                FullName = "Lead Pastor",
-                Title = "Senior Pastor",
-                Category = "Pastoral Staff",
+                FullName = "Daniel Reyes",
+                Title = "Lead Pastor",
+                Category = "Ministers",
+                BioJson = Doc(P("With us since 2017. Husband to Marta, dad to three loud kids. Studied at Trinity.")),
+                Email = "daniel@hopecommunity.church",
                 DisplayOrder = 0,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
             },
             new Leader
             {
                 Id = Guid.NewGuid(),
-                FullName = "Associate Pastor",
-                Title = "Family Ministry",
-                Category = "Pastoral Staff",
+                FullName = "Anna Kowalski",
+                Title = "Associate Pastor — Care",
+                Category = "Ministers",
+                BioJson = Doc(P("Hospital chaplain for 12 years before joining staff in 2021. Coffee snob, hospice champion.")),
+                Email = "anna@hopecommunity.church",
                 DisplayOrder = 1,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
             },
             new Leader
             {
                 Id = Guid.NewGuid(),
-                FullName = "Elder One",
-                Title = null,
-                Category = "Elders",
-                DisplayOrder = 0,
+                FullName = "Marcus Chen",
+                Title = "Worship Director",
+                Category = "Staff",
+                BioJson = Doc(P("Leads our music team and the choir. Plays piano, banjo, anything with strings really.")),
+                Email = "marcus@hopecommunity.church",
+                DisplayOrder = 2,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
             },
             new Leader
             {
                 Id = Guid.NewGuid(),
-                FullName = "Deacon One",
-                Title = null,
-                Category = "Deacons",
-                DisplayOrder = 0,
+                FullName = "Ruth Adeyemi",
+                Title = "Children & Families",
+                Category = "Staff",
+                BioJson = Doc(P("Runs Sunday school, kids check-in, and the Wednesday family dinners. Former teacher.")),
+                Email = "ruth@hopecommunity.church",
+                DisplayOrder = 3,
                 CreatedAt = now,
-                ModifiedAt = now
+                ModifiedAt = now,
+            },
+            new Leader
+            {
+                Id = Guid.NewGuid(),
+                FullName = "Tom Hartline",
+                Title = "Operations",
+                Category = "Staff",
+                BioJson = Doc(P("Keeps the lights on, the snow plowed, and the spreadsheets honest. 30 years in.")),
+                Email = "tom@hopecommunity.church",
+                DisplayOrder = 4,
+                CreatedAt = now,
+                ModifiedAt = now,
+            },
+            new Leader
+            {
+                Id = Guid.NewGuid(),
+                FullName = "Imani Johnson",
+                Title = "Youth Director",
+                Category = "Staff",
+                BioJson = Doc(P("Joined in 2023. Runs middle school + high school groups, retreats, and mission trips.")),
+                Email = "imani@hopecommunity.church",
+                DisplayOrder = 5,
+                CreatedAt = now,
+                ModifiedAt = now,
             });
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample leaders (placeholder names — replace with real staff).");
+        _logger.LogInformation("Seeded sample leaders (6 staff members).");
     }
+
+    // ── News ─────────────────────────────────────────────────────────────────
 
     private async Task SeedSampleNewsAsync(CancellationToken ct)
     {
         if (await _db.News.AnyAsync(ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
+
+        var griefBody = Doc(
+            P("Two weeks ago we lost a beloved member of our church. Here is some of what I have been thinking, mostly slowly, about how a community grieves together."),
+            P("For two weeks now I have been carrying around a small list of names — people I know who are walking through grief in different forms — and I have not always known what to say to them. There is a particular kind of silence that settles over a community after a loss like this, and the temptation is either to rush to fill it with explanations or to retreat from each other entirely."),
+            P("Neither, I think, is what we are being called to."),
+            H2("The kind of presence that is asked of us"),
+            P("The Christian tradition has, for two thousand years, understood grief as a communal task. We do not grieve alone, and we do not grieve well by ourselves. The book of Lamentations is not a private journal; it is a song, sung together, by people who knew that some sorrows are too heavy to carry one at a time."),
+            BQ("“Blessed are those who mourn, for they shall be comforted.” — Matthew 5:4"),
+            P("What we owe each other in this season is not advice, and not silence either, but presence. The willingness to sit on a porch, drop off a meal, write a card, say the name of the one we have lost. To not flinch from each other’s tears. To not require speed."),
+            P("I will be in the church office most weekday afternoons over the next month. The door is open. We don’t have to talk; we can just sit."),
+            P(Ital("Grace and peace,")),
+            P(Ital("Daniel")));
+
+        var retreatBody = Doc(
+            P("Twenty-two students, four leaders, three days, one cabin without working wifi — and a remarkable amount of honest conversation."),
+            P("Every fall we take the youth group to a small camp north of Waterloo. The schedule is loose: hikes, campfires, a few structured talks, and long stretches of unstructured time. That’s where the real conversations happen — late at night, sitting on the dock, when the pressure to perform falls away."),
+            P("This year several students opened up about anxiety, loneliness, and the weight of expectations they carry at school. The leaders didn’t have answers for everything. But they stayed present, listened well, and pointed back to a God who is not in a hurry."),
+            P("If your student came home quieter than usual, that’s probably a good sign."));
+
+        var groupsBody = Doc(
+            P("We are starting six new groups this fall, including two for parents of small children, one for grad students, and a midday group for retirees."),
+            P("Small groups are the backbone of our community life. They meet weekly in homes, coffee shops, and the church library. Each group chooses its own study material and sets its own rhythm."),
+            P("If you’ve been looking for a way to connect beyond Sunday morning, this is the place to start. Signups are open through the end of the month."));
+
+        var soupKitchenBody = Doc(
+            P("The soup kitchen started in 1934, in the basement, with one pot and a borrowed table. During the Depression the church fed anyone who showed up — no questions, no sign-in sheet. It ran five days a week for nearly a decade."),
+            P("When the economy recovered the kitchen scaled back, but it never fully closed. Today it operates every Tuesday and Thursday, serving about forty meals each session. The volunteers rotate, but a few have been showing up for over twenty years."),
+            P("This fall we’re expanding to three days a week and partnering with the Cedar Falls Community Pantry to offer take-home bags. If you’d like to help, talk to Anna Kowalski or sign up on the volunteer board in the lobby."));
+
+        var prayerBody = Doc(
+            P("There is a way of praying for a city that is not about fixing it. It is about holding it — its noise, its need, its beauty — before God and trusting that he is already at work in places we cannot see."),
+            P("Each Wednesday at noon a small group gathers in the chapel to pray for Cedar Falls by name: for the schools, the shelters, the city council, the hospital staff, the neighbours we know and the ones we don’t. It lasts about twenty minutes. No one leads. We just pray."),
+            P("You are welcome to join us. The chapel is open."));
+
         _db.News.AddRange(
-            SampleNews("welcome-to-our-new-site", "Welcome to our new site",
-                "We've launched a new website! Take a look around.", isMembersOnly: false, now: now),
-            SampleNews("upcoming-summer-camp", "Summer Camp Registration Open",
-                "Members can now register for this year's summer camp.", isMembersOnly: true, now: now));
+            new NewsItem
+            {
+                Id = Guid.NewGuid(), Slug = "a-note-from-pastor-daniel-on-grief",
+                Title = "A note from Pastor Daniel on grief",
+                BodyJson = griefBody,
+                Excerpt = "Two weeks ago we lost a beloved member of our church. Here is some of what I have been thinking about how a community grieves together.",
+                IsPublished = true, IsMembersOnly = false,
+                CreatedAt = now.AddDays(-2), ModifiedAt = now.AddDays(-2), PublishedAt = now.AddDays(-2),
+            },
+            new NewsItem
+            {
+                Id = Guid.NewGuid(), Slug = "reflections-from-the-youth-retreat",
+                Title = "Reflections from the youth retreat",
+                BodyJson = retreatBody,
+                Excerpt = "Twenty-two students, four leaders, three days, one cabin without working wifi — and a remarkable amount of honest conversation.",
+                IsPublished = true, IsMembersOnly = false,
+                CreatedAt = now.AddDays(-9), ModifiedAt = now.AddDays(-9), PublishedAt = now.AddDays(-9),
+            },
+            new NewsItem
+            {
+                Id = Guid.NewGuid(), Slug = "new-small-groups-launching-this-fall",
+                Title = "New small groups launching this fall",
+                BodyJson = groupsBody,
+                Excerpt = "We are starting six new groups this fall, including two for parents of small children, one for grad students, and a midday group for retirees.",
+                IsPublished = true, IsMembersOnly = false,
+                CreatedAt = now.AddDays(-16), ModifiedAt = now.AddDays(-16), PublishedAt = now.AddDays(-16),
+            },
+            new NewsItem
+            {
+                Id = Guid.NewGuid(), Slug = "how-the-soup-kitchen-began",
+                Title = "How the soup kitchen began (and where it is going)",
+                BodyJson = soupKitchenBody,
+                Excerpt = "The soup kitchen started in 1934, in the basement, with one pot and a borrowed table.",
+                IsPublished = true, IsMembersOnly = false,
+                CreatedAt = now.AddDays(-23), ModifiedAt = now.AddDays(-23), PublishedAt = now.AddDays(-23),
+            },
+            new NewsItem
+            {
+                Id = Guid.NewGuid(), Slug = "on-praying-for-our-city",
+                Title = "On praying for our city",
+                BodyJson = prayerBody,
+                Excerpt = "There is a way of praying for a city that is not about fixing it. It is about holding it before God.",
+                IsPublished = true, IsMembersOnly = false,
+                CreatedAt = now.AddDays(-30), ModifiedAt = now.AddDays(-30), PublishedAt = now.AddDays(-30),
+            });
+
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample news items.");
+        _logger.LogInformation("Seeded sample news items (5).");
     }
 
-    private static Page SamplePage(string slug, string title, DateTimeOffset now,
-        string paragraph, bool isSystem = false)
-    {
-        var body = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
-            + paragraph.Replace("\"", "\\\"") + "\"}]}]}";
-        return new Page
-        {
-            Id = Guid.NewGuid(),
-            Slug = slug,
-            Title = title,
-            BodyJson = body,
-            Excerpt = paragraph,
-            IsPublished = true,
-            IsMembersOnly = false,
-            IsSystemPage = isSystem,
-            CreatedAt = now,
-            ModifiedAt = now,
-            PublishedAt = now,
-        };
-    }
-
-    private static NewsItem SampleNews(string slug, string title, string paragraph,
-        bool isMembersOnly, DateTimeOffset now)
-    {
-        var body = "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
-            + paragraph.Replace("\"", "\\\"") + "\"}]}]}";
-        return new NewsItem
-        {
-            Id = Guid.NewGuid(),
-            Slug = slug,
-            Title = title,
-            BodyJson = body,
-            Excerpt = paragraph,
-            IsPublished = true,
-            IsMembersOnly = isMembersOnly,
-            CreatedAt = now,
-            ModifiedAt = now,
-            PublishedAt = now,
-        };
-    }
+    // ── Sermons ──────────────────────────────────────────────────────────────
 
     private async Task SeedSampleSermonContentAsync(CancellationToken ct)
     {
-        if (await _db.SermonSeries.AnyAsync(ct).ConfigureAwait(false)) return;
-        if (await _db.Sermons.AnyAsync(ct).ConfigureAwait(false)) return;
+        if (await _db.SermonSeries.AnyAsync(ct).ConfigureAwait(false)
+            || await _db.Sermons.AnyAsync(ct).ConfigureAwait(false)) return;
 
         var now = DateTimeOffset.UtcNow;
 
-        var seriesRomans = new SermonSeries
-        {
-            Id = Guid.NewGuid(),
-            Slug = "the-letter-to-the-romans",
-            Title = "The Letter to the Romans",
-            DescriptionJson = ParaJson("A walk through Paul's most theologically rich letter."),
-            StartDate = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-2),
-            CreatedAt = now,
-            ModifiedAt = now,
-        };
-        var seriesPsalms = new SermonSeries
-        {
-            Id = Guid.NewGuid(),
-            Slug = "psalms-of-ascent",
-            Title = "Psalms of Ascent",
-            DescriptionJson = ParaJson("Songs sung on the road to Jerusalem — and to God."),
-            StartDate = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-1),
-            CreatedAt = now,
-            ModifiedAt = now,
-        };
-        _db.SermonSeries.AddRange(seriesRomans, seriesPsalms);
+        var danielReyes = await _db.Leaders.FirstOrDefaultAsync(l => l.FullName == "Daniel Reyes", ct).ConfigureAwait(false);
+        var annaKowalski = await _db.Leaders.FirstOrDefaultAsync(l => l.FullName == "Anna Kowalski", ct).ConfigureAwait(false);
 
-        // YouTube IDs are placeholders — Editors are expected to replace them.
+        // ── Series: Made to Belong (Gospel of Luke, 6 parts) ─────────
+        var madeToBelung = new SermonSeries
+        {
+            Id = Guid.NewGuid(),
+            Slug = "made-to-belong",
+            Title = "Made to Belong",
+            DescriptionJson = Doc(P("Six weeks in the Gospel of Luke on belonging — what it costs, what it gives, and the kind of table Jesus keeps setting.")),
+            StartDate = DateOnly.FromDateTime(now.AddDays(-28).UtcDateTime),
+            CreatedAt = now,
+            ModifiedAt = now,
+        };
+
+        // ── Series: A Year in the Psalms ─────────────────────────────
+        var yearInPsalms = new SermonSeries
+        {
+            Id = Guid.NewGuid(),
+            Slug = "a-year-in-the-psalms",
+            Title = "A Year in the Psalms",
+            DescriptionJson = Doc(P("Songs sung on the road to Jerusalem — and to God.")),
+            StartDate = DateOnly.FromDateTime(now.AddDays(-56).UtcDateTime),
+            CreatedAt = now,
+            ModifiedAt = now,
+        };
+
+        _db.SermonSeries.AddRange(madeToBelung, yearInPsalms);
+
+        // Pre-generate IDs so we can attach ScriptureReferences after save.
+        var s1Id = Guid.NewGuid(); var s2Id = Guid.NewGuid();
+        var s3Id = Guid.NewGuid(); var s4Id = Guid.NewGuid();
+        var s5Id = Guid.NewGuid(); var s6Id = Guid.NewGuid();
+        var p1Id = Guid.NewGuid(); var p2Id = Guid.NewGuid();
+
+        // ── Made to Belong sermons (all 6 published for demo) ────────
         _db.Sermons.AddRange(
-            SampleSermon("good-news-for-everyone", "Good News for Everyone (Romans 1)",
-                "dQw4w9WgXcQ", seriesRomans.Id, now.AddDays(-21), "Pastor Marcus"),
-            SampleSermon("the-righteousness-of-god", "The Righteousness of God (Romans 3)",
-                "9bZkp7q19f0", seriesRomans.Id, now.AddDays(-14), "Pastor Marcus"),
-            SampleSermon("by-faith-alone", "By Faith Alone (Romans 4)",
-                "kJQP7kiw5Fk", seriesRomans.Id, now.AddDays(-7), "Pastor Marcus"),
-            SampleSermon("i-lift-up-my-eyes", "I Lift Up My Eyes (Psalm 121)",
-                "fLexgOxsZu0", seriesPsalms.Id, now.AddDays(-3), "Elder Sarah"));
+            new Sermon
+            {
+                Id = s1Id, Slug = "the-cost-of-belonging",
+                Title = "The Cost of Belonging",
+                DescriptionJson = Doc(P("What does it actually cost to follow Jesus into a community that doesn’t look like the one you’d design? Luke 14 lays it out plainly — and the invitation is still worth it.")),
+                YouTubeVideoId = "dQw4w9WgXcQ",
+                DurationSeconds = 40 * 60,
+                SpeakerLeaderId = danielReyes?.Id,
+                SpeakerNameFreeText = "Daniel Reyes",
+                SermonSeriesId = madeToBelung.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(-28),
+                YouTubePublishedAt = now.AddDays(-28),
+                CreatedAt = now.AddDays(-28), ModifiedAt = now.AddDays(-28),
+            },
+            new Sermon
+            {
+                Id = s2Id, Slug = "lost-and-found",
+                Title = "Lost & Found",
+                DescriptionJson = Doc(P("A coin, a sheep, a searchlight through the dark — three images of a God who refuses to write anyone off. What does it mean that heaven throws a party over one person who comes home?")),
+                YouTubeVideoId = "9bZkp7q19f0",
+                DurationSeconds = 36 * 60,
+                SpeakerLeaderId = annaKowalski?.Id,
+                SpeakerNameFreeText = "Anna Kowalski",
+                SermonSeriesId = madeToBelung.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(-21),
+                YouTubePublishedAt = now.AddDays(-21),
+                CreatedAt = now.AddDays(-21), ModifiedAt = now.AddDays(-21),
+            },
+            new Sermon
+            {
+                Id = s3Id, Slug = "the-long-way-home",
+                Title = "The Long Way Home",
+                DescriptionJson = Doc(P("The prodigal son story is not about a wayward kid. It’s about a father who runs. And an older brother who can’t bring himself to go inside. Which one are you?")),
+                YouTubeVideoId = "kJQP7kiw5Fk",
+                DurationSeconds = 42 * 60,
+                SpeakerLeaderId = danielReyes?.Id,
+                SpeakerNameFreeText = "Daniel Reyes",
+                SermonSeriesId = madeToBelung.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(-14),
+                YouTubePublishedAt = now.AddDays(-14),
+                CreatedAt = now.AddDays(-14), ModifiedAt = now.AddDays(-14),
+            },
+            new Sermon
+            {
+                Id = s4Id, Slug = "a-table-with-room",
+                Title = "A Table With Room",
+                DescriptionJson = Doc(P("Jesus tells a parable about a feast nobody wants to come to — and a host whose generosity refuses to take “no” for the final word. What does it mean to belong to a kingdom that won’t stop setting places at the table?")),
+                YouTubeVideoId = "fLexgOxsZu0",
+                DurationSeconds = 38 * 60,
+                SpeakerLeaderId = danielReyes?.Id,
+                SpeakerNameFreeText = "Daniel Reyes",
+                SermonSeriesId = madeToBelung.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(-7),
+                YouTubePublishedAt = now.AddDays(-7),
+                CreatedAt = now.AddDays(-7), ModifiedAt = now.AddDays(-7),
+            },
+            new Sermon
+            {
+                Id = s5Id, Slug = "outside-the-camp",
+                Title = "Outside The Camp",
+                DescriptionJson = Doc(P("Hebrews tells us Jesus suffered outside the gate. What does it look like to follow him there — to the margins, the edges, the places the religious world avoids?")),
+                YouTubeVideoId = "L_jWHffIx5E",
+                DurationSeconds = 41 * 60,
+                SpeakerLeaderId = danielReyes?.Id,
+                SpeakerNameFreeText = "Daniel Reyes",
+                SermonSeriesId = madeToBelung.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(7),
+                YouTubePublishedAt = now.AddDays(7),
+                CreatedAt = now, ModifiedAt = now,
+            },
+            new Sermon
+            {
+                Id = s6Id, Slug = "coming-home",
+                Title = "Coming Home",
+                DescriptionJson = Doc(P("The final week of Made to Belong. What does it look like to stay? To belong not just in the moment of welcome but in the long, ordinary middle?")),
+                YouTubeVideoId = "YR5ApYxkU-U",
+                DurationSeconds = 39 * 60,
+                SpeakerLeaderId = annaKowalski?.Id,
+                SpeakerNameFreeText = "Anna Kowalski",
+                SermonSeriesId = madeToBelung.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(14),
+                YouTubePublishedAt = now.AddDays(14),
+                CreatedAt = now, ModifiedAt = now,
+            });
+
+        // ── A Year in the Psalms sermons ─────────────────────────────
+        _db.Sermons.AddRange(
+            new Sermon
+            {
+                Id = p1Id, Slug = "psalm-73-until-i-entered",
+                Title = "Psalm 73 — Until I Entered",
+                DescriptionJson = Doc(P("The psalmist nearly loses his faith watching the wicked prosper. Then he walks into the sanctuary. What changes when we stop comparing and start worshipping?")),
+                YouTubeVideoId = "hT_nvWreIhg",
+                DurationSeconds = 39 * 60,
+                SpeakerLeaderId = danielReyes?.Id,
+                SpeakerNameFreeText = "Daniel Reyes",
+                SermonSeriesId = yearInPsalms.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(-42),
+                YouTubePublishedAt = now.AddDays(-42),
+                CreatedAt = now.AddDays(-42), ModifiedAt = now.AddDays(-42),
+            },
+            new Sermon
+            {
+                Id = p2Id, Slug = "psalm-84-a-day-in-your-courts",
+                Title = "Psalm 84 — A Day in Your Courts",
+                DescriptionJson = Doc(P("Better is one day in your courts than a thousand elsewhere. The sons of Korah sing about longing, pilgrimage, and the God who doesn’t make us earn our welcome.")),
+                YouTubeVideoId = "JGwWNGJdvx8",
+                DurationSeconds = 34 * 60,
+                SpeakerLeaderId = annaKowalski?.Id,
+                SpeakerNameFreeText = "Anna Kowalski",
+                SermonSeriesId = yearInPsalms.Id,
+                IsPublished = true,
+                PublishedAt = now.AddDays(-35),
+                YouTubePublishedAt = now.AddDays(-35),
+                CreatedAt = now.AddDays(-35), ModifiedAt = now.AddDays(-35),
+            });
 
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample sermon series + sermons.");
+
+        // ── Scripture references (one per sermon) ────────────────────
+        ScriptureReference Ref(Guid sermonId, BibleBook book, int ch, int? vs, int? chEnd, int? veEnd)
+            => new()
+            {
+                Id = Guid.NewGuid(), ParentEntityType = "Sermon", ParentEntityId = sermonId,
+                Book = book, ChapterStart = ch, VerseStart = vs, ChapterEnd = chEnd, VerseEnd = veEnd,
+                DisplayOrder = 0, CreatedAt = now, ModifiedAt = now,
+            };
+
+        _db.ScriptureReferences.AddRange(
+            Ref(s1Id, BibleBook.Luke, 14, 25, 14, 33),   // The Cost of Belonging — Luke 14:25-33
+            Ref(s2Id, BibleBook.Luke, 15, 1, 15, 10),    // Lost & Found — Luke 15:1-10
+            Ref(s3Id, BibleBook.Luke, 15, 11, 15, 32),   // The Long Way Home — Luke 15:11-32
+            Ref(s4Id, BibleBook.Luke, 14, 15, 14, 24),   // A Table With Room — Luke 14:15-24
+            Ref(s5Id, BibleBook.Hebrews, 13, 10, 13, 14),// Outside The Camp — Hebrews 13:10-14
+            Ref(s6Id, BibleBook.Luke, 15, 11, 15, 32),   // Coming Home — Luke 15:11-32
+            Ref(p1Id, BibleBook.Psalms, 73, null, null, null), // Psalm 73
+            Ref(p2Id, BibleBook.Psalms, 84, null, null, null)  // Psalm 84
+        );
+
+        await _db.SaveChangesAsync(ct).ConfigureAwait(false);
+        _logger.LogInformation("Seeded sample sermon series + sermons + scripture references.");
     }
 
-    private static Sermon SampleSermon(string slug, string title, string ytId,
-        Guid seriesId, DateTimeOffset publishedAt, string speaker)
-        => new()
-        {
-            Id = Guid.NewGuid(),
-            Slug = slug,
-            Title = title,
-            YouTubeVideoId = ytId,
-            DescriptionJson = ParaJson($"Notes for {title}."),
-            PublishedAt = publishedAt,
-            YouTubePublishedAt = publishedAt,
-            SpeakerNameFreeText = speaker,
-            SermonSeriesId = seriesId,
-            IsPublished = true,
-            CreatedAt = publishedAt,
-            ModifiedAt = publishedAt,
-        };
+    // ── Events ───────────────────────────────────────────────────────────────
 
     private async Task SeedSampleEventsAsync(CancellationToken ct)
     {
         if (await _db.Events.AnyAsync(ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
 
-        // Single events
-        var picnic = new Event
+        var newcomersLunch = new Event
         {
             Id = Guid.NewGuid(),
-            Slug = "summer-picnic",
-            Title = "Summer Picnic",
-            DescriptionJson = ParaJson("Bring a side dish and lawn chairs."),
-            StartsAt = now.Date.AddDays(14).AddHours(11),
-            EndsAt = now.Date.AddDays(14).AddHours(15),
-            Location = "Memorial Park, Pavilion 3",
+            Slug = "newcomers-lunch",
+            Title = "Newcomers Lunch",
+            DescriptionJson = Doc(
+                P("A simple lunch in the fellowship hall for anyone who has visited recently. Come meet the pastors and a few other newcomers — no follow-up commitment, no church-y tour, just food."),
+                H2("What to expect"),
+                P("Walk in through the front doors after the 11:00 service — there will be a sign — and follow the smell of food to the fellowship hall. Lunch is on us. Kids are welcome (we’ll have a kids’ table set up)."),
+                H2("What’s on the menu"),
+                P("Soup (one veg, one not), good bread, salad, and a cookie tray that has historically been the most-discussed item of every newcomers lunch. Coffee, tea, and lemonade."),
+                H2("Do I need to RSVP?"),
+                P("It helps us plan, but you can absolutely just show up. The form below sends us a heads-up; if you fill it out we’ll know roughly how many to expect.")),
+            StartsAt = NextDayOfWeek(now, DayOfWeek.Sunday).AddDays(7).AddHours(12).AddMinutes(30),
+            EndsAt = NextDayOfWeek(now, DayOfWeek.Sunday).AddDays(7).AddHours(14),
+            Location = "Fellowship Hall · 412 Maple Ave",
             Visibility = EventVisibility.Public,
             RegistrationMode = EventRegistrationMode.RsvpOptional,
-            Capacity = 80,
-            WaitlistEnabled = true,
+            Capacity = 40,
+            WaitlistEnabled = false,
             IsPublished = true,
-            CreatedAt = now,
-            ModifiedAt = now,
-        };
-        var workshop = new Event
-        {
-            Id = Guid.NewGuid(),
-            Slug = "marriage-workshop",
-            Title = "Marriage Workshop",
-            DescriptionJson = ParaJson("A Saturday workshop for couples — registration required."),
-            StartsAt = now.Date.AddDays(30).AddHours(9),
-            EndsAt = now.Date.AddDays(30).AddHours(15),
-            Location = "Fellowship Hall",
-            Visibility = EventVisibility.Public,
-            RegistrationMode = EventRegistrationMode.RegistrationRequired,
-            Capacity = 24,
-            WaitlistEnabled = true,
-            RegistrationOpensAt = now,
-            RegistrationClosesAt = now.AddDays(28),
-            IsPublished = true,
-            CreatedAt = now,
-            ModifiedAt = now,
+            CreatedAt = now, ModifiedAt = now,
         };
 
-        // Recurring weekly: Wednesday Bible study
-        var bibleStudy = new Event
+        var midweekBibleStudy = new Event
         {
             Id = Guid.NewGuid(),
-            Slug = "wednesday-bible-study",
-            Title = "Wednesday Bible Study",
-            DescriptionJson = ParaJson("Weekly verse-by-verse study. Childcare provided."),
+            Slug = "midweek-bible-study",
+            Title = "Midweek Bible Study",
+            DescriptionJson = Doc(
+                P("We’re working through the Gospel of Mark, slowly. Newcomers always welcome."),
+                P("Bring a Bible if you have one — we’ll provide handouts. The group is led by Pastor Daniel and meets in the library. Childcare is available.")),
             StartsAt = NextDayOfWeek(now, DayOfWeek.Wednesday).AddHours(19),
             EndsAt = NextDayOfWeek(now, DayOfWeek.Wednesday).AddHours(20).AddMinutes(30),
-            Location = "Room 204",
+            Location = "Library",
             Visibility = EventVisibility.Public,
             RecurrenceRule = "FREQ=WEEKLY;BYDAY=WE",
             IsPublished = true,
-            CreatedAt = now,
-            ModifiedAt = now,
+            CreatedAt = now, ModifiedAt = now,
         };
 
-        // Recurring monthly: members' prayer breakfast (members-only)
-        var prayerBreakfast = new Event
+        var choirTryouts = new Event
         {
             Id = Guid.NewGuid(),
-            Slug = "members-prayer-breakfast",
-            Title = "Members' Prayer Breakfast",
-            DescriptionJson = ParaJson("First Saturday of each month."),
-            StartsAt = FirstSaturdayOfNextMonth(now).AddHours(8),
-            EndsAt = FirstSaturdayOfNextMonth(now).AddHours(9).AddMinutes(30),
-            Location = "Fellowship Hall",
-            Visibility = EventVisibility.MembersOnly,
-            RecurrenceRule = "FREQ=MONTHLY;BYMONTHDAY=1",
+            Slug = "choir-tryouts",
+            Title = "Choir Tryouts",
+            DescriptionJson = Doc(
+                P("Open auditions for the Christmas season. No experience required, just willingness."),
+                P("Marcus Chen leads the choir. We rehearse Thursday evenings. The Christmas concert is December 15. If you can carry a tune — or even if you’re not sure — come try.")),
+            StartsAt = NextDayOfWeek(now, DayOfWeek.Sunday).AddDays(14).AddHours(13),
+            EndsAt = NextDayOfWeek(now, DayOfWeek.Sunday).AddDays(14).AddHours(15),
+            Location = "Music Room",
+            Visibility = EventVisibility.Public,
             IsPublished = true,
-            CreatedAt = now,
-            ModifiedAt = now,
+            CreatedAt = now, ModifiedAt = now,
         };
 
-        // Single members-only with external URL
-        var retreat = new Event
+        var harvestVolunteerDay = new Event
         {
             Id = Guid.NewGuid(),
-            Slug = "annual-retreat",
-            Title = "Annual Members' Retreat",
-            DescriptionJson = ParaJson("A weekend away — registration via the camp's site."),
-            StartsAt = now.Date.AddDays(60).AddHours(17),
-            EndsAt = now.Date.AddDays(62).AddHours(15),
-            Location = "Camp Cedarwood",
-            Visibility = EventVisibility.MembersOnly,
-            ExternalRegistrationUrl = "https://example.org/retreat",
-            RegistrationMode = EventRegistrationMode.RegistrationRequired,
+            Slug = "harvest-volunteer-day",
+            Title = "Harvest Volunteer Day",
+            DescriptionJson = Doc(
+                P("Helping a few neighbours with leaves, gutters, and groceries. Bring gloves."),
+                P("We’ll meet in the church parking lot at 9:00 AM, split into teams, and head out. Back by noon. All ages welcome — there’s a job for everyone.")),
+            StartsAt = NextDayOfWeek(now, DayOfWeek.Saturday).AddDays(14).AddHours(9),
+            EndsAt = NextDayOfWeek(now, DayOfWeek.Saturday).AddDays(14).AddHours(12),
+            Location = "Off-site (meet at church parking lot)",
+            Visibility = EventVisibility.Public,
+            RegistrationMode = EventRegistrationMode.RsvpOptional,
             IsPublished = true,
-            CreatedAt = now,
-            ModifiedAt = now,
+            CreatedAt = now, ModifiedAt = now,
         };
 
-        _db.Events.AddRange(picnic, workshop, bibleStudy, prayerBreakfast, retreat);
+        var allSaintsVigil = new Event
+        {
+            Id = Guid.NewGuid(),
+            Slug = "all-saints-vigil",
+            Title = "All Saints Vigil",
+            DescriptionJson = Doc(
+                P("A quiet candlelight service remembering those we have loved and lost this year. Open to the whole community — bring a name, a memory, a candle."),
+                P("The vigil lasts about ninety minutes. We’ll read names, sing a few hymns, sit in silence, and light candles together. Childcare is available but children are also welcome in the service.")),
+            StartsAt = NextDayOfWeek(now, DayOfWeek.Saturday).AddDays(21).AddHours(19),
+            EndsAt = NextDayOfWeek(now, DayOfWeek.Saturday).AddDays(21).AddHours(20).AddMinutes(30),
+            Location = "Sanctuary · 412 Maple Ave",
+            Visibility = EventVisibility.Public,
+            RegistrationMode = EventRegistrationMode.RsvpOptional,
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        var allSaintsSunday = new Event
+        {
+            Id = Guid.NewGuid(),
+            Slug = "all-saints-sunday",
+            Title = "All Saints Sunday",
+            DescriptionJson = Doc(
+                P("We read the names. We light candles. We give thanks for the great cloud of witnesses."),
+                P("Both the 9:00 and 11:00 services will include a special liturgy for All Saints. If you’d like a loved one’s name read aloud, please submit it through the church office by Wednesday.")),
+            StartsAt = NextDayOfWeek(now, DayOfWeek.Sunday).AddDays(28).AddHours(9),
+            EndsAt = NextDayOfWeek(now, DayOfWeek.Sunday).AddDays(28).AddHours(12).AddMinutes(15),
+            Location = "Sanctuary",
+            Visibility = EventVisibility.Public,
+            IsPublished = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        _db.Events.AddRange(newcomersLunch, midweekBibleStudy, choirTryouts,
+            harvestVolunteerDay, allSaintsVigil, allSaintsSunday);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample events (single, weekly, monthly, members-only).");
+        _logger.LogInformation("Seeded sample events (6).");
     }
 
     private static DateTimeOffset NextDayOfWeek(DateTimeOffset from, DayOfWeek target)
@@ -588,49 +907,71 @@ public sealed class DataSeeder
         return new DateTimeOffset(firstOfNext.AddDays(diff), TimeSpan.Zero);
     }
 
-    private static string ParaJson(string text)
-        => "{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\",\"content\":[{\"type\":\"text\",\"text\":\""
-           + text.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"}]}]}";
+    // ── Groups ───────────────────────────────────────────────────────────────
 
     private async Task SeedSampleGroupsAsync(CancellationToken ct)
     {
         if (await _db.Groups.AnyAsync(ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
-        var youth = new Group
+
+        var bibleStudy = new Group
         {
             Id = Guid.NewGuid(),
-            Slug = "youth-group",
-            Name = "Youth Group",
-            DescriptionJson = ParaJson("Sunday-evening community for middle and high school students."),
-            MeetingInfo = "Sundays · 6:00 pm · Fellowship Hall",
-            ContactEmail = "youth@example.org",
+            Slug = "wednesday-bible-study",
+            Name = "Wednesday Bible Study",
+            DescriptionJson = Doc(
+                P("A midweek group working through one book of Scripture each term. Currently in the Gospel of Mark."),
+                P("Led by Pastor Daniel. Newcomers are always welcome — no preparation required. Childcare provided.")),
+            MeetingInfo = "Wednesdays · 7:00 PM · Library",
+            Visibility = GroupVisibility.Public,
+            Joinability = GroupJoinability.Open,
+            RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
+            RosterVisibility = RosterVisibility.AllGroupMembers,
+            IsActive = true,
+            CreatedAt = now, ModifiedAt = now,
+        };
+
+        var hospitalityTeam = new Group
+        {
+            Id = Guid.NewGuid(),
+            Slug = "hospitality-team",
+            Name = "Hospitality Team",
+            DescriptionJson = Doc(
+                P("The people who make Sunday mornings feel like home. Greeters, coffee brewers, setup crew, and the folks in maroon name tags."),
+                P("We meet briefly before the 9:00 service to set up and debrief after the 11:00 service. It’s a low-key, high-impact way to serve.")),
+            MeetingInfo = "Sundays · pre-service · Lobby",
             Visibility = GroupVisibility.Public,
             Joinability = GroupJoinability.Open,
             RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
             RosterVisibility = RosterVisibility.LeadersOnly,
             IsActive = true,
-            CreatedAt = now,
-            ModifiedAt = now,
+            CreatedAt = now, ModifiedAt = now,
         };
-        var menBibleStudy = new Group
+
+        var choir = new Group
         {
             Id = Guid.NewGuid(),
-            Slug = "mens-bible-study",
-            Name = "Men's Bible Study",
-            DescriptionJson = ParaJson("Saturday-morning study for men. Coffee provided."),
-            MeetingInfo = "Saturdays · 7:00 am · Library",
-            Visibility = GroupVisibility.MembersOnly,
+            Slug = "choir",
+            Name = "Choir",
+            DescriptionJson = Doc(
+                P("Led by Marcus Chen. We sing at the 9:00 traditional service and prepare a Christmas concert each December."),
+                P("Rehearsals are Thursday evenings. All skill levels welcome — if you enjoy singing, you belong here.")),
+            MeetingInfo = "Thursdays · 6:30 PM · Music Room",
+            ContactEmail = "marcus@hopecommunity.church",
+            Visibility = GroupVisibility.Public,
             Joinability = GroupJoinability.Open,
             RequiresMessageOnJoinRequest = MessageOnJoinRequest.Optional,
             RosterVisibility = RosterVisibility.AllGroupMembers,
             IsActive = true,
-            CreatedAt = now,
-            ModifiedAt = now,
+            CreatedAt = now, ModifiedAt = now,
         };
-        _db.Groups.AddRange(youth, menBibleStudy);
+
+        _db.Groups.AddRange(bibleStudy, hospitalityTeam, choir);
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded sample groups (youth + men's Bible study).");
+        _logger.LogInformation("Seeded sample groups (Wednesday Bible Study, Hospitality Team, Choir).");
     }
+
+    // ── Blog posts ───────────────────────────────────────────────────────────
 
     private async Task SeedSampleBlogPostsAsync(CancellationToken ct)
     {
@@ -644,10 +985,10 @@ public sealed class DataSeeder
             Id = Guid.NewGuid(),
             Slug = "welcome-to-our-blog",
             Title = "Welcome to our blog",
-            BodyJson = ParaJson(
-                "We're starting a regular space for devotionals, sermon notes, and reflections " +
-                "from the pastors. Subscribe via the church newsletter to be notified when new " +
-                "posts go up."),
+            BodyJson = Doc(
+                P("We’re starting a regular space for devotionals, sermon notes, and reflections from the pastors. Subscribe via the church newsletter to be notified when new posts go up."),
+                P("This blog is a place for the kind of writing that doesn’t fit in a Sunday sermon — longer reflections, recommended reading, updates from mission partners, and the occasional recipe from the fellowship hall kitchen."),
+                P("If you’d like to contribute, talk to Pastor Daniel or any of the staff. We’d love to hear your voice here too.")),
             Excerpt = "A space for devotionals, sermon notes, and reflections.",
             AuthorUserId = admin.Id,
             Category = "Announcements",
@@ -663,6 +1004,8 @@ public sealed class DataSeeder
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
         _logger.LogInformation("Seeded sample blog post (welcome).");
     }
+
+    // ── Email templates ──────────────────────────────────────────────────────
 
     private async Task SeedEmailTemplatesAsync(CancellationToken ct)
     {
@@ -760,7 +1103,7 @@ public sealed class DataSeeder
                 TemplateKey = key,
                 Subject = subject,
                 HtmlBody = html,
-                AvailableMergeFieldsJson = System.Text.Json.JsonSerializer.Serialize(vars),
+                AvailableMergeFieldsJson = JsonSerializer.Serialize(vars),
                 IsSystemTemplate = true,
                 Description = desc,
                 CreatedAt = now,
@@ -803,8 +1146,6 @@ public sealed class DataSeeder
     private async Task SeedSampleVolunteerRolesAsync(CancellationToken ct)
     {
         if (await _db.EventVolunteerRoles.AnyAsync(ct).ConfigureAwait(false)) return;
-        // Pick the first seeded event (small group / Sunday gathering) and
-        // attach a couple of roles to it.
         var firstEvent = await _db.Events.AsNoTracking().OrderBy(e => e.StartsAt).FirstOrDefaultAsync(ct).ConfigureAwait(false);
         if (firstEvent is null) return;
 
@@ -836,7 +1177,7 @@ public sealed class DataSeeder
         _logger.LogInformation("Seeded sample volunteer roles on event {Id}.", firstEvent.Id);
     }
 
-    // -- Demo content (idempotent) -----------------------------------------
+    // ── Demo content ─────────────────────────────────────────────────────────
 
     private async Task SeedSampleClassesAsync(CancellationToken ct)
     {
@@ -907,9 +1248,6 @@ public sealed class DataSeeder
     {
         if (await _db.Documents.AnyAsync(ct).ConfigureAwait(false)) return;
         var now = DateTimeOffset.UtcNow;
-        // BlobUrl is a placeholder pointing at the seeded admin's expected
-        // storage container. A fresh operator replaces these with real
-        // uploads via /admin/documents.
         _db.Documents.AddRange(
             new Document
             {
@@ -945,10 +1283,6 @@ public sealed class DataSeeder
 
     private async Task SeedSampleDirectoryMembersAsync(CancellationToken ct)
     {
-        // Two sample members with directory opt-in toggles set so the
-        // /members directory page renders something on a fresh deploy.
-        // Both have unconfirmed emails + no usable password — they cannot
-        // sign in. Operator replaces them with real invitations.
         var existing = await _userManager.FindByEmailAsync("sample.member@credocms.local").ConfigureAwait(false);
         if (existing is not null) return;
 
@@ -998,7 +1332,6 @@ public sealed class DataSeeder
     private async Task SeedSamplePrayerRequestsAsync(CancellationToken ct)
     {
         if (await _db.PrayerRequests.AnyAsync(ct).ConfigureAwait(false)) return;
-        // Submitted by the seeded admin so the audit row is meaningful.
         var admin = await _userManager.FindByEmailAsync(_identitySeed.DefaultAdminEmail).ConfigureAwait(false);
         if (admin is null) return;
 
@@ -1065,4 +1398,48 @@ public sealed class DataSeeder
         _logger.LogInformation("Seeded sample connect card submissions.");
     }
 
+    // ── ProseMirror / TipTap JSON builders ───────────────────────────────────
+
+    private static string Doc(params object[] nodes)
+        => JsonSerializer.Serialize(new { type = "doc", content = nodes });
+
+    private static object H2(string text)
+        => new { type = "heading", attrs = new { level = 2 }, content = new object[] { Txt(text) } };
+
+    private static object H3(string text)
+        => new { type = "heading", attrs = new { level = 3 }, content = new object[] { Txt(text) } };
+
+    private static object P(string text)
+        => new { type = "paragraph", content = new object[] { Txt(text) } };
+
+    private static object P(params object[] inline)
+        => new { type = "paragraph", content = inline };
+
+    private static object BQ(string text)
+        => new { type = "blockquote", content = new object[] { P(text) } };
+
+    private static object Txt(string text) => new { type = "text", text };
+    private static object Bold(string text) => new { type = "text", marks = new[] { new { type = "bold" } }, text };
+    private static object Ital(string text) => new { type = "text", marks = new[] { new { type = "italic" } }, text };
+
+    private static string ParaJson(string text) => Doc(P(text));
+
+    private static Page SimplePage(string slug, string title, DateTimeOffset now,
+        string paragraph, bool isSystem = false)
+    {
+        return new Page
+        {
+            Id = Guid.NewGuid(),
+            Slug = slug,
+            Title = title,
+            BodyJson = Doc(P(paragraph)),
+            Excerpt = paragraph,
+            IsPublished = true,
+            IsMembersOnly = false,
+            IsSystemPage = isSystem,
+            CreatedAt = now,
+            ModifiedAt = now,
+            PublishedAt = now,
+        };
+    }
 }

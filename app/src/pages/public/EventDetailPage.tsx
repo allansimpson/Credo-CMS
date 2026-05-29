@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { eventsApi, type PublicEvent } from "@/lib/api/events";
 import { SeoTags } from "@/components/shared/SeoTags";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
+import { Chip, Eyebrow, Headline, ImageSlot } from "@/components/public";
+import { Calendar, Clock, MapPin, Mail, ArrowRight } from "lucide-react";
 import { ApiError } from "@/lib/apiClient";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
@@ -34,7 +36,22 @@ export function EventDetailPage() {
   if (notFound || !event) return <NotFoundPage />;
 
   const orgName = settings?.churchName ?? null;
+  const contactEmail = settings?.contactEmail ?? "office@hopecommunity.church";
   const description = event.location ? `${event.location} · ${orgName}` : orgName;
+  const startDate = new Date(event.startsAt);
+  const formattedDate = startDate.toLocaleDateString("en-US", {
+    weekday: "short", month: "long", day: "numeric", year: "numeric",
+  });
+  const startTime = startDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const endTime = event.endsAt
+    ? new Date(event.endsAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : null;
+  const timeRange = endTime ? `${startTime} – ${endTime}` : startTime;
+  const monthLabel = startDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const canRegister = event.registrationMode > 0
+    && (!event.registrationOpensAt || new Date(event.registrationOpensAt) <= new Date())
+    && (!event.registrationClosesAt || new Date(event.registrationClosesAt) > new Date());
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -47,12 +64,8 @@ export function EventDetailPage() {
     organizer: orgName ? { "@type": "Organization", name: orgName } : undefined,
   };
 
-  const canRegister = event.registrationMode > 0
-    && (!event.registrationOpensAt || new Date(event.registrationOpensAt) <= new Date())
-    && (!event.registrationClosesAt || new Date(event.registrationClosesAt) > new Date());
-
   return (
-    <article className="mx-auto max-w-3xl px-4 py-8">
+    <article>
       <SeoTags
         title={event.title}
         description={description}
@@ -61,93 +74,124 @@ export function EventDetailPage() {
         jsonLd={jsonLd}
       />
 
-      {event.heroImageUrl && (
-        <picture>
-          {event.heroImageWebpUrl && <source srcSet={event.heroImageWebpUrl} type="image/webp" />}
-          <img src={event.heroImageUrl} alt={event.heroImageAlt ?? ""}
-            className="mb-6 w-full object-cover" style={{ maxHeight: 480 }} />
-        </picture>
-      )}
-
-      <h1 className="text-3xl font-bold sm:text-4xl">{event.title}</h1>
-      <p className="mt-2 text-sm text-muted">
-        {new Date(event.startsAt).toLocaleString()}
-        {event.endsAt && ` – ${new Date(event.endsAt).toLocaleString()}`}
-        {event.location && ` · ${event.location}`}
-        {event.visibility === 1 && " · Members only"}
-      </p>
-
-      {event.recurrenceRule && event.nextOccurrences.length > 1 && (
-        <section className="mt-6 border bg-card p-4">
-          <h2 className="text-sm font-semibold">Upcoming occurrences</h2>
-          <ul className="mt-2 space-y-1 text-sm text-muted">
-            {event.nextOccurrences.slice(0, 8).map((d, i) => (
-              <li key={i}>{new Date(d).toLocaleString()}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {canRegister && (
-        <div className="mt-6">
-          {event.externalRegistrationUrl ? (
-            <a href={event.externalRegistrationUrl} target="_blank" rel="noreferrer"
-              className="inline-flex h-11 items-center justify-center bg-primary px-6 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-              Register externally ↗
-            </a>
-          ) : (
-            <Link to={`/events/${event.slug}/register`}
-              className="inline-flex h-11 items-center justify-center bg-primary px-6 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
-              Register
-            </Link>
-          )}
+      {/* ── Breadcrumb ────────────────────────────────────────── */}
+      <nav className="bg-inset px-6 py-3 text-[11px] font-medium uppercase tracking-[0.14em] text-inset-foreground/70">
+        <div className="mx-auto flex max-w-7xl gap-2">
+          <Link to="/events" className="hover:text-inset-foreground">Events</Link>
+          <span aria-hidden>/</span>
+          <span>{monthLabel}</span>
+          <span aria-hidden>/</span>
+          <span className="text-accent">{event.title}</span>
         </div>
-      )}
+      </nav>
 
-      {event.descriptionJson && (
-        <div className="mt-8">
-          <Suspense fallback={null}>
-            <TipTapReadOnly json={event.descriptionJson} />
-          </Suspense>
-        </div>
-      )}
+      {/* ── Content + Sidebar ─────────────────────────────────── */}
+      <div className="mx-auto max-w-7xl px-6 py-10 md:py-14">
+        <div className="grid gap-10 md:grid-cols-[1fr_20rem]">
+          {/* Main content */}
+          <div>
+            {/* Header */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Chip tone="accent">Welcome</Chip>
+              <span className="font-mono text-xs text-muted">
+                {startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {" · "}
+                {startDate.toLocaleDateString("en-US", { weekday: "short" })}
+                {" · "}
+                {startTime}
+              </span>
+            </div>
+            <Headline as="h1" size="display" className="mt-3">
+              {event.title}
+            </Headline>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold">Add to calendar</h2>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <a href={`/api/public/events/${event.slug}/ics`} className="text-sm text-primary hover:underline">
-            Download .ics
-          </a>
-          <a href={googleCalendarUrl(event)} target="_blank" rel="noreferrer"
-            className="text-sm text-primary hover:underline">Google Calendar</a>
-          <a href={outlookUrl(event)} target="_blank" rel="noreferrer"
-            className="text-sm text-primary hover:underline">Outlook</a>
+            {/* Hero image */}
+            <div className="mt-8">
+              {event.heroImageUrl ? (
+                <picture>
+                  {event.heroImageWebpUrl && <source srcSet={event.heroImageWebpUrl} type="image/webp" />}
+                  <img src={event.heroImageUrl} alt={event.heroImageAlt ?? ""} className="aspect-[4/3] w-full object-cover" />
+                </picture>
+              ) : (
+                <ImageSlot ratio="4:3" label={event.location ?? event.title} alt="" />
+              )}
+            </div>
+
+            {/* Description body */}
+            {event.descriptionJson && (
+              <div className="mt-8">
+                <Suspense fallback={null}>
+                  <TipTapReadOnly json={event.descriptionJson} />
+                </Suspense>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <aside className="space-y-6 md:sticky md:top-4 md:self-start">
+            {/* Details card — inset (same bg as footer) */}
+            <div className="bg-inset p-6 text-inset-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">Details</p>
+              <ul className="mt-5 space-y-4 text-sm">
+                <li className="flex items-start gap-3">
+                  <Calendar size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+                  <span>{formattedDate}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Clock size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+                  <span>{timeRange}</span>
+                </li>
+                {event.location && (
+                  <li className="flex items-start gap-3">
+                    <MapPin size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+                    <span>{event.location}</span>
+                  </li>
+                )}
+                <li className="flex items-start gap-3">
+                  <Mail size={18} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" />
+                  <a href={`mailto:${contactEmail}`} className="hover:underline">{contactEmail}</a>
+                </li>
+              </ul>
+
+              <hr className="my-5 border-inset-foreground/15" />
+
+              <div className="space-y-2">
+                {canRegister ? (
+                  event.externalRegistrationUrl ? (
+                    <a href={event.externalRegistrationUrl} target="_blank" rel="noreferrer"
+                      className="flex w-full items-center justify-center gap-2 bg-accent py-2.5 text-sm font-semibold text-inset-foreground hover:bg-accent/90">
+                      RSVP <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+                    </a>
+                  ) : (
+                    <Link to={`/events/${event.slug}/register`}
+                      className="flex w-full items-center justify-center gap-2 bg-accent py-2.5 text-sm font-semibold text-inset-foreground hover:bg-accent/90">
+                      RSVP <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+                    </Link>
+                  )
+                ) : (
+                  <span className="flex w-full items-center justify-center gap-2 bg-accent py-2.5 text-sm font-semibold text-inset-foreground">
+                    RSVP <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+                  </span>
+                )}
+                <a href={`/api/public/events/${event.slug}/ics`}
+                  className="flex w-full items-center justify-center gap-2 border border-inset-foreground/25 py-2.5 text-sm font-medium text-inset-foreground hover:bg-inset-foreground/10">
+                  <Calendar size={14} strokeWidth={1.5} />
+                  Add to calendar
+                </a>
+              </div>
+            </div>
+
+            {/* Hosted by card */}
+            <div className="border border-border-soft p-5">
+              <p className="font-semibold">Hosted by</p>
+              <p className="mt-1 text-sm text-fg-soft">Anna Kowalski · Care</p>
+              <a href={`mailto:${contactEmail}`} className="mt-2 inline-flex items-center gap-1.5 text-sm text-accent hover:underline">
+                <Mail size={14} strokeWidth={1.5} /> Email Anna
+              </a>
+            </div>
+          </aside>
         </div>
-      </section>
+      </div>
     </article>
   );
-}
-
-function googleCalendarUrl(e: PublicEvent): string {
-  const start = (e.startsAt || "").replace(/[-:]/g, "").replace(/\.\d+/, "");
-  const end = ((e.endsAt ?? e.startsAt) || "").replace(/[-:]/g, "").replace(/\.\d+/, "");
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: e.title,
-    dates: `${start}/${end}`,
-  });
-  if (e.location) params.set("location", e.location);
-  return `https://www.google.com/calendar/render?${params}`;
-}
-
-function outlookUrl(e: PublicEvent): string {
-  const params = new URLSearchParams({
-    path: "/calendar/action/compose",
-    rru: "addevent",
-    subject: e.title,
-    startdt: e.startsAt,
-    enddt: e.endsAt ?? e.startsAt,
-  });
-  if (e.location) params.set("location", e.location);
-  return `https://outlook.live.com/calendar/0/deeplink/compose?${params}`;
 }

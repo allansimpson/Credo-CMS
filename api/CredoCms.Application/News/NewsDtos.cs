@@ -5,6 +5,7 @@ public sealed record NewsListItemDto(
     string Slug,
     string Title,
     string? Excerpt,
+    string? Category,
     bool IsPublished,
     bool IsMembersOnly,
     DateTimeOffset? PublishedAt,
@@ -21,6 +22,7 @@ public sealed record NewsDetailDto(
     string? HeroImageWebpUrl,
     string? HeroImageAlt,
     string? MetaDescription,
+    string? Category,
     bool IsPublished,
     bool IsMembersOnly,
     bool IsDeleted,
@@ -40,6 +42,7 @@ public sealed record PublicNewsItemDto(
     string? HeroImageUrl,
     string? HeroImageWebpUrl,
     string? HeroImageAlt,
+    string? Category,
     bool IsMembersOnly,
     DateTimeOffset PublishedAt,
     DateTimeOffset? CalendarDate);
@@ -54,6 +57,7 @@ public sealed record PublicNewsDetailDto(
     string? HeroImageWebpUrl,
     string? HeroImageAlt,
     string? MetaDescription,
+    string? Category,
     bool IsMembersOnly,
     DateTimeOffset PublishedAt,
     DateTimeOffset? CalendarDate);
@@ -67,6 +71,7 @@ public sealed record CreateNewsItemRequest(
     string? HeroImageWebpUrl,
     string? HeroImageAlt,
     string? MetaDescription,
+    string? Category,
     bool IsPublished,
     bool IsMembersOnly,
     DateTimeOffset? ExpiresAt,
@@ -83,6 +88,7 @@ public sealed record UpdateNewsItemRequest(
     string? HeroImageWebpUrl,
     string? HeroImageAlt,
     string? MetaDescription,
+    string? Category,
     bool IsPublished,
     bool IsMembersOnly,
     DateTimeOffset? ExpiresAt,
@@ -92,6 +98,7 @@ public sealed record UpdateNewsItemRequest(
 
 public sealed record NewsListQuery(
     string? Search = null,
+    string? Category = null,
     bool IncludeDeleted = false,
     int Page = 1,
     int PageSize = 25);

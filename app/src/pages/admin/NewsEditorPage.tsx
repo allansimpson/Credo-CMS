@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { newsApi } from "@/lib/api/news";
+import { siteSettingsApi } from "@/lib/api/siteSettings";
 import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import { TipTapFullEditor } from "@/components/shared/TipTapFullEditor";
+import { ConfirmDialog } from "@/components/shared/admin/ConfirmDialog";
 import type { CreateNewsItemRequest, NewsDetail, UpdateNewsItemRequest } from "@/types/api";
 
 interface FormState {
@@ -15,6 +17,7 @@ interface FormState {
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
   metaDescription: string;
+  category: string;
   isPublished: boolean;
   isMembersOnly: boolean;
   expiresAt: string;
@@ -25,6 +28,7 @@ const empty: FormState = {
   slug: "", title: "", bodyJson: null, excerpt: "",
   heroImageUrl: null, heroImageWebpUrl: null, heroImageAlt: null,
   metaDescription: "",
+  category: "",
   isPublished: false, isMembersOnly: true,
   expiresAt: "", calendarDate: "",
 };
@@ -39,6 +43,7 @@ function toApi(f: FormState): CreateNewsItemRequest | UpdateNewsItemRequest {
     heroImageWebpUrl: f.heroImageWebpUrl,
     heroImageAlt: f.heroImageAlt,
     metaDescription: f.metaDescription || null,
+    category: f.category || null,
     isPublished: f.isPublished,
     isMembersOnly: f.isMembersOnly,
     expiresAt: f.expiresAt ? new Date(f.expiresAt).toISOString() : null,
@@ -56,6 +61,7 @@ function fromDetail(n: NewsDetail): FormState {
     heroImageWebpUrl: n.heroImageWebpUrl,
     heroImageAlt: n.heroImageAlt,
     metaDescription: n.metaDescription ?? "",
+    category: n.category ?? "",
     isPublished: n.isPublished,
     isMembersOnly: n.isMembersOnly,
     expiresAt: n.expiresAt ? n.expiresAt.slice(0, 16) : "",
@@ -75,6 +81,8 @@ export function NewsEditorPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [slugAuto, setSlugAuto] = useState(isNew);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (isNew) return;
@@ -88,6 +96,20 @@ export function NewsEditorPage() {
     }).catch(() => { if (!cancelled) { setErrors(["Could not load news item."]); setLoading(false); } });
     return () => { cancelled = true; };
   }, [id, isNew]);
+
+  useEffect(() => {
+    let cancelled = false;
+    siteSettingsApi.getAdmin().then((s) => {
+      if (cancelled) return;
+      try {
+        const parsed = JSON.parse(s.newsCategoriesJson);
+        if (Array.isArray(parsed)) {
+          setCategories(parsed.filter((x): x is string => typeof x === "string" && x.length > 0));
+        }
+      } catch { /* leave empty */ }
+    }).catch(() => { /* leave categories empty */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,9 +134,9 @@ export function NewsEditorPage() {
     }
   };
 
-  const handleSoftDelete = async () => {
+  const performSoftDelete = async () => {
     if (!id) return;
-    if (!window.confirm("Soft-delete this news item?")) return;
+    setDeleteOpen(false);
     await newsApi.softDelete(id);
     navigate("/admin/news");
   };
@@ -143,7 +165,7 @@ export function NewsEditorPage() {
       )}
       {original?.isDeleted && (
         <div role="status" className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-          This item is in the deleted tab. <button type="button" onClick={handleRestore} className="font-semibold underline">Restore</button> to make it editable.
+          This item is in Trash. <button type="button" onClick={handleRestore} className="font-semibold underline">Restore</button> to make it editable.
         </div>
       )}
 
@@ -189,6 +211,27 @@ export function NewsEditorPage() {
           onChangeJson={(json) => setForm((f) => ({ ...f, bodyJson: json }))}
           placeholder="Write the news item body…"
         />
+      </fieldset>
+
+      <fieldset className="grid grid-cols-1 gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2">
+        <legend className="px-2 text-sm font-semibold">Categorize</legend>
+        <Field
+          label="Category"
+          hint="Optional. Manage the list in Site Settings → Content."
+        >
+          <select
+            aria-label="Category"
+            value={form.category}
+            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+            className="input"
+          >
+            <option value="">&mdash; Uncategorized &mdash;</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            {form.category && !categories.includes(form.category) && (
+              <option value={form.category}>{form.category} (not in current list)</option>
+            )}
+          </select>
+        </Field>
       </fieldset>
 
       <fieldset className="grid grid-cols-1 gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2">
@@ -245,12 +288,25 @@ export function NewsEditorPage() {
           {submitting ? "Saving…" : isNew ? "Create item" : "Save changes"}
         </button>
         {!isNew && original && !original.isDeleted && (
-          <button type="button" onClick={handleSoftDelete}
+          <button type="button" onClick={() => setDeleteOpen(true)}
             className="inline-flex h-10 items-center justify-center rounded-md border border-danger/30 bg-card px-4 text-sm text-danger hover:bg-danger/10">
             Delete
           </button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Move this news item to Trash?"
+        message={
+          original
+            ? `"${original.title}" will be moved to Trash. You can restore it or permanently delete it from there.`
+            : "This news item will be moved to Trash. You can restore it or permanently delete it from there."
+        }
+        confirmLabel="Move to Trash"
+        onConfirm={performSoftDelete}
+        onCancel={() => setDeleteOpen(false)}
+      />
 
       <style>{`
         .input {

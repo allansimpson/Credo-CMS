@@ -257,6 +257,29 @@ public sealed class UserAdminService : IUserAdminService
         return UserMutationResult.Success(detail);
     }
 
+    public async Task<UserMutationResult> ResendInvitationEmailAsync(Guid id, CancellationToken ct = default)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user is null)
+        {
+            return UserMutationResult.Failure("User not found.");
+        }
+
+        var invitationToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var message = await _emailComposer.ComposeInvitationAsync(user, invitationToken, ct);
+        await _email.SendTransactionalAsync(message, ct);
+
+        await _audit.WriteAsync(
+            "User.InvitationEmailResent",
+            nameof(ApplicationUser),
+            user.Id.ToString(),
+            cancellationToken: ct);
+
+        var detail = await _queries.GetAsync(user.Id, ct)
+            ?? throw new InvalidOperationException("Resend-invitation succeeded but query failed.");
+        return UserMutationResult.Success(detail);
+    }
+
     public async Task<UserMutationResult> UpdateProfileFieldsAsync(Guid id, UpdateUserProfileFieldsRequest request, CancellationToken ct = default)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());

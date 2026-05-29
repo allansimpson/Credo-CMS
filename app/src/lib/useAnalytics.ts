@@ -24,7 +24,7 @@ export function usePageViewTracking() {
   const location = useLocation();
 
   useEffect(() => {
-    if (!settings || settings.analyticsProvider !== 1) return;
+    if (!settings || settings.analyticsProvider !== "Ga4") return;
     if (readConsent() !== "accepted") return;
     if (!settings.ga4MeasurementId) return;
     if (typeof window === "undefined" || !window.gtag) return;

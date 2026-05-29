@@ -8,8 +8,12 @@ export type Role = "Administrator" | "Editor" | "Member";
 
 // Analytics + cookie consent enums (top-level so they can be
 // imported standalone by the consent banner / GA4 loader).
-export type AnalyticsProvider = 0 | 1; // None | Ga4
-export type ConsentBannerPosition = 0 | 1; // BottomRight | BottomFull
+// Backend serializes these as their enum names (System.Text.Json
+// JsonStringEnumConverter is registered), so the wire shape is a string.
+export type AnalyticsProvider = "None" | "Ga4";
+export type ConsentBannerPosition = "BottomRight" | "BottomFull";
+export type EmailProvider = "None" | "SendGrid" | "Smtp";
+export type AdminNotificationFrequency = "Off" | "Every30Minutes" | "Hourly" | "Daily";
 
 export interface CurrentUser {
   id: string;
@@ -94,7 +98,10 @@ export type PublicTemplate = 0 | 1; // Editorial | Quiet
 export type SiteSettings = Omit<PublicSiteSettings, "cookiePolicyPageSlug"> & {
   defaultVersionRetentionCount: number;
   leaderCategoriesJson: string;
+  eventCategoriesJson: string;
+  newsCategoriesJson: string;
   documentCategoriesJson: string;
+  sermonContextsJson: string;
   maxDocumentSizeBytes: number;
   maxImageSizeBytes: number;
   imageMaxWidth: number;
@@ -120,6 +127,31 @@ export type SiteSettings = Omit<PublicSiteSettings, "cookiePolicyPageSlug"> & {
   facebookOAuthAppId: string | null;
   facebookOAuthAppSecret: string | null;
   cookiePolicyPageId: string | null;
+  emailProvider: EmailProvider;
+  emailFromAddress: string;
+  emailFromName: string;
+  emailReplyToAddress: string | null;
+  sendGridApiKey: string | null;
+  sendGridWebhookSecret: string | null;
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpUsername: string | null;
+  smtpPassword: string | null;
+  smtpUseSsl: boolean;
+  emailEnabled: boolean;
+  testEmailRecipient: string | null;
+  newsEmailTargetMode: number;
+  newsEmailTargetGroupIdsJson: string;
+  blogEmailTargetMode: number;
+  blogEmailTargetGroupIdsJson: string;
+  emailSubjectPrefixNews: string;
+  emailSubjectPrefixBlog: string;
+  adminNotificationFrequency: AdminNotificationFrequency;
+  smsProvider: number;
+  twilioAccountSid: string | null;
+  twilioAuthToken: string | null;
+  twilioFromNumber: string | null;
+  unsubscribeSigningKey: string | null;
   createdAt: string;
   modifiedAt: string;
   modifiedByUserId: string | null;
@@ -178,6 +210,8 @@ export interface HardDeleteUserRequest {
   confirmDisplayName: string;
 }
 
+export type PageTemplate = "Standard" | "About" | "ImNew" | "Beliefs" | "Contact";
+
 export interface PageListItem {
   id: string;
   slug: string;
@@ -186,6 +220,7 @@ export interface PageListItem {
   isPublished: boolean;
   isMembersOnly: boolean;
   isSystemPage: boolean;
+  template: PageTemplate;
   modifiedAt: string;
   modifiedByUserId: string | null;
 }
@@ -204,11 +239,28 @@ export interface PageDetail {
   isMembersOnly: boolean;
   isDeleted: boolean;
   isSystemPage: boolean;
+  template: PageTemplate;
   createdAt: string;
   modifiedAt: string;
   modifiedByUserId: string | null;
   publishedAt: string | null;
   deletedAt: string | null;
+  hasUnpublishedDraft: boolean;
+  draft: PageDraft | null;
+}
+
+/** Pending edits on top of a published page. Null when no draft exists. */
+export interface PageDraft {
+  title: string;
+  bodyJson: string;
+  excerpt: string | null;
+  heroImageUrl: string | null;
+  heroImageWebpUrl: string | null;
+  heroImageAlt: string | null;
+  metaDescription: string | null;
+  isMembersOnly: boolean;
+  template: PageTemplate;
+  savedAt: string;
 }
 
 export interface PublicPage {
@@ -222,6 +274,7 @@ export interface PublicPage {
   heroImageAlt: string | null;
   metaDescription: string | null;
   isMembersOnly: boolean;
+  template: PageTemplate;
   publishedAt: string;
 }
 
@@ -236,6 +289,7 @@ export interface CreatePageRequest {
   metaDescription: string | null;
   isPublished: boolean;
   isMembersOnly: boolean;
+  template: PageTemplate;
 }
 
 export type UpdatePageRequest = CreatePageRequest;
@@ -245,6 +299,7 @@ export interface NewsListItem {
   slug: string;
   title: string;
   excerpt: string | null;
+  category: string | null;
   isPublished: boolean;
   isMembersOnly: boolean;
   publishedAt: string | null;
@@ -262,6 +317,7 @@ export interface NewsDetail {
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
   metaDescription: string | null;
+  category: string | null;
   isPublished: boolean;
   isMembersOnly: boolean;
   isDeleted: boolean;
@@ -282,6 +338,7 @@ export interface PublicNewsItem {
   heroImageUrl: string | null;
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
+  category: string | null;
   isMembersOnly: boolean;
   publishedAt: string;
   calendarDate: string | null;
@@ -302,6 +359,7 @@ export interface CreateNewsItemRequest {
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
   metaDescription: string | null;
+  category: string | null;
   isPublished: boolean;
   isMembersOnly: boolean;
   expiresAt: string | null;
@@ -379,6 +437,7 @@ export interface PublicLeader {
   title: string | null;
   category: string;
   bioJson: string | null;
+  email: string | null;
   photoUrl: string | null;
   photoWebpUrl: string | null;
   photoAlt: string | null;

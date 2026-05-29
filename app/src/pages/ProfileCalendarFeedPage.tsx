@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { profileCalendarFeedApi, type FeedTokenStatus } from "@/lib/api/profileCalendarFeed";
 
 export function ProfileCalendarFeedPage() {
@@ -37,7 +38,10 @@ export function ProfileCalendarFeedPage() {
 
   return (
     <article className="mx-auto max-w-2xl px-4 py-8">
-      <Link to="/profile" className="text-sm text-primary hover:underline">← Profile</Link>
+      <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
+        <ArrowLeft aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+        Profile
+      </Link>
       <h1 className="mt-2 text-2xl font-bold">My calendar feed</h1>
       <p className="mt-2 text-sm text-muted">
         Subscribe to all upcoming events (including members-only events) from

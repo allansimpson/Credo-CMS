@@ -99,13 +99,25 @@ public sealed class YouTubeSyncService : BackgroundService
         {
             var channelId = settings.YouTubeChannelId;
             var since = settings.YouTubeLastSuccessfulSyncAt;
+            _logger.LogInformation("YouTube sync starting. ChannelId={ChannelId}, Since={Since}",
+                channelId, since?.ToString("o") ?? "(all time)");
+
             var videos = await youtube.SearchChannelAsync(channelId, since, ct).ConfigureAwait(false);
+            _logger.LogInformation("YouTube API returned {Count} videos from channel search.", videos.Count);
 
             int imported = 0;
+            int skippedDuplicate = 0;
             foreach (var video in videos)
             {
                 var existing = await sermonRepo.GetByYouTubeVideoIdAsync(video.VideoId, includeDeleted: true, ct).ConfigureAwait(false);
-                if (existing is not null) continue;
+                if (existing is not null)
+                {
+                    skippedDuplicate++;
+                    _logger.LogDebug("Skipping duplicate: {VideoId} - {Title}", video.VideoId, video.Title);
+                    continue;
+                }
+                _logger.LogInformation("Importing: {VideoId} - {Title} (published {PublishedAt})",
+                    video.VideoId, video.Title, video.PublishedAt.ToString("o"));
 
                 string? thumbnailBlobUrl = null;
                 if (!string.IsNullOrWhiteSpace(video.ThumbnailUrl))
@@ -148,11 +160,9 @@ public sealed class YouTubeSyncService : BackgroundService
                     SpeakerLeaderId: null,
                     SpeakerNameFreeText: null,
                     SermonSeriesId: null,
+                    ServiceType: InferServiceType(video.PublishedAt),
                     IsPublished: settings.YouTubeAutoPublishOnSync,
-                    IsMembersOnly: false,
-                    Tags: allTags,
-                    AttachmentDocumentIds: new List<Guid>(),
-                    ScriptureReferences: new List<ScriptureReferenceInput>());
+                    IsMembersOnly: false);
 
                 var result = await sermonService.CreateAsync(request, ct).ConfigureAwait(false);
                 if (!result.Succeeded)
@@ -174,7 +184,8 @@ public sealed class YouTubeSyncService : BackgroundService
             await notifier.NotifyContentChangedAsync(
                 new ContentChangedMessage("SermonSync", Guid.Empty, "Completed"), ct).ConfigureAwait(false);
 
-            _logger.LogInformation("YouTube sync run completed. Imported={Imported}", imported);
+            _logger.LogInformation("YouTube sync run completed. Imported={Imported}, Skipped={Skipped} (duplicates), APIReturned={Total}",
+                imported, skippedDuplicate, videos.Count);
             return settings.YouTubeSyncIntervalMinutes;
         }
         catch (Exception ex)
@@ -212,7 +223,22 @@ public sealed class YouTubeSyncService : BackgroundService
         while (s.Contains("--", StringComparison.Ordinal)) s = s.Replace("--", "-", StringComparison.Ordinal);
         if (s.Length == 0) s = "sermon";
         if (s.Length > 160) s = s[..160];
-        return $"{s}-{videoId.ToLowerInvariant()}";
+        // Sanitize video ID — replace underscores and non-alphanumeric chars with dashes
+        var safeId = new System.Text.StringBuilder(videoId.Length);
+        foreach (var c in videoId) safeId.Append(char.IsLetterOrDigit(c) ? char.ToLowerInvariant(c) : '-');
+        var idPart = safeId.ToString().Trim('-');
+        return $"{s}-{idPart}";
+    }
+
+    private static ServiceType InferServiceType(DateTimeOffset publishedAt)
+    {
+        var hour = publishedAt.Hour;
+        var dow = publishedAt.DayOfWeek;
+        if (dow == DayOfWeek.Wednesday) return ServiceType.WednesdayNight;
+        if (hour < 10) return ServiceType.AmBibleClass;
+        if (hour < 13) return ServiceType.AmWorship;
+        if (hour >= 17) return ServiceType.PmWorship;
+        return ServiceType.AmWorship;
     }
 
     private static string? WrapDescriptionAsTipTap(string? description)

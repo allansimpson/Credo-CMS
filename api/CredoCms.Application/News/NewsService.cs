@@ -77,12 +77,14 @@ public sealed class NewsService : INewsService
         return new PublicNewsDetailDto(
             item.Id, item.Slug, item.Title, item.BodyJson, item.Excerpt,
             item.HeroImageUrl, item.HeroImageWebpUrl, item.HeroImageAlt, item.MetaDescription,
+            item.Category,
             item.IsMembersOnly, item.PublishedAt ?? item.ModifiedAt, item.CalendarDate);
     }
 
     public Task<PagedResult<PublicNewsItemDto>> ListPublicAsync(
-        bool includeMembersOnly, int page, int pageSize, CancellationToken ct = default)
-        => _repo.ListPublicAsync(includeMembersOnly, DateTimeOffset.UtcNow, page, pageSize, ct);
+        bool includeMembersOnly, int page, int pageSize, string? category = null,
+        CancellationToken ct = default)
+        => _repo.ListPublicAsync(includeMembersOnly, DateTimeOffset.UtcNow, page, pageSize, category, ct);
 
     public async Task<NewsOperationResult> CreateAsync(CreateNewsItemRequest request, CancellationToken ct = default)
     {
@@ -105,6 +107,7 @@ public sealed class NewsService : INewsService
             HeroImageWebpUrl = request.HeroImageWebpUrl,
             HeroImageAlt = request.HeroImageAlt,
             MetaDescription = request.MetaDescription,
+            Category = string.IsNullOrWhiteSpace(request.Category) ? null : request.Category.Trim(),
             IsPublished = request.IsPublished,
             IsMembersOnly = request.IsMembersOnly,
             ExpiresAt = request.ExpiresAt,
@@ -149,6 +152,7 @@ public sealed class NewsService : INewsService
         item.HeroImageWebpUrl = request.HeroImageWebpUrl;
         item.HeroImageAlt = request.HeroImageAlt;
         item.MetaDescription = request.MetaDescription;
+        item.Category = string.IsNullOrWhiteSpace(request.Category) ? null : request.Category.Trim();
         item.IsPublished = request.IsPublished;
         item.IsMembersOnly = request.IsMembersOnly;
         item.ExpiresAt = request.ExpiresAt;
@@ -221,6 +225,7 @@ public sealed class NewsService : INewsService
     internal static NewsDetailDto ToDetail(NewsItem n) => new(
         n.Id, n.Slug, n.Title, n.BodyJson, n.Excerpt,
         n.HeroImageUrl, n.HeroImageWebpUrl, n.HeroImageAlt, n.MetaDescription,
+        n.Category,
         n.IsPublished, n.IsMembersOnly, n.IsDeleted,
         n.ExpiresAt, n.CalendarDate,
         n.CreatedAt, n.ModifiedAt, n.ModifiedByUserId,

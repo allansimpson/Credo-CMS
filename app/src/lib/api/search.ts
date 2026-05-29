@@ -22,5 +22,10 @@ export const searchApi = {
     const usp = new URLSearchParams({ q, page: String(page), pageSize: String(pageSize) });
     return apiGet<SearchResults>(`/api/public/search?${usp}`, { emitUnauthorized: false });
   },
+  /** Admin global search — includes drafts and unpublished entries. */
+  searchAdmin: (q: string, page = 1, pageSize = 10) => {
+    const usp = new URLSearchParams({ q, page: String(page), pageSize: String(pageSize) });
+    return apiGet<SearchResults>(`/api/admin/search?${usp}`);
+  },
   rebuild: () => apiPost<void>("/api/admin/search/rebuild"),
 };

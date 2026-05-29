@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import { eventsApi, type EventDetail, type EventRequest, type EventVisibility, type EventRegistrationMode } from "@/lib/api/events";
+import { siteSettingsApi } from "@/lib/api/siteSettings";
 import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import { TipTapFullEditor } from "@/components/shared/TipTapFullEditor";
@@ -16,6 +18,7 @@ interface FormState {
   endsAt: string;
   allDay: boolean;
   location: string;
+  category: string;
   heroImageUrl: string | null;
   heroImageWebpUrl: string | null;
   heroImageAlt: string | null;
@@ -37,7 +40,7 @@ interface FormState {
 const empty: FormState = {
   slug: "", title: "", descriptionJson: null,
   startsAt: nowDateTimeLocal(), endsAt: "",
-  allDay: false, location: "",
+  allDay: false, location: "", category: "",
   heroImageUrl: null, heroImageWebpUrl: null, heroImageAlt: null,
   visibility: null,
   recurrence: { pattern: "none", weekday: null, monthDay: null },
@@ -59,6 +62,7 @@ function fromDetail(d: EventDetail): FormState {
     endsAt: d.endsAt ? d.endsAt.slice(0, 16) : "",
     allDay: d.allDay,
     location: d.location ?? "",
+    category: d.category ?? "",
     heroImageUrl: d.heroImageUrl,
     heroImageWebpUrl: d.heroImageWebpUrl,
     heroImageAlt: d.heroImageAlt,
@@ -87,6 +91,7 @@ function toApi(f: FormState): EventRequest {
     endsAt: f.endsAt ? new Date(f.endsAt).toISOString() : null,
     allDay: f.allDay,
     location: f.location || null,
+    category: f.category || null,
     heroImageUrl: f.heroImageUrl,
     heroImageWebpUrl: f.heroImageWebpUrl,
     heroImageAlt: f.heroImageAlt,
@@ -127,6 +132,21 @@ export function EventEditorPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [slugAuto, setSlugAuto] = useState(isNew);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    siteSettingsApi.getAdmin().then((s) => {
+      if (cancelled) return;
+      try {
+        const parsed = JSON.parse(s.eventCategoriesJson);
+        if (Array.isArray(parsed)) {
+          setCategories(parsed.filter((x): x is string => typeof x === "string" && x.length > 0));
+        }
+      } catch { /* empty list */ }
+    }).catch(() => { /* leave categories empty */ });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -249,6 +269,17 @@ export function EventEditorPage() {
             onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
             className="input" />
         </Field>
+        <Field label="Category" hint="Optional. Drives the public events filter chips. Manage the list in Site Settings → Content.">
+          <select value={form.category}
+            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+            className="input">
+            <option value="">— Uncategorized —</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+            {form.category && !categories.includes(form.category) && (
+              <option value={form.category}>{form.category} (not in current list)</option>
+            )}
+          </select>
+        </Field>
       </fieldset>
 
       <fieldset className="space-y-3 border bg-card p-4">
@@ -358,8 +389,9 @@ export function EventEditorPage() {
         <legend className="px-2 text-sm font-semibold">Registration</legend>
         {!isNew && (
           <Link to={`/admin/events/${id}/registrations`}
-            className="inline-flex h-8 items-center justify-center border bg-card px-3 text-xs hover:bg-panel-alt">
-            Manage registrations & fields →
+            className="inline-flex h-8 items-center justify-center gap-1.5 border bg-card px-3 text-xs hover:bg-panel-alt">
+            Manage registrations &amp; fields
+            <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-3.5 w-3.5 translate-y-px" />
           </Link>
         )}
         <Field label="Mode">

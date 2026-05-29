@@ -24,26 +24,11 @@
  * deliberately (and check contrast against the template's --background).
  */
 
-/* ---- Self-hosted fonts ---------------------------------------------------
- * Per design handoff Q1: Inter Tight + JetBrains Mono, self-hosted under
- * /fonts/, with font-display: swap and a system fallback stack. The actual
- * .woff2 files are placed during the build pipeline (operator drop or
- * downloaded by the build step); the fallback stack keeps the UI usable
- * until the fonts arrive. */
-@font-face {
-  font-family: "Inter Tight";
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url("/fonts/InterTight-Variable.woff2") format("woff2-variations");
-}
-@font-face {
-  font-family: "JetBrains Mono";
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url("/fonts/JetBrainsMono-Variable.woff2") format("woff2-variations");
-}
+/* Inter Tight + JetBrains Mono are loaded from Google Fonts via index.html's
+ * <link rel="stylesheet"> tag. Self-hosted .woff2 fallbacks under /fonts/
+ * were previously declared here but the files are not shipped, which made
+ * the browser's OpenType Sanitizer reject the SPA-fallback HTML response —
+ * remove the dead @font-face rules and let the Google Fonts CSS handle it. */
 
 [data-theme="church"] {
   /* Tenant-overridable brand. Set at runtime from SiteSettings. */
@@ -52,16 +37,16 @@
   --primary: 222 84% 33%;
   --primary-foreground: 0 0% 100%;
   --accent: 38 92% 50%;
-  --accent-foreground: 222 47% 11%;
+  --accent-foreground: 0 0% 100%;
   --accent-soft: 38 92% 50% / 0.13;
 
   /* Editorial Warm defaults — template-fixed (not tenant-overridable).
    * The [data-template="..."] selectors below override these. The block
    * here also serves as fallback when no data-template attribute is set. */
-  --background: 41 27% 95%;        /* #f6f4ef cream */
+  --background: 43 28% 95%;        /* #f6f4ef warm cream */
   --foreground: 36 9% 9%;           /* #1a1815 ink */
-  --panel: 45 33% 97%;              /* #fbfaf6 */
-  --panel-alt: 44 25% 92%;          /* #f0ede5 */
+  --panel: 0 0% 100%;               /* #ffffff white */
+  --panel-alt: 42 25% 94%;          /* #f3f1eb */
   --inset: 36 9% 9%;                /* #1a1815 */
   --inset-fg: 39 49% 93%;           /* #f5efe2 */
   --fg-soft: 33 13% 20%;            /* #3a352e */
@@ -82,6 +67,12 @@
   --ring: 36 9% 9%;
 
   --radius: 0;
+
+  /* Motion scale — drawer reveals, dropdowns, tab fades, modals. */
+  --motion-sm: 120ms;
+  --motion-md: 200ms;
+  --motion-lg: 320ms;
+  --motion-ease: cubic-bezier(0.2, 0.6, 0.2, 1);
 
   --font-heading: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-body: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -129,4 +120,31 @@
 }
 [data-theme="church"] .rounded-full {
   border-radius: 9999px !important;
+}
+
+/* Editorial prose — drop-cap on first paragraph + prominent blockquotes. */
+.prose-editorial > .tiptap > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-heading);
+  font-size: 3.75rem;
+  font-weight: 600;
+  line-height: 0.8;
+  margin-right: 0.35rem;
+  margin-top: 0.15rem;
+  color: hsl(var(--foreground));
+}
+
+.prose-editorial > .tiptap blockquote {
+  border-left: 3px solid hsl(var(--accent));
+  background: hsl(var(--inset));
+  color: hsl(var(--inset-fg));
+  padding: 1.5rem 1.75rem;
+  margin: 2rem 0;
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.prose-editorial > .tiptap blockquote p {
+  margin: 0;
 }

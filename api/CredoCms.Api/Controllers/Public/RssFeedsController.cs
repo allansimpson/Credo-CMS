@@ -77,7 +77,7 @@ public sealed class RssFeedsController : ControllerBase
         CancellationToken ct)
     {
         var s = await _settings.GetPublicAsync(ct).ConfigureAwait(false);
-        var page = await news.ListPublicAsync(includeMembersOnly: false, page: 1, pageSize: MaxItems, ct).ConfigureAwait(false);
+        var page = await news.ListPublicAsync(includeMembersOnly: false, page: 1, pageSize: MaxItems, category: null, ct: ct).ConfigureAwait(false);
         var baseUrl = _siteOptions.BaseUrl.TrimEnd('/');
 
         var channel = new RssChannelInfo(

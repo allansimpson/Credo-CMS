@@ -17,8 +17,9 @@ public sealed class PublicNewsController : ControllerBase
     public Task<PagedResult<PublicNewsItemDto>> ListAsync(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
+        [FromQuery] string? category = null,
         CancellationToken ct = default)
-        => _news.ListPublicAsync(IsAuthenticatedMember(), page, pageSize, ct);
+        => _news.ListPublicAsync(IsAuthenticatedMember(), page, pageSize, category, ct);
 
     [HttpGet("{slug}")]
     public async Task<ActionResult<PublicNewsDetailDto>> GetBySlugAsync(string slug, CancellationToken ct)

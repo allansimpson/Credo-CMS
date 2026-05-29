@@ -45,10 +45,10 @@ function makeSettings(template: PublicTemplate): PublicSiteSettings {
     homepageHeroCtaLabel: "Plan your visit",
     homepageHeroCtaLink: "#service-times",
     facebookLoginEnabled: false,
-    analyticsProvider: 0,
+    analyticsProvider: "None",
     ga4MeasurementId: null,
     ga4ConsentBannerEnabled: true,
-    ga4ConsentBannerPosition: 0,
+    ga4ConsentBannerPosition: "BottomRight",
     cookiePolicyPageSlug: null,
     template,
   };

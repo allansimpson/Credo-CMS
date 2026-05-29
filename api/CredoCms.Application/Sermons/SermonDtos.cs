@@ -16,7 +16,14 @@ public sealed record SermonListItemDto(
     bool IsDeleted,
     string? SpeakerName,
     string? SermonSeriesTitle,
-    Guid? SermonSeriesId);
+    Guid? SermonSeriesId,
+    ServiceType ServiceType,
+    /// <summary>Carried on every row so the admin table's inline "Watch"
+    /// modal can mount the YouTube embed without a per-click round trip.</summary>
+    string YouTubeVideoId,
+    /// <summary>Video length in seconds (captured during YouTube sync).
+    /// Null when the sync didn't return a duration — show "—" in the UI.</summary>
+    int? DurationSeconds);
 
 public sealed record SermonAttachmentDto(Guid DocumentId, string Title, int DisplayOrder);
 
@@ -37,6 +44,7 @@ public sealed record SermonDetailDto(
     Guid? SpeakerLeaderId,
     string? SpeakerNameFreeText,
     Guid? SermonSeriesId,
+    ServiceType ServiceType,
     bool IsPublished,
     bool IsMembersOnly,
     bool IsDeleted,
@@ -65,6 +73,7 @@ public sealed record PublicSermonDto(
     string? SermonSeriesTitle,
     string? SermonSeriesSlug,
     bool IsMembersOnly,
+    ServiceType ServiceType,
     IReadOnlyList<TagDto> Tags,
     IReadOnlyList<SermonAttachmentDto> Attachments,
     IReadOnlyList<ScriptureReferenceDto> ScriptureReferences);
@@ -87,11 +96,12 @@ public sealed record CreateSermonRequest(
     Guid? SpeakerLeaderId,
     string? SpeakerNameFreeText,
     Guid? SermonSeriesId,
-    bool IsPublished,
-    bool IsMembersOnly,
-    IList<SermonTagInput> Tags,
-    IList<Guid> AttachmentDocumentIds,
-    IList<ScriptureReferenceInput> ScriptureReferences);
+    ServiceType ServiceType = ServiceType.AmWorship,
+    bool IsPublished = false,
+    bool IsMembersOnly = false,
+    IList<SermonTagInput>? Tags = null,
+    IList<Guid>? AttachmentDocumentIds = null,
+    IList<ScriptureReferenceInput>? ScriptureReferences = null);
 
 public sealed record UpdateSermonRequest(
     string Slug,
@@ -105,11 +115,43 @@ public sealed record UpdateSermonRequest(
     Guid? SpeakerLeaderId,
     string? SpeakerNameFreeText,
     Guid? SermonSeriesId,
-    bool IsPublished,
-    bool IsMembersOnly,
-    IList<SermonTagInput> Tags,
-    IList<Guid> AttachmentDocumentIds,
-    IList<ScriptureReferenceInput> ScriptureReferences);
+    ServiceType ServiceType = ServiceType.AmWorship,
+    bool IsPublished = false,
+    bool IsMembersOnly = false,
+    IList<SermonTagInput>? Tags = null,
+    IList<Guid>? AttachmentDocumentIds = null,
+    IList<ScriptureReferenceInput>? ScriptureReferences = null);
+
+// ── By-day grouping DTOs ─────────────────────────────────────────────────
+
+public sealed record ServiceDayDto(
+    DateOnly Date,
+    int DayOfWeek,
+    string Kind,
+    IReadOnlyList<SermonListItemDto> Sermons);
+
+public sealed record SermonsByDayResponse(
+    IReadOnlyList<ServiceDayDto> Days,
+    int Page,
+    int PageSize,
+    int TotalDays,
+    int TotalPages,
+    /// <summary>Populated only when a filter narrows the archive (search OR
+    /// tag). Drives the side-rail's rescoped match counts. Sorted descending
+    /// by year. Null in normal browse mode — the unfiltered rail uses the
+    /// dedicated /years endpoint instead.</summary>
+    IReadOnlyList<YearStatsDto>? YearStats = null);
+
+public sealed record YearStatsDto(
+    int Year,
+    int Count,
+    /// <summary>Lowercase three-letter slug → count. Months with zero entries
+    /// are omitted. Slugs match <c>MONTH_SLUGS</c> in the SPA.</summary>
+    IReadOnlyDictionary<string, int> MonthCounts);
+
+public sealed record YearsResponse(
+    int CurrentYear,
+    IReadOnlyList<YearStatsDto> Years);
 
 public sealed record SermonListQuery(
     string? Search = null,
@@ -121,5 +163,16 @@ public sealed record SermonListQuery(
     bool IncludeDeleted = false,
     int Page = 1,
     int PageSize = 25);
+
+public sealed record SermonsByDayQuery(
+    string? Search = null,
+    string? TagSlug = null,
+    ServiceType? ServiceType = null,
+    /// <summary>Calendar year filter (e.g. 2024). Pages of a single year are
+    /// returned in descending date order. When null, returns the latest
+    /// pageSize days regardless of year.</summary>
+    int? Year = null,
+    int Page = 1,
+    int PageSize = 20);
 
 public sealed record SermonsByBookCount(int BookValue, int Count);

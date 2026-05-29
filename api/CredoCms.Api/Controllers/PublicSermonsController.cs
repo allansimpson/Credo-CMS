@@ -2,6 +2,7 @@ using CredoCms.Application.Common;
 using CredoCms.Application.Sermons;
 using CredoCms.Domain.Bible;
 using CredoCms.Domain.Common;
+using CredoCms.Domain.Sermons;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CredoCms.Api.Controllers;
@@ -69,6 +70,35 @@ public sealed class PublicSermonsController : ControllerBase
             BookFilter: (int)info.Book, PublishedOnly: true, Page: page, PageSize: pageSize);
         return _svc.ListPublicAsync(query, IsAuthenticatedMember(), ct);
     }
+
+    [HttpGet("by-day")]
+    public Task<SermonsByDayResponse> ListByDayAsync(
+        [FromQuery] string? search,
+        [FromQuery] string? tagSlug,
+        [FromQuery] ServiceType? serviceType,
+        [FromQuery] int? year,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var query = new SermonsByDayQuery(
+            Search: search,
+            TagSlug: tagSlug,
+            ServiceType: serviceType,
+            Year: year,
+            Page: page,
+            PageSize: pageSize);
+        return _svc.ListPublicByDayAsync(query, IsAuthenticatedMember(), ct);
+    }
+
+    /// <summary>
+    /// Year + month rollup that drives the public sermons archive's side-rail.
+    /// Counts are viewer-scoped — anonymous visitors get totals that exclude
+    /// members-only sermons.
+    /// </summary>
+    [HttpGet("years")]
+    public Task<YearsResponse> ListYearsAsync(CancellationToken ct = default)
+        => _svc.ListYearStatsAsync(IsAuthenticatedMember(), ct);
 
     private bool IsAuthenticatedMember()
     {

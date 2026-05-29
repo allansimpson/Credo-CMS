@@ -33,6 +33,10 @@ public sealed class Event : IVersionedEntity
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
 
+    /// <summary>Optional category for filtering (e.g., "Worship", "Formation"). Must match one configured in SiteSettings.EventCategoriesJson.</summary>
+    [MaxLength(100)]
+    public string? Category { get; set; }
+
     public string? DescriptionJson { get; set; }
 
     public DateTimeOffset StartsAt { get; set; }

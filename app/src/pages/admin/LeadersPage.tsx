@@ -149,9 +149,17 @@ export function LeadersPage() {
               </select>
             </Field>
             <Field label="Order">
-              <input type="number" value={form.displayOrder}
-                onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) })}
-                className="input" />
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={form.displayOrder}
+                onChange={(e) => {
+                  const n = Number(e.target.value);
+                  setForm({ ...form, displayOrder: Number.isFinite(n) && n >= 0 ? n : 0 });
+                }}
+                className="input"
+              />
             </Field>
           </div>
           <Field label="Email">
@@ -214,7 +222,7 @@ function CategoryBlock({ title, items, onEdit, onDelete }: {
             )}
             <div className="flex-1">
               <button type="button" onClick={() => onEdit(l)}
-                className="text-left font-semibold hover:underline">
+                className="block text-left font-semibold hover:underline">
                 {l.fullName}
               </button>
               {l.title && <p className="text-xs text-muted">{l.title}</p>}
@@ -243,7 +251,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-const DEFAULT_CATEGORIES = ["Pastoral Staff", "Elders", "Deacons", "Ministry Directors"];
+const DEFAULT_CATEGORIES = ["Ministers", "Staff", "Elders", "Deacons"];
 
 function emptyForm(category: string): FormState {
   return {

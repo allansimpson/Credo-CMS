@@ -12,7 +12,7 @@ public sealed record LeaderDto(
     int DisplayOrder, DateTimeOffset CreatedAt, DateTimeOffset ModifiedAt);
 
 public sealed record PublicLeaderDto(
-    Guid Id, string FullName, string? Title, string Category, string? BioJson,
+    Guid Id, string FullName, string? Title, string Category, string? BioJson, string? Email,
     string? PhotoUrl, string? PhotoWebpUrl, string? PhotoAlt, int DisplayOrder);
 
 public sealed record CreateLeaderRequest(
@@ -190,6 +190,6 @@ public sealed class LeaderService : ILeaderService
         l.DisplayOrder, l.CreatedAt, l.ModifiedAt);
 
     internal static PublicLeaderDto ToPublic(Leader l) => new(
-        l.Id, l.FullName, l.Title, l.Category, l.BioJson,
+        l.Id, l.FullName, l.Title, l.Category, l.BioJson, l.Email,
         l.PhotoUrl, l.PhotoWebpUrl, l.PhotoAlt, l.DisplayOrder);
 }

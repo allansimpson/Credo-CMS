@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { sermonSeriesApi, type SermonSeriesDetail, type SermonSeriesRequest } from "@/lib/api/sermonSeries";
+import { siteSettingsApi } from "@/lib/api/siteSettings";
 import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import { TipTapFullEditor } from "@/components/shared/TipTapFullEditor";
@@ -16,6 +17,9 @@ interface FormState {
   bannerImageAlt: string | null;
   startDate: string;
   endDate: string;
+  context: string;
+  scopeLabel: string;
+  plannedParts: string;
   scriptureReferences: ScriptureReference[];
 }
 
@@ -23,6 +27,7 @@ const empty: FormState = {
   slug: "", title: "", descriptionJson: null,
   bannerImageUrl: null, bannerImageWebpUrl: null, bannerImageAlt: null,
   startDate: new Date().toISOString().slice(0, 10), endDate: "",
+  context: "", scopeLabel: "", plannedParts: "",
   scriptureReferences: [],
 };
 
@@ -36,6 +41,9 @@ function fromDetail(d: SermonSeriesDetail): FormState {
     bannerImageAlt: d.bannerImageAlt,
     startDate: d.startDate,
     endDate: d.endDate ?? "",
+    context: d.context ?? "",
+    scopeLabel: d.scopeLabel ?? "",
+    plannedParts: d.plannedParts !== null ? String(d.plannedParts) : "",
     scriptureReferences: d.scriptureReferences.map((r) => ({
       book: r.book, chapterStart: r.chapterStart,
       verseStart: r.verseStart, chapterEnd: r.chapterEnd, verseEnd: r.verseEnd,
@@ -44,6 +52,7 @@ function fromDetail(d: SermonSeriesDetail): FormState {
 }
 
 function toApi(f: FormState): SermonSeriesRequest {
+  const parsedPlannedParts = f.plannedParts.trim() === "" ? null : Number(f.plannedParts);
   return {
     slug: f.slug,
     title: f.title,
@@ -53,6 +62,9 @@ function toApi(f: FormState): SermonSeriesRequest {
     bannerImageAlt: f.bannerImageAlt,
     startDate: f.startDate,
     endDate: f.endDate || null,
+    context: f.context.trim() || null,
+    scopeLabel: f.scopeLabel.trim() || null,
+    plannedParts: parsedPlannedParts !== null && Number.isFinite(parsedPlannedParts) ? parsedPlannedParts : null,
     scriptureReferences: f.scriptureReferences.map((r) => ({
       book: r.book, chapterStart: r.chapterStart,
       verseStart: r.verseStart, chapterEnd: r.chapterEnd, verseEnd: r.verseEnd,
@@ -72,6 +84,21 @@ export function SermonSeriesEditorPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
   const [slugAuto, setSlugAuto] = useState(isNew);
+  const [contexts, setContexts] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    siteSettingsApi.getAdmin().then((s) => {
+      if (cancelled) return;
+      try {
+        const parsed = JSON.parse(s.sermonContextsJson);
+        if (Array.isArray(parsed)) {
+          setContexts(parsed.filter((x): x is string => typeof x === "string" && x.length > 0));
+        }
+      } catch { /* leave empty */ }
+    }).catch(() => { /* leave empty */ });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (isNew) return;
@@ -183,6 +210,44 @@ export function SermonSeriesEditorPage() {
         <Field label="End date" hint="Leave blank for ongoing.">
           <input type="date" value={form.endDate}
             onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} className="input" />
+        </Field>
+      </fieldset>
+
+      <fieldset className="grid grid-cols-1 gap-3 border bg-card p-4 sm:grid-cols-3">
+        <legend className="px-2 text-sm font-semibold">Categorize</legend>
+        <Field label="Context" hint="Teaching track. Manage the list in Site Settings → Content → Sermons.">
+          <select
+            aria-label="Sermon context"
+            value={form.context}
+            onChange={(e) => setForm((f) => ({ ...f, context: e.target.value }))}
+            className="input"
+          >
+            <option value="">&mdash; Unset &mdash;</option>
+            {contexts.map((c) => <option key={c} value={c}>{c}</option>)}
+            {form.context && !contexts.includes(form.context) && (
+              <option value={form.context}>{form.context} (not in current list)</option>
+            )}
+          </select>
+        </Field>
+        <Field label="Scope label" hint='Optional. e.g. "Hebrews", "Luke 14–15". Auto-derived from scripture refs if blank.'>
+          <input
+            value={form.scopeLabel}
+            maxLength={120}
+            onChange={(e) => setForm((f) => ({ ...f, scopeLabel: e.target.value }))}
+            className="input"
+          />
+        </Field>
+        <Field label="Planned parts" hint="Optional. Expected number of messages — drives the progress bar on the public by-series page.">
+          <input
+            type="number"
+            min={1}
+            max={200}
+            value={form.plannedParts}
+            aria-label="Planned parts"
+            onChange={(e) => setForm((f) => ({ ...f, plannedParts: e.target.value }))}
+            className="input"
+            placeholder="e.g. 6"
+          />
         </Field>
       </fieldset>
 

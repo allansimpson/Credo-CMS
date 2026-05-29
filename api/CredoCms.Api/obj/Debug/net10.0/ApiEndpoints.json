@@ -1327,6 +1327,11 @@
         "IsRequired": false
       },
       {
+        "Name": "Category",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
         "Name": "IncludeDeleted",
         "Type": "System.Boolean",
         "IsRequired": false
@@ -2386,6 +2391,11 @@
         "IsRequired": false
       },
       {
+        "Name": "Category",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
         "Name": "IncludeDeleted",
         "Type": "System.Boolean",
         "IsRequired": false
@@ -2696,6 +2706,32 @@
   },
   {
     "ContainingType": "CredoCms.Api.Controllers.Admin.PagesController",
+    "Method": "DiscardDraftAsync",
+    "RelativePath": "api/admin/pages/{id}/discard-draft",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Pages.PageDetailDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.Admin.PagesController",
     "Method": "HardDeleteAsync",
     "RelativePath": "api/admin/pages/{id}/hard",
     "HttpMethod": "DELETE",
@@ -2709,6 +2745,32 @@
       }
     ],
     "ReturnTypes": []
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.Admin.PagesController",
+    "Method": "PublishAsync",
+    "RelativePath": "api/admin/pages/{id}/publish",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Pages.PageDetailDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
   },
   {
     "ContainingType": "CredoCms.Api.Controllers.Admin.PagesController",
@@ -2727,6 +2789,58 @@
     "ReturnTypes": [
       {
         "Type": "CredoCms.Application.Pages.PageDetailDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.Admin.PagesController",
+    "Method": "UnpublishAsync",
+    "RelativePath": "api/admin/pages/{id}/unpublish",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Pages.PageDetailDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.Admin.PagesController",
+    "Method": "GetPreviewAsync",
+    "RelativePath": "api/admin/pages/preview/{slug}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "slug",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Pages.PublicPageDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -2893,6 +3007,42 @@
     "ReturnTypes": [
       {
         "Type": "System.Int32",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.Admin.SearchAdminController",
+    "Method": "SearchAsync",
+    "RelativePath": "api/admin/search",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "q",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Search.SearchResults",
         "MediaTypes": [
           "text/plain",
           "application/json",
@@ -3865,6 +4015,32 @@
     "ContainingType": "CredoCms.Api.Controllers.Admin.UsersController",
     "Method": "ReactivateAsync",
     "RelativePath": "api/admin/users/{id}/reactivate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.UserManagement.UserDetailDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.Admin.UsersController",
+    "Method": "ResendInvitationAsync",
+    "RelativePath": "api/admin/users/{id}/resend-invitation",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -4897,6 +5073,11 @@
         "Name": "pageSize",
         "Type": "System.Int32",
         "IsRequired": false
+      },
+      {
+        "Name": "category",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
@@ -5202,6 +5383,11 @@
         "Name": "pageSize",
         "Type": "System.Int32",
         "IsRequired": false
+      },
+      {
+        "Name": "category",
+        "Type": "System.String",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": [
@@ -5463,6 +5649,57 @@
     ]
   },
   {
+    "ContainingType": "CredoCms.Api.Controllers.PublicSermonsController",
+    "Method": "ListByDayAsync",
+    "RelativePath": "api/public/sermons/by-day",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "search",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "tagSlug",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "serviceType",
+        "Type": "System.Nullable\u00601[[CredoCms.Domain.Sermons.ServiceType, CredoCms.Domain, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "year",
+        "Type": "System.Nullable\u00601[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "IsRequired": false
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Sermons.SermonsByDayResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "CredoCms.Api.Controllers.PublicSermonSeriesController",
     "Method": "ListAsync",
     "RelativePath": "api/public/sermons/series",
@@ -5499,6 +5736,46 @@
     "ReturnTypes": [
       {
         "Type": "CredoCms.Application.Sermons.PublicSermonSeriesDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.PublicSermonSeriesController",
+    "Method": "ListWithStatsAsync",
+    "RelativePath": "api/public/sermons/series/with-stats",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[CredoCms.Application.Sermons.PublicSermonSeriesWithStatsDto, CredoCms.Application, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.PublicSermonsController",
+    "Method": "ListYearsAsync",
+    "RelativePath": "api/public/sermons/years",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Sermons.YearsResponse",
         "MediaTypes": [
           "text/plain",
           "application/json",

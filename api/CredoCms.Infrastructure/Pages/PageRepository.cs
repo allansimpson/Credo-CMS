@@ -36,7 +36,7 @@ public sealed class PageRepository : IPageRepository
             .Take(pageSize)
             .Select(p => new PageListItemDto(
                 p.Id, p.Slug, p.Title, p.Excerpt, p.IsPublished, p.IsMembersOnly,
-                p.IsSystemPage, p.ModifiedAt, p.ModifiedByUserId))
+                p.IsSystemPage, p.Template, p.ModifiedAt, p.ModifiedByUserId))
             .ToListAsync(ct).ConfigureAwait(false);
 
         return new PagedResult<PageListItemDto>(items, total, page, pageSize);
@@ -68,7 +68,7 @@ public sealed class PageRepository : IPageRepository
             .Select(p => new PublicPageDto(
                 p.Id, p.Slug, p.Title, p.BodyJson, p.Excerpt,
                 p.HeroImageUrl, p.HeroImageWebpUrl, p.HeroImageAlt, p.MetaDescription,
-                p.IsMembersOnly, p.PublishedAt ?? p.ModifiedAt))
+                p.IsMembersOnly, p.Template, p.PublishedAt ?? p.ModifiedAt))
             .ToListAsync(ct).ConfigureAwait(false);
     }
 

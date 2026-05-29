@@ -1,6 +1,12 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FileText, Newspaper, Mic, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { pagesApi } from "@/lib/api/pages";
+import { newsApi } from "@/lib/api/news";
+import { sermonsApi } from "@/lib/api/sermons";
+import { sermonSeriesApi } from "@/lib/api/sermonSeries";
+import { eventsApi } from "@/lib/api/events";
 
 /**
  * Editorial dashboard. Per DESIGN_HANDOFF.md §5.1 + Claude Design clarification #6,
@@ -9,15 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
  */
 export function AdminDashboard() {
   const { user } = useAuth();
-
-  // TODO: wire endpoint — replace with `useDashboardSummary()` hook fed by
-  // GET /api/admin/dashboard/summary (counts + tone metadata).
-  const stats: StatCard[] = [
-    { label: "Pages", value: "12", sub: "10 published · 2 drafts", tone: "accent" },
-    { label: "News posts", value: "47", sub: "3 drafts waiting", tone: "warn" },
-    { label: "Sermons", value: "184", sub: "across 12 series" },
-    { label: "Upcoming events", value: "06", sub: "next 30 days" },
-  ];
+  const stats = useDashboardStats();
 
   // TODO: wire endpoint — GET /api/admin/dashboard/activity (last 5 entries).
   const activity: ActivityEntry[] = [
@@ -70,13 +68,13 @@ export function AdminDashboard() {
             to="/admin/news/new"
             className="inline-flex h-10 items-center border border-border bg-panel px-4 text-sm font-medium hover:bg-panel-alt"
           >
-            Quick add
+            Add News
           </Link>
           <Link
             to="/admin/pages/new"
             className="inline-flex h-10 items-center bg-foreground px-4 text-sm font-semibold text-background hover:opacity-90"
           >
-            Compose page
+            Compose Page
           </Link>
         </div>
       </header>
@@ -158,9 +156,104 @@ export function AdminDashboard() {
 
 interface StatCard {
   label: string;
+  /** Display string — "—" while loading, the count otherwise. */
   value: string;
   sub: string;
   tone?: "accent" | "warn";
+}
+
+/**
+ * Fetches headline counts for the four stat cards in parallel from the
+ * existing admin list endpoints. Each card stays at "—" until its source
+ * resolves so a slow endpoint doesn't block the others. Sub-lines are
+ * derived from what we can cheaply count without a dedicated dashboard
+ * endpoint:
+ *   • Pages / News — pull a 200-row page, count drafts client-side.
+ *   • Sermons — total via pageSize=1, "across N series" from series total.
+ *   • Upcoming events — fetch the public list (sorted by next occurrence)
+ *     and count rows within the next 30 days.
+ */
+function useDashboardStats(): StatCard[] {
+  const [pageStats, setPageStats] = useState({ total: "—", sub: "loading…", tone: undefined as StatCard["tone"] });
+  const [newsStats, setNewsStats] = useState({ total: "—", sub: "loading…", tone: undefined as StatCard["tone"] });
+  const [sermonStats, setSermonStats] = useState({ total: "—", sub: "loading…" });
+  const [eventStats, setEventStats] = useState({ total: "—", sub: "next 30 days" });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Pages — fetch up to 200 to also compute drafts count.
+    pagesApi.list({ pageSize: 200 }).then((res) => {
+      if (cancelled) return;
+      const drafts = res.items.filter((p) => !p.isPublished).length;
+      const published = res.totalCount - drafts;
+      setPageStats({
+        total: String(res.totalCount),
+        sub: drafts > 0
+          ? `${published} published · ${drafts} ${drafts === 1 ? "draft" : "drafts"}`
+          : `${published} published`,
+        tone: undefined,
+      });
+    }).catch(() => {
+      if (!cancelled) setPageStats({ total: "?", sub: "unavailable", tone: undefined });
+    });
+
+    // News posts — same pattern.
+    newsApi.list({ pageSize: 200 }).then((res) => {
+      if (cancelled) return;
+      const drafts = res.items.filter((n) => !n.isPublished).length;
+      setNewsStats({
+        total: String(res.totalCount),
+        sub: drafts > 0
+          ? `${drafts} ${drafts === 1 ? "draft" : "drafts"} waiting`
+          : `all published`,
+        tone: drafts > 0 ? "warn" : undefined,
+      });
+    }).catch(() => {
+      if (!cancelled) setNewsStats({ total: "?", sub: "unavailable", tone: undefined });
+    });
+
+    // Sermons — total only, plus series count for sub.
+    Promise.all([
+      sermonsApi.list({ pageSize: 1 }),
+      sermonSeriesApi.list({ pageSize: 1 }),
+    ]).then(([sermons, series]) => {
+      if (cancelled) return;
+      setSermonStats({
+        total: String(sermons.totalCount),
+        sub: `across ${series.totalCount} ${series.totalCount === 1 ? "series" : "series"}`,
+      });
+    }).catch(() => {
+      if (!cancelled) setSermonStats({ total: "?", sub: "unavailable" });
+    });
+
+    // Upcoming events — fetch public-style listing (ordered by next
+    // occurrence asc) and count those within the next 30 days.
+    eventsApi.listPublic(1, 100).then((res) => {
+      if (cancelled) return;
+      const now = Date.now();
+      const horizon = now + 30 * 24 * 60 * 60 * 1000;
+      const within30 = res.items.filter((e) => {
+        const t = new Date(e.nextOccurrenceAt).getTime();
+        return t >= now && t <= horizon;
+      }).length;
+      setEventStats({
+        total: String(within30),
+        sub: "next 30 days",
+      });
+    }).catch(() => {
+      if (!cancelled) setEventStats({ total: "?", sub: "unavailable" });
+    });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  return [
+    { label: "Pages", value: pageStats.total, sub: pageStats.sub, tone: pageStats.tone },
+    { label: "News posts", value: newsStats.total, sub: newsStats.sub, tone: newsStats.tone },
+    { label: "Sermons", value: sermonStats.total, sub: sermonStats.sub },
+    { label: "Upcoming events", value: eventStats.total, sub: eventStats.sub },
+  ];
 }
 
 function StatColumn({ label, value, sub, tone }: StatCard) {

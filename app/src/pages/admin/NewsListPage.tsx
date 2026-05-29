@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Plus, Trash2 } from "lucide-react";
 import { newsApi } from "@/lib/api/news";
 import type { NewsListItem, PagedResult } from "@/types/api";
 import {
@@ -10,23 +10,40 @@ import {
   PageHeader,
   SectionHead,
 } from "@/components/shared/admin/EditorialPrimitives";
+import { ConfirmDialog } from "@/components/shared/admin/ConfirmDialog";
+import { useToast } from "@/components/shared/admin/Toast";
 
-type Tab = "active" | "drafts" | "members" | "deleted";
+type Tab = "active" | "drafts" | "members" | "trash";
 
 export function NewsListPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("active");
   const [search, setSearch] = useState("");
   const [data, setData] = useState<PagedResult<NewsListItem> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emptyTrashOpen, setEmptyTrashOpen] = useState(false);
+  const [emptying, setEmptying] = useState(false);
+
+  const reload = useCallback(() => {
+    setLoading(true);
+    newsApi.list({
+      search: search || undefined,
+      includeDeleted: tab === "trash",
+      pageSize: 50,
+    })
+      .then((d) => { setData(d); setError(null); })
+      .catch(() => setError("Could not load news."))
+      .finally(() => setLoading(false));
+  }, [search, tab]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     newsApi.list({
       search: search || undefined,
-      includeDeleted: tab === "deleted",
+      includeDeleted: tab === "trash",
       pageSize: 50,
     })
       .then((d) => { if (!cancelled) { setData(d); setError(null); } })
@@ -34,6 +51,65 @@ export function NewsListPage() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [tab, search]);
+
+  const handleRestore = async (item: NewsListItem) => {
+    try {
+      await newsApi.restore(item.id);
+      toast("success", `Restored "${item.title}".`);
+      reload();
+    } catch {
+      toast("error", "Could not restore news item.");
+    }
+  };
+
+  const handleHardDelete = async (item: NewsListItem) => {
+    try {
+      await newsApi.hardDelete(item.id);
+      toast("success", `Permanently deleted "${item.title}".`);
+      setData((prev) => prev
+        ? { ...prev, items: prev.items.filter((x) => x.id !== item.id), totalCount: Math.max(0, prev.totalCount - 1) }
+        : prev);
+    } catch {
+      toast("error", "Could not permanently delete news item.");
+    }
+  };
+
+  // Loops in batches of 50 (the admin list cap) so emptying still works
+  // when more than a page of items sit in the trash. Breaks out of the
+  // loop if a batch makes no progress so a persistent failure can't spin.
+  const performEmptyTrash = async () => {
+    setEmptyTrashOpen(false);
+    setEmptying(true);
+    let deleted = 0;
+    let failed = 0;
+    try {
+      while (true) {
+        const batch = await newsApi.list({ includeDeleted: true, pageSize: 50 });
+        if (batch.items.length === 0) break;
+        const results = await Promise.allSettled(
+          batch.items.map((i) => newsApi.hardDelete(i.id)),
+        );
+        const successesThisBatch = results.filter((r) => r.status === "fulfilled").length;
+        deleted += successesThisBatch;
+        failed += results.length - successesThisBatch;
+        if (successesThisBatch === 0) break;
+      }
+      if (failed > 0) {
+        toast(
+          "warning",
+          `Deleted ${deleted}. ${failed} item${failed === 1 ? "" : "s"} failed.`,
+        );
+      } else if (deleted > 0) {
+        toast(
+          "success",
+          `Trash emptied — ${deleted} item${deleted === 1 ? "" : "s"} permanently deleted.`,
+        );
+      }
+    } finally {
+      setEmptying(false);
+      reload();
+    }
+  };
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -43,18 +119,39 @@ export function NewsListPage() {
   }, [data, tab]);
 
   // First published item is treated as the featured item per §5.4.
-  const featured = filtered.find((n) => n.isPublished);
+  // The Trash tab is a recovery view — never surface a featured card there.
+  const featured = tab === "trash" ? undefined : filtered.find((n) => n.isPublished);
   const rest = featured ? filtered.filter((n) => n.id !== featured.id) : filtered;
+  const trashCount = tab === "trash" ? (data?.totalCount ?? 0) : 0;
 
   return (
     <div className="space-y-8">
+      <ConfirmDialog
+        open={emptyTrashOpen}
+        variant="danger"
+        title="Empty Trash?"
+        message={
+          trashCount > 0
+            ? `${trashCount} item${trashCount === 1 ? "" : "s"} will be permanently deleted from the database. This cannot be undone.`
+            : "Trash is already empty."
+        }
+        confirmLabel="Empty Trash"
+        onConfirm={performEmptyTrash}
+        onCancel={() => setEmptyTrashOpen(false)}
+      />
+
       <PageHeader
         eyebrow={data ? `${data.items.length} posts` : "Loading…"}
         title="News"
         kicker="church news, announcements, and updates"
         actions={
-          <Btn variant="accent" size="lg" onClick={() => navigate("/admin/news/new")}>
-            Compose post
+          <Btn
+            variant="accent"
+            size="lg"
+            iconLeft={<Plus className="h-4 w-4" />}
+            onClick={() => navigate("/admin/news/new")}
+          >
+            Add News
           </Btn>
         }
       />
@@ -121,16 +218,29 @@ export function NewsListPage() {
             />
           }
         />
-        <FilterPills
-          activeValue={tab}
-          onChange={(v) => setTab(v as Tab)}
-          items={[
-            { value: "active", label: "Active" },
-            { value: "drafts", label: "Drafts" },
-            { value: "members", label: "Members only" },
-            { value: "deleted", label: "Deleted" },
-          ]}
-        />
+        <div className="flex items-center justify-between gap-3">
+          <FilterPills
+            activeValue={tab}
+            onChange={(v) => setTab(v as Tab)}
+            items={[
+              { value: "active", label: "Active" },
+              { value: "drafts", label: "Drafts" },
+              { value: "members", label: "Members only" },
+              { value: "trash", label: "Trash" },
+            ]}
+          />
+          {tab === "trash" && trashCount > 0 && (
+            <Btn
+              size="sm"
+              variant="danger"
+              iconLeft={<Trash2 className="h-3.5 w-3.5" />}
+              disabled={emptying}
+              onClick={() => setEmptyTrashOpen(true)}
+            >
+              {emptying ? "Emptying…" : "Empty Trash"}
+            </Btn>
+          )}
+        </div>
 
         {rest.length === 0 ? (
           <p className="text-muted">No news items found.</p>
@@ -172,14 +282,25 @@ export function NewsListPage() {
                     {new Date(n.publishedAt ?? n.modifiedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex justify-end">
-                  <Btn
-                    size="sm"
-                    iconRight={<ArrowRight className="h-3.5 w-3.5" />}
-                    onClick={() => navigate(`/admin/news/${n.id}`)}
-                  >
-                    Edit
-                  </Btn>
+                <div className="flex justify-end gap-2">
+                  {tab === "trash" ? (
+                    <>
+                      <Btn size="sm" onClick={() => handleRestore(n)}>
+                        Restore
+                      </Btn>
+                      <Btn size="sm" variant="danger" onClick={() => handleHardDelete(n)}>
+                        Delete
+                      </Btn>
+                    </>
+                  ) : (
+                    <Btn
+                      size="sm"
+                      iconRight={<ArrowRight className="h-3.5 w-3.5" />}
+                      onClick={() => navigate(`/admin/news/${n.id}`)}
+                    >
+                      Edit
+                    </Btn>
+                  )}
                 </div>
               </li>
             ))}

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ArrowRight, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import type { PublicTemplate } from "@/types/api";
@@ -37,6 +37,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: "/about", label: "About", page: "about" },
   { to: "/im-new", label: "I'm New", page: "im-new" },
+  { to: "/what-we-believe", label: "Beliefs", page: "beliefs" },
   { to: "/sermons", label: "Sermons", page: "sermons" },
   { to: "/events", label: "Events", page: "events" },
   { to: "/news", label: "News", page: "news" },
@@ -58,20 +59,48 @@ export function PublicHeader({ template, activePage }: PublicHeaderProps) {
   const { user } = useAuth();
   const { settings } = useSiteSettings();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
 
   const churchName = settings?.churchName ?? "Credo CMS";
   const isQuiet = template === 1;
   const ctaLabel = isQuiet ? "Visit Sunday" : "Plan a visit";
   const ctaHref = "/im-new";
 
+  // Publish the header's height as a CSS variable on documentElement so any
+  // descendant — preview banner, sermons filter bar, sermons rail — can stick
+  // itself flush below the nav using `top-[var(--public-header-offset,0px)]`.
+  // Re-measures on resize (the announcement bar wraps on narrow viewports).
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const update = () => {
+      document.documentElement.style.setProperty(
+        "--public-header-offset",
+        `${el.offsetHeight}px`,
+      );
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+      document.documentElement.style.removeProperty("--public-header-offset");
+    };
+  }, []);
+
   return (
-    <header className="bg-background">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_8px_-2px_rgba(0,0,0,0.04)]"
+    >
       {/* Editorial keeps the announcement bar; Quiet omits by default. */}
       {!isQuiet ? <AnnouncementBar /> : null}
 
-      <div className="border-b border-border-soft">
+      <div className="border-b border-border-soft bg-panel">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/" className="inline-flex items-baseline gap-1" aria-label={`${churchName} home`}>
+          <Link to="/" className="inline-flex items-center gap-2.5" aria-label={`${churchName} home`}>
             {isQuiet ? (
               <span className="font-heading text-xl font-semibold tracking-[-0.022em]">
                 {churchName}
@@ -79,9 +108,16 @@ export function PublicHeader({ template, activePage }: PublicHeaderProps) {
               </span>
             ) : (
               <>
-                <Eyebrow accent>HC</Eyebrow>
-                <span className="font-heading text-base font-semibold tracking-[-0.018em]">
-                  {churchName}
+                <span className="flex h-8 w-8 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
+                  H
+                </span>
+                <span className="leading-tight">
+                  <span className="block font-heading text-sm font-semibold tracking-[-0.018em]">
+                    {churchName}
+                  </span>
+                  <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-muted">
+                    Est. 1894
+                  </span>
                 </span>
               </>
             )}
@@ -95,10 +131,10 @@ export function PublicHeader({ template, activePage }: PublicHeaderProps) {
                 to={item.to}
                 className={({ isActive }) =>
                   [
-                    "text-sm transition-colors",
+                    "text-sm transition-colors py-1",
                     isActive || activePage === item.page
-                      ? "text-foreground font-medium"
-                      : "text-fg-soft hover:text-foreground",
+                      ? "text-foreground font-medium border-b-2 border-foreground"
+                      : "text-fg-soft hover:text-foreground border-b-2 border-transparent",
                   ].join(" ")
                 }
                 aria-current={activePage === item.page ? "page" : undefined}
@@ -112,9 +148,11 @@ export function PublicHeader({ template, activePage }: PublicHeaderProps) {
             {user ? (
               <Link
                 to="/members/home"
-                className="hidden sm:inline-flex text-sm text-fg-soft hover:text-foreground"
+                aria-label="Members"
+                title="Members"
+                className="hidden sm:inline-flex items-center justify-center text-fg-soft hover:text-foreground"
               >
-                Members
+                <User aria-hidden="true" strokeWidth={1.75} className="h-5 w-5" />
               </Link>
             ) : (
               <Link
@@ -124,9 +162,13 @@ export function PublicHeader({ template, activePage }: PublicHeaderProps) {
                 Sign in
               </Link>
             )}
-            <BtnLink to={ctaHref} variant="primary" size="sm" className="hidden sm:inline-flex">
+            <Link
+              to={ctaHref}
+              className="hidden sm:inline-flex items-center gap-1.5 border border-primary px-3.5 py-1.5 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+            >
               {ctaLabel}
-            </BtnLink>
+              <ArrowRight aria-hidden="true" strokeWidth={1.75} className="h-4 w-4 translate-y-px" />
+            </Link>
             {/* Mobile menu trigger */}
             <button
               type="button"
