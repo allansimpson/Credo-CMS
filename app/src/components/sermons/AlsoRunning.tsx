@@ -20,7 +20,7 @@ export function AlsoRunning({ series, contexts }: AlsoRunningProps) {
 
   return (
     <section className="border-b border-border-soft bg-panel-alt">
-      <div className="mx-auto max-w-7xl px-6 py-9">
+      <div className="mx-auto max-w-[1180px] px-6 py-9 md:px-14">
         <Eyebrow>Also running</Eyebrow>
         <div className="mt-5 grid gap-6 sm:grid-cols-2">
           {series.map((s) => <AlsoRunningCard key={s.id} series={s} contexts={contexts} />)}

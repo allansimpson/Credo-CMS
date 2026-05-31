@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { AuthProvider } from "@/lib/AuthContext";
 import { AdminNotificationsProvider } from "@/hooks/useAdminNotifications";
 import { SiteSettingsProvider } from "@/lib/SiteSettingsContext";
@@ -103,9 +103,6 @@ const SermonsArchivePage = lazy(() =>
 const SermonsByBookIndexPage = lazy(() =>
   import("@/pages/public/SermonsByBookIndexPage").then((m) => ({ default: m.SermonsByBookIndexPage }))
 );
-const SermonsByBookPage = lazy(() =>
-  import("@/pages/public/SermonsByBookPage").then((m) => ({ default: m.SermonsByBookPage }))
-);
 const SermonDetailPage = lazy(() =>
   import("@/pages/public/SermonDetailPage").then((m) => ({ default: m.SermonDetailPage }))
 );
@@ -145,11 +142,41 @@ const ProfileCalendarFeedPage = lazy(() =>
 const ProfileRegistrationsPage = lazy(() =>
   import("@/pages/ProfileRegistrationsPage").then((m) => ({ default: m.ProfileRegistrationsPage }))
 );
-const MembersDirectoryPage = lazy(() =>
-  import("@/pages/MembersDirectoryPage").then((m) => ({ default: m.MembersDirectoryPage }))
+const MemberPortalLayout = lazy(() =>
+  import("@/pages/members/MemberPortalLayout").then((m) => ({ default: m.MemberPortalLayout }))
 );
-const MemberDetailPage = lazy(() =>
-  import("@/pages/MemberDetailPage").then((m) => ({ default: m.MemberDetailPage }))
+const MembersHomePage = lazy(() =>
+  import("@/pages/members/MembersHomePage").then((m) => ({ default: m.MembersHomePage }))
+);
+const DirectoryListPage = lazy(() =>
+  import("@/pages/members/DirectoryListPage").then((m) => ({ default: m.DirectoryListPage }))
+);
+const DirectoryDetailPage = lazy(() =>
+  import("@/pages/members/DirectoryDetailPage").then((m) => ({ default: m.DirectoryDetailPage }))
+);
+const MemberPrayerListPage = lazy(() =>
+  import("@/pages/members/PrayerListPage").then((m) => ({ default: m.PrayerListPage }))
+);
+const MemberPrayerSubmitPage = lazy(() =>
+  import("@/pages/members/PrayerSubmitPage").then((m) => ({ default: m.PrayerSubmitPage }))
+);
+const MemberPrayerDetailPage = lazy(() =>
+  import("@/pages/members/PrayerDetailPage").then((m) => ({ default: m.PrayerDetailPage }))
+);
+const MemberGroupsListPage = lazy(() =>
+  import("@/pages/members/GroupsListPage").then((m) => ({ default: m.GroupsListPage }))
+);
+const MemberGroupDetailPage = lazy(() =>
+  import("@/pages/members/GroupDetailPage").then((m) => ({ default: m.GroupDetailPage }))
+);
+const MemberClassesListPage = lazy(() =>
+  import("@/pages/members/ClassesListPage").then((m) => ({ default: m.ClassesListPage }))
+);
+const MemberClassDetailPage = lazy(() =>
+  import("@/pages/members/ClassDetailPage").then((m) => ({ default: m.ClassDetailPage }))
+);
+const MemberPortalProfilePage = lazy(() =>
+  import("@/pages/members/ProfilePage").then((m) => ({ default: m.ProfilePage }))
 );
 const GetInvolvedPage = lazy(() =>
   import("@/pages/public/GetInvolvedPage").then((m) => ({ default: m.GetInvolvedPage }))
@@ -232,6 +259,19 @@ const AdminBroadcastEditorPage = lazy(() =>
 const AdminBroadcastDetailPage = lazy(() =>
   import("@/pages/admin/AdminBroadcastDetailPage").then((m) => ({ default: m.AdminBroadcastDetailPage }))
 );
+
+/**
+ * Backwards-compat redirect for /sermons/by-book/{slug}. The book filter
+ * now lives as a `?book=` query param on the index page so the header
+ * and filter bar stay visible.
+ */
+function RedirectToByBookFilter() {
+  const { bookSlug } = useParams<{ bookSlug: string }>();
+  const target = bookSlug
+    ? `/sermons/by-book?book=${encodeURIComponent(bookSlug)}`
+    : "/sermons/by-book";
+  return <Navigate to={target} replace />;
+}
 
 export default function App() {
   return (
@@ -342,13 +382,12 @@ export default function App() {
                 </Suspense>
               }
             />
+            {/* Legacy /sermons/by-book/{slug} path — redirect to the
+                in-page filter on the By Book index so the header + filter
+                bar stay visible and the X clears back to the atlas. */}
             <Route
               path="sermons/by-book/:bookSlug"
-              element={
-                <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
-                  <SermonsByBookPage />
-                </Suspense>
-              }
+              element={<RedirectToByBookFilter />}
             />
             <Route
               path="sermons/:slug"
@@ -467,21 +506,67 @@ export default function App() {
             element={
               <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
                 <Suspense fallback={<p className="mx-auto max-w-5xl p-8 text-muted">Loading…</p>}>
-                  <MembersDirectoryPage />
+                  <MemberPortalLayout />
                 </Suspense>
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="members/:userId"
-            element={
-              <ProtectedRoute mode="auth" roles={["Member", "Editor", "Administrator"]}>
-                <Suspense fallback={<p className="mx-auto max-w-3xl p-8 text-muted">Loading…</p>}>
-                  <MemberDetailPage />
-                </Suspense>
-              </ProtectedRoute>
-            }
-          />
+          >
+            <Route index element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MembersHomePage />
+              </Suspense>
+            } />
+            <Route path="directory" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <DirectoryListPage />
+              </Suspense>
+            } />
+            <Route path="directory/:userId" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <DirectoryDetailPage />
+              </Suspense>
+            } />
+            <Route path="prayer" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberPrayerListPage />
+              </Suspense>
+            } />
+            <Route path="prayer/new" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberPrayerSubmitPage />
+              </Suspense>
+            } />
+            <Route path="prayer/:id" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberPrayerDetailPage />
+              </Suspense>
+            } />
+            <Route path="groups" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberGroupsListPage />
+              </Suspense>
+            } />
+            <Route path="groups/:slug" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberGroupDetailPage />
+              </Suspense>
+            } />
+            <Route path="classes" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberClassesListPage />
+              </Suspense>
+            } />
+            <Route path="classes/:slug" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberClassDetailPage />
+              </Suspense>
+            } />
+            <Route path="profile" element={
+              <Suspense fallback={<p className="p-8 text-muted">Loading…</p>}>
+                <MemberPortalProfilePage />
+              </Suspense>
+            } />
+          </Route>
           <Route
             path="get-involved"
             element={

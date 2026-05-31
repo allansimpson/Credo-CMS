@@ -8,6 +8,7 @@ public sealed class PublicSiteOptions
 {
     public const string SectionName = "PublicSite";
 
-    /// <summary>Absolute base URL of the SPA, e.g. https://example.org.</summary>
-    public string BaseUrl { get; set; } = "https://localhost:5001";
+    /// <summary>Absolute base URL of the SPA, e.g. https://example.org.
+    /// Dev default matches the Vite server in app/vite.config.ts.</summary>
+    public string BaseUrl { get; set; } = "http://localhost:5173";
 }

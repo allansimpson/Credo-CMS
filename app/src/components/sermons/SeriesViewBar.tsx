@@ -107,7 +107,20 @@ export const SeriesViewBar = forwardRef<HTMLDivElement, SeriesViewBarProps>(func
     else setInternalValue(next);
   };
 
-  const showClear = !!onClear && hasAppliedQuery;
+  const handleClear = () => {
+    // Reset the input value in either mode...
+    if (isControlled) onChange?.("");
+    else setInternalValue("");
+    // ...and always let the caller act on the clear (e.g. dropping a
+    // URL filter — the book filter on By Book, the q param on Latest).
+    onClear?.();
+  };
+
+  // Show the clear X as soon as the input has text. In controlled mode
+  // (Latest), `hasAppliedQuery` also keeps it visible after submit even
+  // if the input has been blurred — the caller owns that state. In
+  // uncontrolled mode (By Series / By Book), the value alone drives it.
+  const showClear = currentValue.length > 0 || (!!onClear && hasAppliedQuery);
 
   return (
     <>
@@ -123,34 +136,45 @@ export const SeriesViewBar = forwardRef<HTMLDivElement, SeriesViewBarProps>(func
         ].join(" ")}
       >
         <div className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-3 px-6 py-3 md:px-14">
-          <form onSubmit={handleSubmit} className="flex min-w-[220px] flex-1 items-center gap-2" role="search">
+          <form onSubmit={handleSubmit} className="min-w-[220px] flex-1" role="search">
             <label className="sr-only" htmlFor="sermon-view-search">Search sermons</label>
-            <div className="relative flex-1">
-              <Search
-                aria-hidden="true"
-                strokeWidth={1.75}
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
-              />
+            <div className="relative w-full">
+              <button
+                type="submit"
+                aria-label="Submit search"
+                title="Search"
+                className="absolute left-0 top-0 inline-flex h-9 w-9 items-center justify-center text-muted transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+              >
+                <Search aria-hidden="true" strokeWidth={1.75} className="h-4 w-4" />
+              </button>
               <input
                 id="sermon-view-search"
                 type="search"
                 value={currentValue}
                 onChange={(e) => handleChange(e.target.value)}
                 placeholder={placeholder}
-                className="h-9 w-full border border-border-soft bg-background pl-9 pr-3 text-sm focus-visible:border-accent focus-visible:outline-none"
+                className={[
+                  "h-9 w-full border border-border-soft bg-background pl-9 text-sm",
+                  "focus-visible:border-accent focus-visible:outline-none",
+                  // pr-10 reserves space for the inline clear button so
+                  // typed text doesn't slide under it. When no clear is
+                  // visible, pr-3 is the standard right padding — same
+                  // visible input edge across all three browse surfaces.
+                  showClear ? "pr-10" : "pr-3",
+                ].join(" ")}
               />
+              {showClear && (
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  aria-label="Clear search"
+                  title="Clear search"
+                  className="absolute right-1.5 top-1/2 inline-flex h-6 w-6 -translate-y-1/2 items-center justify-center text-muted transition-colors hover:text-foreground"
+                >
+                  <X aria-hidden="true" strokeWidth={1.75} className="h-4 w-4" />
+                </button>
+              )}
             </div>
-            {showClear && (
-              <button
-                type="button"
-                onClick={onClear}
-                aria-label="Clear search"
-                title="Clear search"
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-border-soft bg-background text-muted transition-colors hover:bg-panel hover:text-foreground"
-              >
-                <X aria-hidden="true" strokeWidth={1.75} className="h-4 w-4" />
-              </button>
-            )}
           </form>
           <nav aria-label="Sermon views" className="flex items-center">
             <Tab to="/sermons" label="Latest" active={active === "latest"} />

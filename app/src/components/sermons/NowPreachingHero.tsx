@@ -28,7 +28,7 @@ export function NowPreachingHero({ series, contexts }: NowPreachingHeroProps) {
 
   return (
     <section className="border-b border-border-soft">
-      <div className="mx-auto max-w-7xl px-6 py-10 md:py-14">
+      <div className="mx-auto max-w-[1180px] px-6 py-10 md:px-14 md:py-14">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <Eyebrow accent>Now preaching</Eyebrow>
           {latest && (

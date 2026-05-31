@@ -21,6 +21,7 @@ using CredoCms.Domain.Services;
 using CredoCms.Domain.Settings;
 using CredoCms.Infrastructure.Configuration;
 using CredoCms.Infrastructure.Persistence;
+using CredoCms.Infrastructure.Seeding.EmailTemplates;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -1007,111 +1008,56 @@ public sealed class DataSeeder
 
     // ── Email templates ──────────────────────────────────────────────────────
 
+    /// <summary>The system email templates whose HTML lives as embedded resources
+    /// under Seeding/EmailTemplates/*.html (Claude Design's full-bleed designs).</summary>
+    private static readonly (string Key, string FileName, string Subject, string Description, string[] Vars)[]
+        DesignedEmailTemplates = new[]
+    {
+        ("InvitationEmail", "MemberInvite.html",
+         "You're invited to join {{churchName}}",
+         "Sent when an admin creates a user account. Full-bleed editorial design.",
+         new[] { "first_name", "account_email", "role", "invited_by", "accept_url", "expiry_days" }),
+
+        ("PasswordReset", "PasswordReset.html",
+         "Reset your {{churchName}} password",
+         "Sent when a user requests a password reset. Full-bleed editorial design.",
+         new[] { "first_name", "reset_url", "expiry_minutes", "request_time", "request_device", "request_location", "support_email" }),
+
+        ("AccountActivated", "Welcome.html",
+         "Welcome to {{churchName}}, {{first_name}}",
+         "Sent when a user accepts an invitation. Full-bleed editorial design.",
+         new[] { "first_name", "portal_url" }),
+
+        ("WeeklyDigest", "WeeklyDigest.html",
+         "The Weekly · {{issue_subject}}",
+         "Weekly congregation digest. Loops (postsHtml/eventsHtml) are pre-rendered in C# before invoking the renderer.",
+         new[] { "issue_subject", "issue_number", "issue_date", "intro_html", "postsHtml", "eventsHtml", "site_url" }),
+    };
+
     private async Task SeedEmailTemplatesAsync(CancellationToken ct)
     {
         if (await _db.EmailTemplates.AnyAsync(ct).ConfigureAwait(false)) return;
 
         var now = DateTimeOffset.UtcNow;
-        var seeds = new (string Key, string Subject, string Html, string Description, string[] Vars)[]
-        {
-            ("InvitationEmail", "You're invited to {{churchName}}",
-             "<p>Hi {{firstName}},</p><p>You've been invited to join {{churchName}}'s online community.</p><p><a href=\"{{invitationLink}}\">Accept your invitation</a></p>",
-             "Sent when an admin creates a user account.",
-             new[] { "firstName", "lastName", "invitationLink" }),
 
-            ("PasswordReset", "Reset your password — {{churchName}}",
-             "<p>Hi {{firstName}},</p><p>A password reset was requested. <a href=\"{{resetLink}}\">Choose a new password</a>.</p><p>If you didn't request this, no action is needed.</p>",
-             "Sent when a user requests a password reset.",
-             new[] { "firstName", "resetLink" }),
-
-            ("AccountActivated", "Welcome to {{churchName}}",
-             "<p>Hi {{firstName}},</p><p>Your account is active. You can now sign in to {{churchName}}.</p>",
-             "Sent when a user accepts an invitation.",
-             new[] { "firstName" }),
-
-            ("ConnectCardAcknowledgment", "Thanks for connecting with {{churchName}}",
-             "<p>Hi {{firstName}},</p><p>Thanks for filling out our connect card. We'll be in touch soon.</p>",
-             "Sent to connect-card submitters.",
-             new[] { "firstName" }),
-
-            ("GroupJoinApproved", "You're in: {{groupName}}",
-             "<p>Hi {{firstName}},</p><p>Your request to join <strong>{{groupName}}</strong> was approved. Welcome!</p>",
-             "Sent when a group join request is approved.",
-             new[] { "firstName", "groupName" }),
-
-            ("GroupJoinDeclined", "About your request to join {{groupName}}",
-             "<p>Hi {{firstName}},</p><p>Your request to join {{groupName}} was not approved at this time.</p>",
-             "Sent when a group join request is declined.",
-             new[] { "firstName", "groupName" }),
-
-            ("EventRegistrationConfirmation", "Registered for {{eventTitle}}",
-             "<p>Hi {{firstName}},</p><p>You're registered for <strong>{{eventTitle}}</strong> on {{eventDate}}.</p>",
-             "Sent on event registration.",
-             new[] { "firstName", "eventTitle", "eventDate" }),
-
-            ("EventRegistrationCancellation", "Cancellation: {{eventTitle}}",
-             "<p>Hi {{firstName}},</p><p>Your registration for {{eventTitle}} has been canceled.</p>",
-             "Sent when an event registration is canceled.",
-             new[] { "firstName", "eventTitle" }),
-
-            ("EventRegistrationWaitlistPromotion", "You're off the waitlist: {{eventTitle}}",
-             "<p>Hi {{firstName}},</p><p>A spot opened up for <strong>{{eventTitle}}</strong> and you're now confirmed.</p>",
-             "Sent when a waitlisted entry is promoted.",
-             new[] { "firstName", "eventTitle" }),
-
-            ("EventRegistrationReminder", "Reminder: {{eventTitle}} on {{eventDate}}",
-             "<p>Hi {{firstName}},</p><p>This is a reminder that you're registered for <strong>{{eventTitle}}</strong> on {{eventDate}}.</p>",
-             "Sent 24-48h before an event.",
-             new[] { "firstName", "eventTitle", "eventDate" }),
-
-            ("BroadcastUnsubscribeConfirmation", "You've unsubscribed from {{churchName}} emails",
-             "<p>Hi {{firstName}},</p><p>You've been unsubscribed from {{categoryLabel}} emails. You can re-enable preferences any time at <a href=\"{{preferencesLink}}\">your account</a>.</p>",
-             "Sent after a one-click unsubscribe.",
-             new[] { "firstName", "categoryLabel", "preferencesLink" }),
-
-            ("EventVolunteerSignupConfirmation", "Thanks for volunteering at {{eventTitle}}",
-             "<p>Hi {{firstName}},</p><p>You're signed up to volunteer as <strong>{{roleName}}</strong> for {{eventTitle}} on {{occurrenceDate}}.</p>",
-             "Sent on volunteer signup.",
-             new[] { "firstName", "roleName", "eventTitle", "occurrenceDate" }),
-
-            ("EventVolunteerCancellation", "Volunteer slot canceled",
-             "<p>Hi {{firstName}},</p><p>Your volunteer commitment for {{eventTitle}} on {{occurrenceDate}} has been canceled.</p>",
-             "Sent when a volunteer signup is canceled.",
-             new[] { "firstName", "eventTitle", "occurrenceDate" }),
-
-            ("EventVolunteerReminder", "Volunteer reminder: {{roleName}} on {{occurrenceDate}}",
-             "<p>Hi {{firstName}},</p><p>You're scheduled to serve as <strong>{{roleName}}</strong> at {{eventTitle}} on {{occurrenceDate}}.</p>",
-             "24-48h volunteer reminder.",
-             new[] { "firstName", "roleName", "eventTitle", "occurrenceDate" }),
-
-            ("ConnectCardDigest", "{{count}} new connect card{{plural}}",
-             "<p>Hi {{firstName}},</p><p>You have {{count}} new connect card submission{{plural}} to review.</p><p><a href=\"/admin/connect-cards\">View in admin</a></p>",
-             "Admin digest for new connect cards.",
-             new[] { "firstName", "count", "plural" }),
-
-            ("GroupJoinRequestDigest", "{{count}} new group join request{{plural}}",
-             "<p>Hi {{firstName}},</p><p>You have {{count}} new group join request{{plural}} to review.</p><p><a href=\"/admin/groups\">View in admin</a></p>",
-             "Admin digest for new group join requests.",
-             new[] { "firstName", "count", "plural" }),
-        };
-
-        foreach (var (key, subject, html, desc, vars) in seeds)
+        foreach (var (key, fileName, subject, description, vars) in DesignedEmailTemplates)
         {
             _db.EmailTemplates.Add(new EmailTemplate
             {
                 Id = Guid.NewGuid(),
                 TemplateKey = key,
                 Subject = subject,
-                HtmlBody = html,
+                HtmlBody = EmailTemplateResources.Load(fileName),
                 AvailableMergeFieldsJson = JsonSerializer.Serialize(vars),
                 IsSystemTemplate = true,
-                Description = desc,
+                Description = description,
                 CreatedAt = now,
                 ModifiedAt = now,
             });
         }
+
         await _db.SaveChangesAsync(ct).ConfigureAwait(false);
-        _logger.LogInformation("Seeded {Count} system email templates.", seeds.Length);
+        _logger.LogInformation("Seeded {Count} system email templates.", DesignedEmailTemplates.Length);
     }
 
     private async Task SeedSampleBroadcastAsync(CancellationToken ct)

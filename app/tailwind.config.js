@@ -23,7 +23,10 @@ export default {
           DEFAULT: "hsl(var(--panel) / <alpha-value>)",
           alt: "hsl(var(--panel-alt) / <alpha-value>)",
         },
-        sidebar: "hsl(var(--sidebar) / <alpha-value>)",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar) / <alpha-value>)",
+          foreground: "hsl(var(--sidebar-fg) / <alpha-value>)",
+        },
         fg: {
           DEFAULT: "hsl(var(--foreground) / <alpha-value>)",
           soft: "hsl(var(--fg-soft) / <alpha-value>)",

@@ -74,6 +74,22 @@ public sealed class AuthController : ControllerBase
             : BadRequest(new { errors = result.Errors });
     }
 
+    /// <summary>
+    /// Returns a tagged-status preview of an invitation token so the SPA can
+    /// branch its render before the user types a password. Validates the
+    /// token WITHOUT consuming it.
+    /// </summary>
+    [HttpGet("invitation-preview")]
+    [AllowAnonymous]
+    public async Task<ActionResult<InvitationPreviewResult>> InvitationPreviewAsync(
+        [FromQuery] string email,
+        [FromQuery] string token,
+        CancellationToken ct)
+    {
+        var preview = await _authService.GetInvitationPreviewAsync(email, token, ct);
+        return Ok(preview);
+    }
+
     [HttpPost("change-password")]
     [Authorize]
     public async Task<IActionResult> ChangePasswordAsync([FromBody] ChangePasswordRequest request, CancellationToken ct)

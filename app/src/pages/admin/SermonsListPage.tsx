@@ -81,6 +81,12 @@ export function SermonsListPage() {
   // and the YouTube embed mounts in an overlay. null = closed.
   const [watching, setWatching] = useState<SermonListItem | null>(null);
 
+  // Last row the admin interacted with — any click in a row (action button,
+  // title, anywhere inside the <li>) sets this. Persists after modals close
+  // so the admin can find their place again. Cleared on data-filter changes.
+  const [lastActedRowId, setLastActedRowId] = useState<string | null>(null);
+  useEffect(() => { setLastActedRowId(null); }, [tab, q, page]);
+
   // Hard-delete confirmation — only reachable from the Deleted tab. Holds
   // the sermon currently up for permanent removal so the dialog can name it.
   const [hardDeleting, setHardDeleting] = useState<SermonListItem | null>(null);
@@ -417,10 +423,25 @@ export function SermonsListPage() {
           )}
           {hasRows && (
             <ul className={loading ? "divide-y divide-border-soft opacity-60 transition-opacity" : "divide-y divide-border-soft transition-opacity"}>
-              {data!.items.map((s, i) => (
+              {data!.items.map((s, i) => {
+                // A row is "active" when EITHER a row-scoped modal is open
+                // (Watch, hard-delete confirm) OR it's the last row the admin
+                // clicked anywhere inside. The latter persists after modals
+                // close so the admin can resume scanning where they left off.
+                const isActive =
+                  watching?.id === s.id ||
+                  hardDeleting?.id === s.id ||
+                  lastActedRowId === s.id;
+                return (
                 <li
                   key={s.id}
-                  className={`grid ${COLUMNS_CLASS} items-center gap-4 px-5 py-3 transition-colors odd:bg-panel-alt/40 hover:bg-panel-alt ${tab === "deleted" ? "opacity-70" : ""}`}
+                  aria-current={isActive ? "true" : undefined}
+                  onClick={() => setLastActedRowId(s.id)}
+                  className={`grid ${COLUMNS_CLASS} items-center gap-4 px-5 py-3 transition-colors ${
+                    isActive
+                      ? "bg-accent/25 shadow-[inset_3px_0_0_hsl(var(--accent))]"
+                      : "odd:bg-panel-alt/40 hover:bg-accent/15 hover:shadow-[inset_3px_0_0_hsl(var(--accent))]"
+                  } ${tab === "deleted" ? "opacity-70" : ""}`}
                 >
                   <span className="font-mono text-xs tabular-nums text-muted">
                     {String(rowNumberStart + i + 1).padStart(3, "0")}
@@ -497,7 +518,8 @@ export function SermonsListPage() {
                     )}
                   </div>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </div>

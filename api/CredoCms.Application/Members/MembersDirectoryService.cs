@@ -11,6 +11,11 @@ namespace CredoCms.Application.Members;
 /// </summary>
 public sealed class MembersDirectoryService : IMembersDirectoryService
 {
+    /// <summary>Bio excerpt cap on the wire. ~280 chars is the standard
+    /// length we use for sermon series + news excerpts so the directory
+    /// detail card stays compact even when a member writes paragraphs.</summary>
+    private const int BioExcerptLength = 280;
+
     private readonly IMembersDirectoryQueries _queries;
     public MembersDirectoryService(IMembersDirectoryQueries queries) => _queries = queries;
 
@@ -63,9 +68,15 @@ public sealed class MembersDirectoryService : IMembersDirectoryService
             row.ShowPhotoInDirectory ? row.PhotoBlobUrl : null,
             row.ShowPhotoInDirectory ? row.PhotoWebpBlobUrl : null,
             row.ShowPhotoInDirectory ? row.PhotoAltText : null,
-            row.PublicAuthorBio,
+            // PublicAuthorBio is ProseMirror JSON on the row; strip to a
+            // truncated plain-text excerpt before crossing the boundary
+            // so the SPA can render it directly. Null when the bio is
+            // empty so the UI can fall through to its no-bio treatment.
+            NullIfEmpty(ProseMirrorText.Excerpt(row.PublicAuthorBio, BioExcerptLength)),
             memberships);
     }
+
+    private static string? NullIfEmpty(string s) => string.IsNullOrWhiteSpace(s) ? null : s;
 }
 
 /// <summary>

@@ -49,6 +49,8 @@
   --panel-alt: 42 25% 94%;          /* #f3f1eb */
   --inset: 36 9% 9%;                /* #1a1815 */
   --inset-fg: 39 49% 93%;           /* #f5efe2 */
+  --sidebar: 36 9% 9%;              /* member portal sidebar — same ink as inset */
+  --sidebar-fg: 39 49% 93%;         /* #f5efe2 */
   --fg-soft: 33 13% 20%;            /* #3a352e */
   --muted: 30 9% 44%;               /* #7a7165 */
   --border: 44 30% 82%;             /* #dcd5c5 */
@@ -91,6 +93,8 @@
   --panel-alt: 47 31% 94%;           /* #f4f2ec */
   --inset: 138 11% 17%;              /* #26302a */
   --inset-fg: 60 12% 90%;            /* #e9eae3 */
+  --sidebar: 138 11% 17%;            /* member portal sidebar — same dark sage as inset */
+  --sidebar-fg: 60 12% 90%;          /* #e9eae3 */
   --fg-soft: 138 6% 30%;             /* #48504a */
   --muted: 86 4% 54%;                /* #8b8e84 */
   --border: 47 16% 87%;              /* #e3e1d8 */

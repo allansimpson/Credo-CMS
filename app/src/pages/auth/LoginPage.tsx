@@ -28,7 +28,11 @@ export function LoginPage() {
     const result = await login(email, password);
     setSubmitting(false);
     if (result.ok) {
-      const returnTo = searchParams.get("return") ?? "/";
+      // Honor a `?return=` deep-link first (set by ProtectedRoute when an
+      // anonymous visitor was bounced from a protected URL). Otherwise
+      // land on the member portal — signing in is a member-side action,
+      // not a homepage one.
+      const returnTo = searchParams.get("return") ?? "/members";
       navigate(returnTo, { replace: true });
     } else {
       setErrors(result.errors);
@@ -88,7 +92,7 @@ export function LoginPage() {
 
           {/* Footer row */}
           <div className="flex items-center justify-between font-mono text-[11px] text-background/60">
-            <span>v1.0 · admin</span>
+            <span>v1.0</span>
             <span>{settings?.churchName ?? "credo-cms"}</span>
           </div>
         </aside>
@@ -100,10 +104,6 @@ export function LoginPage() {
             <h1 className="mt-3 font-heading text-[42px] font-bold leading-none tracking-[-0.025em]">
               Welcome back.
             </h1>
-            <p className="mt-3 text-sm text-fg-soft">
-              Sign in to manage your church's content. If you don't have an
-              account, an administrator will invite you by email.
-            </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               {errors.length > 0 && (
@@ -179,10 +179,6 @@ export function LoginPage() {
                 </p>
               </div>
             )}
-
-            <p className="mt-8 border-t border-border-soft pt-5 text-xs text-muted">
-              Need an account? Administrators invite you by email.
-            </p>
           </div>
         </section>
       </main>

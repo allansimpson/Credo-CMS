@@ -1,39 +1,43 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/apiClient";
 
 // ---- enum mirrors -------------------------------------------------------
+// The backend uses System.Text.Json JsonStringEnumConverter, so these
+// arrive on the wire as the enum NAMES ("Public", "Open", "Pending"),
+// not the numeric values. Comparisons stay readable when the constants
+// hold strings rather than numbers.
 
 export const GroupVisibility = {
-  Public: 0,
-  MembersOnly: 1,
-  Hidden: 2,
+  Public: "Public",
+  MembersOnly: "MembersOnly",
+  Hidden: "Hidden",
 } as const;
 export type GroupVisibility = (typeof GroupVisibility)[keyof typeof GroupVisibility];
 
 export const GroupJoinability = {
-  Open: 0,
-  InviteOnly: 1,
-  Closed: 2,
+  Open: "Open",
+  InviteOnly: "InviteOnly",
+  Closed: "Closed",
 } as const;
 export type GroupJoinability = (typeof GroupJoinability)[keyof typeof GroupJoinability];
 
 export const MessageOnJoinRequest = {
-  Hidden: 0,
-  Optional: 1,
-  Required: 2,
+  Hidden: "Hidden",
+  Optional: "Optional",
+  Required: "Required",
 } as const;
 export type MessageOnJoinRequest = (typeof MessageOnJoinRequest)[keyof typeof MessageOnJoinRequest];
 
 export const RosterVisibility = {
-  LeadersOnly: 0,
-  AllGroupMembers: 1,
+  LeadersOnly: "LeadersOnly",
+  AllGroupMembers: "AllGroupMembers",
 } as const;
 export type RosterVisibility = (typeof RosterVisibility)[keyof typeof RosterVisibility];
 
 export const GroupMembershipStatus = {
-  Pending: 0,
-  Active: 1,
-  Declined: 2,
-  Removed: 3,
+  Pending: "Pending",
+  Active: "Active",
+  Declined: "Declined",
+  Removed: "Removed",
 } as const;
 export type GroupMembershipStatus = (typeof GroupMembershipStatus)[keyof typeof GroupMembershipStatus];
 

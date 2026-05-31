@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Seeding\EmailTemplates\*.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Infrastructure provides the ASP.NET Core Identity SignInManager wiring,
          which lives in the ASP.NET Core shared framework. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

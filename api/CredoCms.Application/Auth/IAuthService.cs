@@ -19,6 +19,15 @@ public interface IAuthService
     Task<AuthOperationResult> AcceptInvitationAsync(AcceptInvitationRequest request, CancellationToken ct = default);
 
     Task<AuthOperationResult> ChangePasswordAsync(Guid userId, ChangePasswordRequest request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Validates an invitation token WITHOUT consuming it and returns a
+    /// tagged-status payload the SPA branches on before rendering the
+    /// set-password form. Never throws on unknown email / malformed token —
+    /// returns <see cref="InvitationPreviewStatus.Invalid"/> instead, to
+    /// avoid leaking which emails are real accounts.
+    /// </summary>
+    Task<InvitationPreviewResult> GetInvitationPreviewAsync(string email, string token, CancellationToken ct = default);
 }
 
 /// <summary>

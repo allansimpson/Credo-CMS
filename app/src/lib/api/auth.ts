@@ -9,6 +9,27 @@ import type {
   ResetPasswordRequest,
 } from "@/types/api";
 
+/**
+ * Tagged status of an invitation token. Mirrors the C# enum
+ * <c>CredoCms.Application.Auth.InvitationPreviewStatus</c>. Backend uses
+ * <c>JsonStringEnumConverter</c>, so the wire shape is a STRING — not a
+ * number. Don't add numeric mappings.
+ */
+export type InvitationPreviewStatus = "Valid" | "Expired" | "Consumed" | "Invalid";
+
+export interface InvitationPreview {
+  status: InvitationPreviewStatus;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  role: string | null;
+  invitedBy: string | null;
+  churchName: string | null;
+  churchInitials: string | null;
+  credentialNumber: string | null;
+  expiresAt: string | null; // ISO-8601 UTC, null unless status === "Valid"
+}
+
 export const authApi = {
   login: (req: LoginRequest) =>
     apiPost<LoginResult>("/api/auth/login", req, { emitUnauthorized: false }),
@@ -46,6 +67,13 @@ export const authApi = {
     apiPost<{ ok: boolean }>("/api/auth/accept-invitation", req, {
       emitUnauthorized: false,
     }),
+
+  invitationPreview: (email: string, token: string) => {
+    const qs = new URLSearchParams({ email, token }).toString();
+    return apiGet<InvitationPreview>(`/api/auth/invitation-preview?${qs}`, {
+      emitUnauthorized: false,
+    });
+  },
 
   changePassword: (req: ChangePasswordRequest) =>
     apiPost<{ ok: boolean }>("/api/auth/change-password", req),

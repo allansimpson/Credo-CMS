@@ -145,11 +145,6 @@ function EditorialFooter({
 }: FooterContentProps) {
   return (
     <footer className="mt-20 bg-inset text-inset-foreground">
-      {/* Accent rule above the footer */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div aria-hidden="true" className="h-px w-full bg-accent" />
-      </div>
-
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4 lg:px-8">
         <div>
           <div className="flex items-center gap-2.5">

@@ -54,7 +54,10 @@ export function SermonSeriesListPage() {
         {!loading && data && data.items.length > 0 && (
           <ul className="divide-y border bg-card">
             {data.items.map((s) => (
-              <li key={s.id} className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
+              <li
+                key={s.id}
+                className="flex flex-col gap-2 p-4 transition-colors hover:bg-accent/5 hover:shadow-[inset_3px_0_0_hsl(var(--accent))] sm:flex-row sm:items-center sm:gap-4"
+              >
                 {s.bannerImageUrl ? (
                   <picture>
                     {s.bannerImageWebpUrl && <source srcSet={s.bannerImageWebpUrl} type="image/webp" />}

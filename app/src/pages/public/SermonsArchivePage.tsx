@@ -198,21 +198,17 @@ export function SermonsArchivePage({ yearParam }: SermonsArchivePageProps = {}) 
 
       {/* ── Header ────────────────────────────────────────────── */}
       <header className="mx-auto max-w-[1180px] px-6 py-10 md:px-14 md:py-12">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <Eyebrow accent>Sermons</Eyebrow>
-            <Headline as="h1" size="display" className="mt-3">
-              Listen back.
-            </Headline>
-          </div>
-          {currentYear !== undefined && (
-            <p className="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-muted md:block">
-              {isSearchMode
-                ? `${listing?.totalDays ?? 0} matching ${(listing?.totalDays ?? 0) === 1 ? "day" : "days"}`
-                : `${currentYear} · ${totalSermons} sermons`}
-            </p>
-          )}
-        </div>
+        <Eyebrow accent>Sermons</Eyebrow>
+        <Headline as="h1" size="display" className="mt-3">
+          Listen back.
+        </Headline>
+        {currentYear !== undefined && (
+          <p className="mt-4 hidden font-mono text-[11px] uppercase tracking-[0.14em] text-muted md:block">
+            {isSearchMode
+              ? `${listing?.totalDays ?? 0} matching ${(listing?.totalDays ?? 0) === 1 ? "day" : "days"}`
+              : `${currentYear} · ${totalSermons} sermons`}
+          </p>
+        )}
       </header>
 
       {/* ── Filter bar (shared across all sermon browse tabs) ─── */}
@@ -267,9 +263,7 @@ export function SermonsArchivePage({ yearParam }: SermonsArchivePageProps = {}) 
                 years={railYears}
                 currentYear={currentYear}
                 activeMonth={activeMonth}
-                searchQuery={isSearchMode ? appliedQuery : undefined}
                 yearStats={isSearchMode ? listing?.yearStats ?? [] : undefined}
-                onClearSearch={isSearchMode ? clearSearch : undefined}
               />
             )}
           </div>
@@ -315,13 +309,13 @@ export function SermonsArchivePage({ yearParam }: SermonsArchivePageProps = {}) 
               <div className="py-16 text-center">
                 {isSearchMode ? (
                   <>
-                    <p className="text-fg-soft">No sermons matched &ldquo;{appliedQuery}&rdquo;.</p>
+                    <p className="text-fg-soft">There are no sermons matching that search.</p>
                     <button
                       type="button"
                       onClick={clearSearch}
-                      className="mt-2 text-sm text-accent hover:underline"
+                      className="mt-4 inline-flex items-center border border-border-soft bg-background px-4 py-2 text-sm font-medium hover:bg-panel-alt"
                     >
-                      Clear search
+                      Clear Search
                     </button>
                   </>
                 ) : currentYear !== undefined ? (
@@ -408,9 +402,7 @@ export function SermonsArchivePage({ yearParam }: SermonsArchivePageProps = {}) 
           years={railYears}
           currentYear={currentYear}
           activeMonth={activeMonth}
-          searchQuery={isSearchMode ? appliedQuery : undefined}
           yearStats={isSearchMode ? listing?.yearStats ?? [] : undefined}
-          onClearSearch={isSearchMode ? () => { clearSearch(); setDrawerOpen(false); } : undefined}
         />
       )}
     </div>

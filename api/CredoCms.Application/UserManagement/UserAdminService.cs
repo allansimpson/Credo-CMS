@@ -453,4 +453,5 @@ public interface IInvitationEmailComposer
 {
     Task<EmailMessage> ComposeInvitationAsync(ApplicationUser user, string invitationToken, CancellationToken ct = default);
     Task<EmailMessage> ComposePasswordResetAsync(ApplicationUser user, string resetToken, CancellationToken ct = default);
+    Task<EmailMessage> ComposeWelcomeAsync(ApplicationUser user, CancellationToken ct = default);
 }

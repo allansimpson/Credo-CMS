@@ -30,6 +30,38 @@
     height: 100%;
   }
 
+  /*
+   * Reserve scrollbar space even when content fits without scrolling.
+   * Without this, `mx-auto`-centered content (page headers, search bars,
+   * sticky filter rows) shifts laterally between routes depending on
+   * whether each page is long enough to need the vertical scrollbar.
+   * Most visible on the Sermons surfaces — Latest / By Series / By Book
+   * all share a sticky filter bar, and the bar must not jiggle when you
+   * switch tabs.
+   *
+   * `overflow-y: scroll` is the universally-supported fallback (works in
+   * every browser including Safari < 18.2). `scrollbar-gutter: stable`
+   * is the modern progressive enhancement — supported browsers honor it
+   * to keep the gutter reserved while still hiding the track when not
+   * needed (cleaner on macOS overlay scrollbars).
+   */
+  html {
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+
+  /*
+   * Suppress the native clear button on `<input type="search">` so any
+   * search input we render uses our own Lucide X for cross-browser icon
+   * consistency. Without this, WebKit/Chromium browsers render a small
+   * rounded "X" that doesn't match the rest of the icon set.
+   */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);

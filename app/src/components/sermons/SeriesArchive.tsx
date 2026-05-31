@@ -19,7 +19,7 @@ export function SeriesArchive({ series }: SeriesArchiveProps) {
 
   return (
     <section>
-      <div className="mx-auto max-w-7xl px-6 pb-16 pt-10">
+      <div className="mx-auto max-w-[1180px] px-6 pb-16 pt-10 md:px-14">
         <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-border-soft pb-4">
           <Headline as="h2" size="h3">The archive</Headline>
           <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">

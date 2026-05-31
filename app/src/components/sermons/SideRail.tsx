@@ -32,10 +32,8 @@ export interface SideRailProps {
   activeMonth?: string | null;
 
   // Search-mode props
-  searchQuery?: string;
   /** Per-year match data from `by-day?search=…`. */
   yearStats?: YearStats[];
-  onClearSearch?: () => void;
 }
 
 export function SideRail({
@@ -43,9 +41,7 @@ export function SideRail({
   years,
   currentYear,
   activeMonth,
-  searchQuery,
   yearStats,
-  onClearSearch,
 }: SideRailProps) {
   // In search mode, build a year→YearStats lookup so we can render every
   // year row with its rescoped count. Years not in `yearStats` are
@@ -58,30 +54,9 @@ export function SideRail({
   return (
     <aside className="sticky top-[calc(var(--public-header-offset,0px)_+_var(--sermons-filter-offset,0px)_+_1.5rem)] self-start">
       {/* Header row */}
-      <div className="mb-4 flex items-center justify-between border-b border-border pb-3 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+      <div className="mb-4 border-b border-border pb-3 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
         <span>{mode === "search" ? "Search results" : "Archive index"}</span>
-        {mode === "search" && searchQuery && onClearSearch && (
-          <button
-            type="button"
-            onClick={onClearSearch}
-            className="font-mono text-[11px] normal-case tracking-normal text-accent hover:underline"
-          >
-            Clear
-          </button>
-        )}
       </div>
-
-      {/* Search-mode query callout */}
-      {mode === "search" && searchQuery && (
-        <div className="mb-4 border border-accent bg-accent/10 p-3">
-          <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
-            Searching
-          </div>
-          <div className="mt-1 font-heading text-sm font-medium tracking-[-0.005em]">
-            &ldquo;{searchQuery}&rdquo;
-          </div>
-        </div>
-      )}
 
       {/* Year list */}
       {years.map((y, i) => {

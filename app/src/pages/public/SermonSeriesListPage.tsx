@@ -23,6 +23,7 @@ export function SermonSeriesListPublicPage() {
   const [items, setItems] = useState<PublicSermonSeriesWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -54,8 +55,20 @@ export function SermonSeriesListPublicPage() {
     return ordered;
   }, [items]);
 
-  const active = useMemo(() => items.filter((s) => s.status === "active"), [items]);
-  const complete = useMemo(() => items.filter((s) => s.status === "complete"), [items]);
+  // In-page search filters series by title or scope label — stays on
+  // this tab instead of bouncing to Latest's full-text sermon search.
+  const visibleItems = useMemo(() => {
+    const needle = searchText.trim().toLowerCase();
+    if (!needle) return items;
+    return items.filter((s) => {
+      return s.title.toLowerCase().includes(needle)
+        || (s.scopeLabel?.toLowerCase().includes(needle) ?? false);
+    });
+  }, [items, searchText]);
+  const hasTextFilter = searchText.trim().length > 0;
+
+  const active = useMemo(() => visibleItems.filter((s) => s.status === "active"), [visibleItems]);
+  const complete = useMemo(() => visibleItems.filter((s) => s.status === "complete"), [visibleItems]);
 
   // Flagship = the active series with the most-recent published sermon.
   // Stable-sort by startDate desc when latestSermon ties or is null.
@@ -93,12 +106,27 @@ export function SermonSeriesListPublicPage() {
         activeCount={active.length}
       />
 
-      <SeriesViewBar active="by-series" />
+      <SeriesViewBar
+        active="by-series"
+        placeholder="Search series — 'Hebrews', 'Advent', 'Psalms'"
+        value={searchText}
+        onChange={setSearchText}
+        onSubmit={() => { /* filtering is real-time */ }}
+        hasAppliedQuery={hasTextFilter}
+        onClear={() => setSearchText("")}
+      />
 
       {loading ? (
         <LoadingState />
       ) : error ? (
         <ErrorState />
+      ) : hasTextFilter && visibleItems.length === 0 ? (
+        <NoSeriesMatches onClear={() => setSearchText("")} />
+      ) : hasTextFilter ? (
+        // Filtered view: show one combined list (no hero, no archive
+        // grouping). Keeps the result density tight when search returns
+        // a small set spanning active + complete.
+        <FilteredSeriesList items={visibleItems} contexts={contexts} />
       ) : (
         <>
           {flagship ? (
@@ -118,9 +146,80 @@ export function SermonSeriesListPublicPage() {
   );
 }
 
+function NoSeriesMatches({ onClear }: { onClear: () => void }) {
+  return (
+    <div className="mx-auto max-w-[1180px] px-6 py-14 md:px-14">
+      <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">No matches</p>
+      <p className="mt-3 text-fg-soft">There are no series matching that search.</p>
+      <button
+        type="button"
+        onClick={onClear}
+        className="mt-4 inline-flex items-center border border-border-soft bg-background px-4 py-2 text-sm font-medium hover:bg-panel-alt"
+      >
+        Clear Search
+      </button>
+    </div>
+  );
+}
+
+/** Combined list rendered during a text-filter search — strips the hero
+ * + archive grouping so the matches read as a focused result set. */
+function FilteredSeriesList({
+  items,
+  contexts,
+}: {
+  items: PublicSermonSeriesWithStats[];
+  contexts: string[];
+}) {
+  return (
+    <section className="mx-auto max-w-[1180px] px-6 py-10 md:px-14">
+      <p className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+        {items.length} {items.length === 1 ? "match" : "matches"}
+      </p>
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {items.map((s) => <FilteredSeriesRow key={s.id} series={s} contexts={contexts} />)}
+      </ul>
+    </section>
+  );
+}
+
+function FilteredSeriesRow({
+  series,
+  contexts,
+}: {
+  series: PublicSermonSeriesWithStats;
+  contexts: string[];
+}) {
+  // Lightweight; just enough to identify the series. ContextLabel + a
+  // status hint (active vs completed) keep parity with the hero/archive
+  // rows the user sees outside of search.
+  const isActive = series.status === "active";
+  const contextIndex = contexts.indexOf(series.context);
+  return (
+    <li>
+      <Link
+        to={`/sermons/series/${encodeURIComponent(series.slug)}`}
+        className="block border border-border bg-panel p-4 transition-colors hover:bg-panel-alt"
+      >
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          <span aria-hidden="true">{contextIndex >= 0 ? series.context : "Series"}</span>
+          {" · "}
+          <span className={isActive ? "text-accent" : "text-muted"}>
+            {isActive ? "Active" : "Completed"}
+          </span>
+        </p>
+        <h3 className="mt-1 truncate font-heading text-base font-semibold">{series.title}</h3>
+        <p className="mt-1 truncate font-mono text-[10.5px] uppercase tracking-[0.10em] text-muted">
+          {series.scopeLabel} · {series.sermonCount} {series.sermonCount === 1 ? "message" : "messages"}
+        </p>
+      </Link>
+    </li>
+  );
+}
+
 function LoadingState() {
   return (
-    <div className="mx-auto max-w-7xl px-6 py-14">
+    <div className="mx-auto max-w-[1180px] px-6 py-14 md:px-14">
       <p className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">Loading…</p>
     </div>
   );
@@ -128,7 +227,7 @@ function LoadingState() {
 
 function ErrorState() {
   return (
-    <div className="mx-auto max-w-7xl px-6 py-14">
+    <div className="mx-auto max-w-[1180px] px-6 py-14 md:px-14">
       <p className="text-danger">Could not load the series list. Try refreshing.</p>
     </div>
   );
@@ -138,7 +237,7 @@ function ErrorState() {
 function BetweenSeries() {
   return (
     <section className="border-b border-border-soft">
-      <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="mx-auto max-w-[1180px] px-6 py-12 md:px-14">
         <div className="bg-panel-alt px-6 py-10">
           <Eyebrow>Between series</Eyebrow>
           <Headline as="h2" size="h3" className="mt-3">
@@ -146,7 +245,7 @@ function BetweenSeries() {
           </Headline>
           <p className="mt-3 max-w-prose text-fg-soft">
             New series will appear here as soon as they begin. In the meantime, you can browse our
-            latest stand-alone messages.
+            latest stand-alone sermons.
           </p>
           <div className="mt-5">
             <Link

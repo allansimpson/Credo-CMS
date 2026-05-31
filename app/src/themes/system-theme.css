@@ -27,6 +27,7 @@
   --panel: 48 38% 97%;               /* #fbfaf6 — card / table surface */
   --panel-alt: 44 27% 92%;           /* #f0ede5 — table headers, inset rows */
   --sidebar: 36 11% 9%;              /* #1a1815 — left rail + dark insets */
+  --sidebar-fg: 43 29% 92%;          /* #ede5d4 — sidebar text on dark */
 
   /* Text --------------------------------------------------------------- */
   --foreground: 36 11% 9%;           /* #1a1815 — primary text */
@@ -94,6 +95,7 @@
   --panel: 38 12% 11%;               /* #201d18 */
   --panel-alt: 40 12% 10%;           /* #1c1a16 */
   --sidebar: 36 20% 5%;              /* #0f0d0a */
+  --sidebar-fg: 41 49% 92%;          /* #f5efe2 */
 
   --foreground: 41 49% 92%;          /* #f5efe2 */
   --fg-soft: 45 25% 78%;             /* #d4cdb8 */

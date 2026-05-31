@@ -14,7 +14,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddPersistence(configuration);
-        services.AddIdentity();
+        services.AddIdentity(configuration);
         services.AddCommunications();
         services.AddContentServices(configuration);
         services.AddBackgroundWorkers();
