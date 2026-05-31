@@ -305,6 +305,10 @@ export interface NewsListItem {
   publishedAt: string | null;
   expiresAt: string | null;
   modifiedAt: string;
+  authorUserId: string | null;
+  authorDisplayName: string | null;
+  authorLeaderTitle: string | null;
+  authorLeaderId: string | null;
 }
 
 export interface NewsDetail {
@@ -328,6 +332,10 @@ export interface NewsDetail {
   modifiedByUserId: string | null;
   publishedAt: string | null;
   deletedAt: string | null;
+  authorUserId: string | null;
+  authorDisplayName: string | null;
+  authorLeaderTitle: string | null;
+  authorLeaderId: string | null;
 }
 
 export interface PublicNewsItem {
@@ -342,6 +350,9 @@ export interface PublicNewsItem {
   isMembersOnly: boolean;
   publishedAt: string;
   calendarDate: string | null;
+  authorDisplayName: string | null;
+  authorLeaderTitle: string | null;
+  authorLeaderId: string | null;
 }
 
 export interface PublicNewsDetail extends Omit<PublicNewsItem, "excerpt"> {
@@ -364,6 +375,7 @@ export interface CreateNewsItemRequest {
   isMembersOnly: boolean;
   expiresAt: string | null;
   calendarDate: string | null;
+  authorUserId?: string | null;
 }
 
 export type UpdateNewsItemRequest = CreateNewsItemRequest;
@@ -427,6 +439,7 @@ export interface Leader {
   photoWebpUrl: string | null;
   photoAlt: string | null;
   displayOrder: number;
+  userId: string | null;
   createdAt: string;
   modifiedAt: string;
 }
@@ -454,6 +467,7 @@ export interface CreateLeaderRequest {
   photoWebpUrl: string | null;
   photoAlt: string | null;
   displayOrder: number;
+  userId?: string | null;
 }
 
 export type UpdateLeaderRequest = CreateLeaderRequest;

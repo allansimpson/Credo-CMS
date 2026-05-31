@@ -95,6 +95,12 @@ export function PublicNewsListPage() {
               </Link>
               <p className="mt-2 font-mono text-xs uppercase tracking-wide text-muted">
                 {formatDate(featured.calendarDate ?? featured.publishedAt)}
+                {featured.authorDisplayName && (
+                  <span className="ml-2 normal-case tracking-normal">
+                    · By <span className="text-foreground">{featured.authorDisplayName}</span>
+                    {featured.authorLeaderTitle && <span>{` · ${featured.authorLeaderTitle}`}</span>}
+                  </span>
+                )}
               </p>
               {featured.excerpt && (
                 <p className="mt-4 text-fg-soft leading-relaxed">
@@ -207,6 +213,12 @@ function NewsCard({ item }: { item: PublicNewsItem }) {
         <p className="mt-2 font-mono text-[10px] uppercase tracking-wide text-muted">
           {formatDate(item.calendarDate ?? item.publishedAt)}
         </p>
+        {item.authorDisplayName && (
+          <p className="mt-1 text-xs text-muted">
+            By <span className="text-foreground">{item.authorDisplayName}</span>
+            {item.authorLeaderTitle && <span>{` · ${item.authorLeaderTitle}`}</span>}
+          </p>
+        )}
       </div>
     </Link>
   );

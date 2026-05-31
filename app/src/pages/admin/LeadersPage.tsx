@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { leadersApi } from "@/lib/api/leaders";
+import { usersApi } from "@/lib/api/users";
 import { useSiteSettings } from "@/lib/SiteSettingsContext";
 import { useAuth } from "@/hooks/useAuth";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import { TipTapEditor } from "@/components/shared/TipTapEditor";
+import { UserPicker, type PickedUser } from "@/components/shared/admin/UserPicker";
 import type { CreateLeaderRequest, Leader } from "@/types/api";
 
 interface FormState {
@@ -16,6 +18,10 @@ interface FormState {
   photoWebpUrl: string | null;
   photoAlt: string | null;
   displayOrder: number;
+  userId: string | null;
+  /** Locally-cached display snapshot for the picker's "selected" pill. Not
+   * sent to the server — the server only cares about `userId`. */
+  linkedUser: PickedUser | null;
 }
 
 export function LeadersPage() {
@@ -47,15 +53,45 @@ export function LeadersPage() {
   }, []);
 
   const startNew = () => { setEditing(null); setForm(emptyForm(categories[0])); setErrors([]); };
-  const startEdit = (l: Leader) => {
+  const startEdit = async (l: Leader) => {
     setEditing(l);
     setForm({
       fullName: l.fullName, title: l.title ?? "",
       category: l.category, bioJson: l.bioJson, email: l.email ?? "",
       photoUrl: l.photoUrl, photoWebpUrl: l.photoWebpUrl, photoAlt: l.photoAlt,
       displayOrder: l.displayOrder,
+      userId: l.userId,
+      linkedUser: null, // populated below if the leader is linked
     });
     setErrors([]);
+    if (l.userId) {
+      // Fetch the linked user so the picker can render its "selected" pill
+      // with name + email rather than an opaque UUID.
+      try {
+        const u = await usersApi.get(l.userId);
+        setForm((prev) => prev.userId === l.userId
+          ? { ...prev, linkedUser: { id: u.id, displayName: u.displayName, email: u.email } }
+          : prev);
+      } catch { /* user may have been deleted — leave pill empty */ }
+    }
+  };
+
+  const onPickUser = (picked: PickedUser | null) => {
+    setForm((prev) => {
+      const next: FormState = {
+        ...prev,
+        userId: picked?.id ?? null,
+        linkedUser: picked,
+      };
+      // Convenience pre-fill: copy the user's name + email into the form
+      // when those fields are empty, so the admin doesn't retype them. Never
+      // overwrite a value the admin has already entered.
+      if (picked) {
+        if (!prev.fullName.trim()) next.fullName = picked.displayName;
+        if (!prev.email.trim()) next.email = picked.email;
+      }
+      return next;
+    });
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -65,6 +101,7 @@ export function LeadersPage() {
       bioJson: form.bioJson, email: form.email || null,
       photoUrl: form.photoUrl, photoWebpUrl: form.photoWebpUrl, photoAlt: form.photoAlt,
       displayOrder: Number(form.displayOrder),
+      userId: form.userId,
     };
     try {
       const saved = editing
@@ -122,6 +159,18 @@ export function LeadersPage() {
               <ul className="list-disc pl-4">{errors.map((e) => <li key={e}>{e}</li>)}</ul>
             </div>
           )}
+
+          <Field label="Linked user account">
+            <UserPicker
+              value={form.linkedUser}
+              onChange={onPickUser}
+              placeholder="Search by name or email…"
+              clearLabel="Unlink"
+            />
+            <p className="mt-1 text-xs text-muted">
+              Optional. When set, this leader's title appears on any Blog or News post they author.
+            </p>
+          </Field>
 
           <Field label="Photo">
             <ImageUpload
@@ -257,6 +306,7 @@ function emptyForm(category: string): FormState {
   return {
     fullName: "", title: "", category, bioJson: null, email: "",
     photoUrl: null, photoWebpUrl: null, photoAlt: null, displayOrder: 0,
+    userId: null, linkedUser: null,
   };
 }
 

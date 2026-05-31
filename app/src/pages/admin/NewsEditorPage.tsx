@@ -6,6 +6,8 @@ import { slugify } from "@/lib/slug";
 import { ImageUpload } from "@/components/shared/ImageUpload";
 import { TipTapFullEditor } from "@/components/shared/TipTapFullEditor";
 import { ConfirmDialog } from "@/components/shared/admin/ConfirmDialog";
+import { UserPicker, type PickedUser } from "@/components/shared/admin/UserPicker";
+import { useAuth } from "@/hooks/useAuth";
 import type { CreateNewsItemRequest, NewsDetail, UpdateNewsItemRequest } from "@/types/api";
 
 interface FormState {
@@ -22,6 +24,11 @@ interface FormState {
   isMembersOnly: boolean;
   expiresAt: string;
   calendarDate: string;
+  /** Author override. Null on new items = default to current user. On edit,
+   * null sent to the backend means "leave the existing author intact". */
+  authorUserId: string | null;
+  /** Display snapshot for the picker pill. Not sent to the server. */
+  authorPicked: PickedUser | null;
 }
 
 const empty: FormState = {
@@ -31,6 +38,7 @@ const empty: FormState = {
   category: "",
   isPublished: false, isMembersOnly: true,
   expiresAt: "", calendarDate: "",
+  authorUserId: null, authorPicked: null,
 };
 
 function toApi(f: FormState): CreateNewsItemRequest | UpdateNewsItemRequest {
@@ -48,6 +56,7 @@ function toApi(f: FormState): CreateNewsItemRequest | UpdateNewsItemRequest {
     isMembersOnly: f.isMembersOnly,
     expiresAt: f.expiresAt ? new Date(f.expiresAt).toISOString() : null,
     calendarDate: f.calendarDate ? new Date(f.calendarDate).toISOString() : null,
+    authorUserId: f.authorUserId,
   };
 }
 
@@ -66,6 +75,10 @@ function fromDetail(n: NewsDetail): FormState {
     isMembersOnly: n.isMembersOnly,
     expiresAt: n.expiresAt ? n.expiresAt.slice(0, 16) : "",
     calendarDate: n.calendarDate ? n.calendarDate.slice(0, 16) : "",
+    authorUserId: n.authorUserId,
+    authorPicked: n.authorUserId && n.authorDisplayName
+      ? { id: n.authorUserId, displayName: n.authorDisplayName, email: "" }
+      : null,
   };
 }
 
@@ -73,6 +86,7 @@ export function NewsEditorPage() {
   const { id } = useParams<{ id?: string }>();
   const isNew = !id || id === "new";
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   const [form, setForm] = useState<FormState>(empty);
   const [original, setOriginal] = useState<NewsDetail | null>(null);
@@ -266,6 +280,38 @@ export function NewsEditorPage() {
             onChange={(e) => setForm((f) => ({ ...f, metaDescription: e.target.value }))}
             className="input min-h-16 py-2" />
         </Field>
+      </fieldset>
+
+      <fieldset className="space-y-3 rounded-lg border bg-card p-4">
+        <legend className="px-2 text-sm font-semibold">Author</legend>
+        {form.authorPicked ? (
+          <UserPicker
+            value={form.authorPicked}
+            onChange={(picked) => setForm((f) => ({
+              ...f,
+              authorUserId: picked?.id ?? null,
+              authorPicked: picked,
+            }))}
+            clearLabel="Change"
+          />
+        ) : (
+          <>
+            <UserPicker
+              value={null}
+              onChange={(picked) => setForm((f) => ({
+                ...f,
+                authorUserId: picked?.id ?? null,
+                authorPicked: picked,
+              }))}
+              placeholder="Search a user to attribute this item to…"
+            />
+            <p className="text-xs text-muted">
+              {isNew
+                ? `Defaults to you${currentUser?.displayName ? ` (${currentUser.displayName})` : ""} when saved. Pick someone else to attribute it.`
+                : "Pick a user to re-attribute this item."}
+            </p>
+          </>
+        )}
       </fieldset>
 
       <fieldset className="space-y-3 rounded-lg border bg-card p-4">

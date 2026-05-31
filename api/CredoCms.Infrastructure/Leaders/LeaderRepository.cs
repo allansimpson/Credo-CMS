@@ -20,6 +20,9 @@ public sealed class LeaderRepository : ILeaderRepository
     public Task<Leader?> GetByIdAsync(Guid id, CancellationToken ct = default)
         => _db.Leaders.FirstOrDefaultAsync(l => l.Id == id, ct);
 
+    public Task<Leader?> GetByUserIdAsync(Guid userId, CancellationToken ct = default)
+        => _db.Leaders.FirstOrDefaultAsync(l => l.UserId == userId, ct);
+
     public async Task AddAsync(Leader leader, CancellationToken ct = default)
     {
         _db.Leaders.Add(leader);

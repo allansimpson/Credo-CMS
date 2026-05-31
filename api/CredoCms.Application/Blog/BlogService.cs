@@ -1,6 +1,7 @@
 using CredoCms.Application.Caching;
 using CredoCms.Application.Common;
 using CredoCms.Application.Email;
+using CredoCms.Application.Leaders;
 using CredoCms.Application.Search;
 using CredoCms.Application.Tags;
 using CredoCms.Domain.Blog;
@@ -15,6 +16,7 @@ public sealed class BlogService : IBlogService
 {
     private readonly IBlogRepository _repo;
     private readonly UserManager<ApplicationUser> _users;
+    private readonly ILeaderRepository _leaders;
     private readonly ITagService _tags;
     private readonly ITagRepository _tagRepo;
     private readonly ICurrentUserService _currentUser;
@@ -28,6 +30,7 @@ public sealed class BlogService : IBlogService
     public BlogService(
         IBlogRepository repo,
         UserManager<ApplicationUser> users,
+        ILeaderRepository leaders,
         ITagService tags,
         ITagRepository tagRepo,
         ICurrentUserService currentUser,
@@ -40,6 +43,7 @@ public sealed class BlogService : IBlogService
     {
         _repo = repo;
         _users = users;
+        _leaders = leaders;
         _tags = tags;
         _tagRepo = tagRepo;
         _currentUser = currentUser;
@@ -307,11 +311,14 @@ public sealed class BlogService : IBlogService
     private async Task<BlogPostListItemDto> ToListItemAsync(BlogPost p, CancellationToken ct)
     {
         var author = await _users.FindByIdAsync(p.AuthorUserId.ToString()).ConfigureAwait(false);
+        var leader = await _leaders.GetByUserIdAsync(p.AuthorUserId, ct).ConfigureAwait(false);
         return new BlogPostListItemDto(
             p.Id, p.Slug, p.Title, p.Excerpt,
             p.HeroImageBlobUrl, p.HeroImageWebpBlobUrl, p.HeroImageAltText,
             p.Category,
             author?.DisplayName ?? "(unknown)",
+            leader?.Title,
+            leader?.Id,
             p.IsPublished, p.IsMembersOnly, p.IsPinned,
             p.PublishedAt, p.ReadingTimeMinutes, p.ModifiedAt);
     }
@@ -319,6 +326,7 @@ public sealed class BlogService : IBlogService
     private async Task<BlogPostDetailDto> ToDetailAsync(BlogPost p, CancellationToken ct)
     {
         var author = await _users.FindByIdAsync(p.AuthorUserId.ToString()).ConfigureAwait(false);
+        var leader = await _leaders.GetByUserIdAsync(p.AuthorUserId, ct).ConfigureAwait(false);
         var tagIds = await _repo.GetTagIdsAsync(p.Id, ct).ConfigureAwait(false);
         var tags = tagIds.Count == 0
             ? new List<string>()
@@ -330,6 +338,8 @@ public sealed class BlogService : IBlogService
             p.HeroImageBlobUrl, p.HeroImageWebpBlobUrl, p.HeroImageAltText,
             p.Category,
             p.AuthorUserId, author?.DisplayName ?? "(unknown)",
+            leader?.Title,
+            leader?.Id,
             p.RelatedSermonId,
             p.IsPublished, p.IsMembersOnly, p.IsPinned,
             p.PublishedAt, p.ScheduledPublishAt,

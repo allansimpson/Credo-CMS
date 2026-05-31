@@ -75,6 +75,11 @@ public sealed class NewsItem : IVersionedEntity
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>The User who authored the item. Defaults to the user who
+    /// created it; an admin can re-attribute via the editor. Nullable so
+    /// pre-attribution rows (created before the field existed) remain valid.</summary>
+    public Guid? AuthorUserId { get; set; }
+
     public Guid? ModifiedByUserId { get; set; }
 
     public DateTimeOffset ModifiedAt { get; set; }

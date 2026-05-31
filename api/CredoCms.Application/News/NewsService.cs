@@ -1,9 +1,13 @@
 using CredoCms.Application.Common;
 using CredoCms.Application.Email;
+using CredoCms.Application.Leaders;
 using CredoCms.Application.Pages;
 using CredoCms.Application.Search;
+using CredoCms.Domain.Common;
+using CredoCms.Domain.Identity;
 using CredoCms.Domain.News;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 
 namespace CredoCms.Application.News;
 
@@ -15,12 +19,18 @@ public sealed class NewsService : INewsService
     private readonly IValidator<CreateNewsItemRequest> _createValidator;
     private readonly IValidator<UpdateNewsItemRequest> _updateValidator;
     private readonly IEmailOnPublishService? _emailOnPublish;
+    private readonly ICurrentUserService _currentUser;
+    private readonly UserManager<ApplicationUser> _users;
+    private readonly ILeaderRepository _leaders;
 
     public NewsService(
         INewsRepository repo,
         IAuditLogger audit,
         IValidator<CreateNewsItemRequest> createValidator,
         IValidator<UpdateNewsItemRequest> updateValidator,
+        ICurrentUserService currentUser,
+        UserManager<ApplicationUser> users,
+        ILeaderRepository leaders,
         ISearchIndexer? search = null,
         IEmailOnPublishService? emailOnPublish = null)
     {
@@ -30,6 +40,9 @@ public sealed class NewsService : INewsService
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _emailOnPublish = emailOnPublish;
+        _currentUser = currentUser;
+        _users = users;
+        _leaders = leaders;
     }
 
     private async Task IndexAsync(NewsItem n, CancellationToken ct)
@@ -64,7 +77,7 @@ public sealed class NewsService : INewsService
     public async Task<NewsDetailDto?> GetAsync(Guid id, bool includeDeleted = false, CancellationToken ct = default)
     {
         var item = await _repo.GetByIdAsync(id, includeDeleted, ct).ConfigureAwait(false);
-        return item is null ? null : ToDetail(item);
+        return item is null ? null : await ToDetailAsync(item, ct).ConfigureAwait(false);
     }
 
     public async Task<PublicNewsDetailDto?> GetPublicBySlugAsync(string slug, bool includeMembersOnly, CancellationToken ct = default)
@@ -74,11 +87,22 @@ public sealed class NewsService : INewsService
         if (item.IsMembersOnly && !includeMembersOnly) return null;
         if (item.ExpiresAt is not null && item.ExpiresAt <= DateTimeOffset.UtcNow) return null;
 
+        var (authorName, leaderTitle, leaderId) = await ResolveAuthorAsync(item.AuthorUserId, ct).ConfigureAwait(false);
         return new PublicNewsDetailDto(
             item.Id, item.Slug, item.Title, item.BodyJson, item.Excerpt,
             item.HeroImageUrl, item.HeroImageWebpUrl, item.HeroImageAlt, item.MetaDescription,
             item.Category,
-            item.IsMembersOnly, item.PublishedAt ?? item.ModifiedAt, item.CalendarDate);
+            item.IsMembersOnly, item.PublishedAt ?? item.ModifiedAt, item.CalendarDate,
+            authorName, leaderTitle, leaderId);
+    }
+
+    private async Task<(string? authorName, string? leaderTitle, Guid? leaderId)> ResolveAuthorAsync(
+        Guid? authorUserId, CancellationToken ct)
+    {
+        if (authorUserId is not { } uid) return (null, null, null);
+        var user = await _users.FindByIdAsync(uid.ToString()).ConfigureAwait(false);
+        var leader = await _leaders.GetByUserIdAsync(uid, ct).ConfigureAwait(false);
+        return (user?.DisplayName, leader?.Title, leader?.Id);
     }
 
     public Task<PagedResult<PublicNewsItemDto>> ListPublicAsync(
@@ -114,6 +138,11 @@ public sealed class NewsService : INewsService
             CalendarDate = request.CalendarDate,
             ScheduledPublishAt = request.ScheduledPublishAt,
             SendEmailOnPublish = request.SendEmailOnPublish,
+            // Caller may attribute to a specific user (admin override); otherwise
+            // default to whoever is creating the item. The System user (background
+            // jobs / seed) maps to null so seeded items show no byline.
+            AuthorUserId = request.AuthorUserId
+                ?? (_currentUser.UserId == SystemConstants.SystemUserId ? null : _currentUser.UserId),
             CreatedAt = now,
             ModifiedAt = now,
             PublishedAt = request.IsPublished ? now : null,
@@ -125,7 +154,7 @@ public sealed class NewsService : INewsService
             details: new { item.Slug, item.Title, item.IsPublished, item.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
 
-        return new NewsOperationResult(true, Array.Empty<string>(), ToDetail(item));
+        return new NewsOperationResult(true, Array.Empty<string>(), await ToDetailAsync(item, ct).ConfigureAwait(false));
     }
 
     public async Task<NewsOperationResult> UpdateAsync(Guid id, UpdateNewsItemRequest request, CancellationToken ct = default)
@@ -159,6 +188,10 @@ public sealed class NewsService : INewsService
         item.CalendarDate = request.CalendarDate;
         item.ScheduledPublishAt = request.ScheduledPublishAt;
         item.SendEmailOnPublish = request.SendEmailOnPublish;
+        // Admins can re-attribute an item by passing AuthorUserId; null on the
+        // request leaves the current value intact (so a partial-update PATCH
+        // semantically doesn't erase authorship).
+        if (request.AuthorUserId is not null) item.AuthorUserId = request.AuthorUserId;
         item.ModifiedAt = DateTimeOffset.UtcNow;
         if (request.IsPublished && item.PublishedAt is null) item.PublishedAt = item.ModifiedAt;
 
@@ -169,7 +202,7 @@ public sealed class NewsService : INewsService
             details: new { item.Slug, item.Title, item.IsPublished, item.IsMembersOnly },
             cancellationToken: ct).ConfigureAwait(false);
 
-        return new NewsOperationResult(true, Array.Empty<string>(), ToDetail(item));
+        return new NewsOperationResult(true, Array.Empty<string>(), await ToDetailAsync(item, ct).ConfigureAwait(false));
     }
 
     public async Task<NewsOperationResult> SoftDeleteAsync(Guid id, CancellationToken ct = default)
@@ -185,7 +218,7 @@ public sealed class NewsService : INewsService
             await _search.SetPublishedAsync(nameof(NewsItem), id, false, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.SoftDeleted", nameof(NewsItem), id.ToString(),
             details: new { item.Slug, item.Title }, cancellationToken: ct).ConfigureAwait(false);
-        return new NewsOperationResult(true, Array.Empty<string>(), ToDetail(item));
+        return new NewsOperationResult(true, Array.Empty<string>(), await ToDetailAsync(item, ct).ConfigureAwait(false));
     }
 
     public async Task<NewsOperationResult> RestoreAsync(Guid id, CancellationToken ct = default)
@@ -203,7 +236,7 @@ public sealed class NewsService : INewsService
         await _repo.UpdateAsync(item, ct).ConfigureAwait(false);
         await _audit.WriteAsync("News.Restored", nameof(NewsItem), id.ToString(),
             details: new { item.Slug, item.Title }, cancellationToken: ct).ConfigureAwait(false);
-        return new NewsOperationResult(true, Array.Empty<string>(), ToDetail(item));
+        return new NewsOperationResult(true, Array.Empty<string>(), await ToDetailAsync(item, ct).ConfigureAwait(false));
     }
 
     public async Task<NewsOperationResult> HardDeleteAsync(Guid id, CancellationToken ct = default)
@@ -222,12 +255,17 @@ public sealed class NewsService : INewsService
         return new NewsOperationResult(true, Array.Empty<string>(), null);
     }
 
-    internal static NewsDetailDto ToDetail(NewsItem n) => new(
-        n.Id, n.Slug, n.Title, n.BodyJson, n.Excerpt,
-        n.HeroImageUrl, n.HeroImageWebpUrl, n.HeroImageAlt, n.MetaDescription,
-        n.Category,
-        n.IsPublished, n.IsMembersOnly, n.IsDeleted,
-        n.ExpiresAt, n.CalendarDate,
-        n.CreatedAt, n.ModifiedAt, n.ModifiedByUserId,
-        n.PublishedAt, n.DeletedAt);
+    private async Task<NewsDetailDto> ToDetailAsync(NewsItem n, CancellationToken ct)
+    {
+        var (authorName, leaderTitle, leaderId) = await ResolveAuthorAsync(n.AuthorUserId, ct).ConfigureAwait(false);
+        return new NewsDetailDto(
+            n.Id, n.Slug, n.Title, n.BodyJson, n.Excerpt,
+            n.HeroImageUrl, n.HeroImageWebpUrl, n.HeroImageAlt, n.MetaDescription,
+            n.Category,
+            n.IsPublished, n.IsMembersOnly, n.IsDeleted,
+            n.ExpiresAt, n.CalendarDate,
+            n.CreatedAt, n.ModifiedAt, n.ModifiedByUserId,
+            n.PublishedAt, n.DeletedAt,
+            n.AuthorUserId, authorName, leaderTitle, leaderId);
+    }
 }

@@ -4239,6 +4239,37 @@
   },
   {
     "ContainingType": "CredoCms.Api.Controllers.AuthController",
+    "Method": "InvitationPreviewAsync",
+    "RelativePath": "api/auth/invitation-preview",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "email",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "token",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "CredoCms.Application.Auth.InvitationPreviewResult",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "CredoCms.Api.Controllers.AuthController",
     "Method": "LoginAsync",
     "RelativePath": "api/auth/login",
     "HttpMethod": "POST",

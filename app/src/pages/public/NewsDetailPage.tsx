@@ -85,6 +85,19 @@ export function NewsDetailPage() {
         <p className="mt-3 font-mono text-xs uppercase tracking-wide text-muted">
           {formattedDate}
         </p>
+        {item.authorDisplayName && (
+          <p className="mt-2 text-sm text-muted">
+            By{" "}
+            {item.authorLeaderId ? (
+              <Link to={`/leaders/${item.authorLeaderId}`} className="text-foreground hover:text-accent hover:underline">
+                {item.authorDisplayName}
+              </Link>
+            ) : (
+              <span className="text-foreground">{item.authorDisplayName}</span>
+            )}
+            {item.authorLeaderTitle && <span>{` · ${item.authorLeaderTitle}`}</span>}
+          </p>
+        )}
       </header>
 
       {/* ── Hero image (omitted entirely when no image is set) ── */}

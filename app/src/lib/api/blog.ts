@@ -11,6 +11,8 @@ export interface BlogPostListItem {
   heroImageAltText: string | null;
   category: string;
   authorDisplayName: string;
+  authorLeaderTitle: string | null;
+  authorLeaderId: string | null;
   isPublished: boolean;
   isMembersOnly: boolean;
   isPinned: boolean;
@@ -31,6 +33,8 @@ export interface BlogPostDetail {
   category: string;
   authorUserId: string;
   authorDisplayName: string;
+  authorLeaderTitle: string | null;
+  authorLeaderId: string | null;
   relatedSermonId: string | null;
   isPublished: boolean;
   isMembersOnly: boolean;

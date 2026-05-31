@@ -41,6 +41,13 @@ public sealed class Leader
 
     public int DisplayOrder { get; set; }
 
+    /// <summary>Optional link to an <c>ApplicationUser</c>. When set, the leader's
+    /// <see cref="Title"/> is surfaced as the byline tag on any Blog post or
+    /// News item authored by that user. One user can be at most one leader —
+    /// enforced by a filtered unique index in
+    /// <c>LeaderConfiguration</c>.</summary>
+    public Guid? UserId { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset ModifiedAt { get; set; }

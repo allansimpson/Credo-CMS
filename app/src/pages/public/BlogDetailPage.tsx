@@ -71,7 +71,14 @@ export function BlogDetailPage() {
                 </p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight">{post.title}</h1>
                 <p className="mt-3 text-sm text-muted">
-                  {post.authorDisplayName}
+                  {post.authorLeaderId ? (
+                    <Link to={`/leaders/${post.authorLeaderId}`} className="text-foreground hover:text-accent hover:underline">
+                      {post.authorDisplayName}
+                    </Link>
+                  ) : (
+                    <span className="text-foreground">{post.authorDisplayName}</span>
+                  )}
+                  {post.authorLeaderTitle && <span>{` · ${post.authorLeaderTitle}`}</span>}
                   {post.publishedAt && ` · ${new Date(post.publishedAt).toLocaleDateString()}`}
                   {" · "}
                   <Clock className="inline h-3 w-3" /> {post.readingTimeMinutes} min read

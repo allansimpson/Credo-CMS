@@ -15,6 +15,7 @@ internal sealed class NewsItemConfiguration : IEntityTypeConfiguration<NewsItem>
             .HasFilter("[IsDeleted] = 0");
 
         builder.HasIndex(x => x.PublishedAt);
+        builder.HasIndex(x => x.AuthorUserId);
 
         builder.Property(x => x.BodyJson).HasColumnType("nvarchar(max)");
 

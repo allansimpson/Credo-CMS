@@ -105,7 +105,8 @@ function FeaturedCard({ post }: { post: BlogPostListItem }) {
         </h2>
         {post.excerpt && <p className="mt-3 text-sm text-fg-soft">{post.excerpt}</p>}
         <p className="mt-auto pt-4 text-xs text-muted">
-          {post.authorDisplayName}
+          <span className="text-foreground">{post.authorDisplayName}</span>
+          {post.authorLeaderTitle && <span>{` · ${post.authorLeaderTitle}`}</span>}
           {post.publishedAt && ` · ${new Date(post.publishedAt).toLocaleDateString()}`}
           {" · "}
           <Clock className="inline h-3 w-3" /> {post.readingTimeMinutes} min read
@@ -144,7 +145,8 @@ function PostCard({ post }: { post: BlogPostListItem }) {
             <p className="mt-2 line-clamp-3 text-xs text-fg-soft">{post.excerpt}</p>
           )}
           <p className="mt-auto pt-3 text-xs text-muted">
-            {post.authorDisplayName}
+            <span className="text-foreground">{post.authorDisplayName}</span>
+            {post.authorLeaderTitle && <span>{` · ${post.authorLeaderTitle}`}</span>}
             {post.publishedAt && ` · ${new Date(post.publishedAt).toLocaleDateString()}`}
           </p>
         </div>

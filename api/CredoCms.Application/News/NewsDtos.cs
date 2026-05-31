@@ -10,7 +10,11 @@ public sealed record NewsListItemDto(
     bool IsMembersOnly,
     DateTimeOffset? PublishedAt,
     DateTimeOffset? ExpiresAt,
-    DateTimeOffset ModifiedAt);
+    DateTimeOffset ModifiedAt,
+    Guid? AuthorUserId,
+    string? AuthorDisplayName,
+    string? AuthorLeaderTitle,
+    Guid? AuthorLeaderId);
 
 public sealed record NewsDetailDto(
     Guid Id,
@@ -32,7 +36,11 @@ public sealed record NewsDetailDto(
     DateTimeOffset ModifiedAt,
     Guid? ModifiedByUserId,
     DateTimeOffset? PublishedAt,
-    DateTimeOffset? DeletedAt);
+    DateTimeOffset? DeletedAt,
+    Guid? AuthorUserId,
+    string? AuthorDisplayName,
+    string? AuthorLeaderTitle,
+    Guid? AuthorLeaderId);
 
 public sealed record PublicNewsItemDto(
     Guid Id,
@@ -45,7 +53,10 @@ public sealed record PublicNewsItemDto(
     string? Category,
     bool IsMembersOnly,
     DateTimeOffset PublishedAt,
-    DateTimeOffset? CalendarDate);
+    DateTimeOffset? CalendarDate,
+    string? AuthorDisplayName,
+    string? AuthorLeaderTitle,
+    Guid? AuthorLeaderId);
 
 public sealed record PublicNewsDetailDto(
     Guid Id,
@@ -60,7 +71,10 @@ public sealed record PublicNewsDetailDto(
     string? Category,
     bool IsMembersOnly,
     DateTimeOffset PublishedAt,
-    DateTimeOffset? CalendarDate);
+    DateTimeOffset? CalendarDate,
+    string? AuthorDisplayName,
+    string? AuthorLeaderTitle,
+    Guid? AuthorLeaderId);
 
 public sealed record CreateNewsItemRequest(
     string Slug,
@@ -77,7 +91,8 @@ public sealed record CreateNewsItemRequest(
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? CalendarDate,
     DateTimeOffset? ScheduledPublishAt = null,
-    bool SendEmailOnPublish = false);
+    bool SendEmailOnPublish = false,
+    Guid? AuthorUserId = null);
 
 public sealed record UpdateNewsItemRequest(
     string Slug,
@@ -94,7 +109,8 @@ public sealed record UpdateNewsItemRequest(
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? CalendarDate,
     DateTimeOffset? ScheduledPublishAt = null,
-    bool SendEmailOnPublish = false);
+    bool SendEmailOnPublish = false,
+    Guid? AuthorUserId = null);
 
 public sealed record NewsListQuery(
     string? Search = null,

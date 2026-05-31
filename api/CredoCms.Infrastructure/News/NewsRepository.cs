@@ -38,7 +38,14 @@ public sealed class NewsRepository : INewsRepository
             .Select(n => new NewsListItemDto(
                 n.Id, n.Slug, n.Title, n.Excerpt, n.Category,
                 n.IsPublished, n.IsMembersOnly,
-                n.PublishedAt, n.ExpiresAt, n.ModifiedAt))
+                n.PublishedAt, n.ExpiresAt, n.ModifiedAt,
+                n.AuthorUserId,
+                // Correlated subqueries: EF translates these to single SQL joins,
+                // not N+1 round-trips. Each yields null if the author/leader is
+                // missing — legacy rows pre-AuthorUserId stay valid.
+                _db.Users.Where(u => u.Id == n.AuthorUserId).Select(u => (u.FirstName + " " + u.LastName).Trim()).FirstOrDefault(),
+                _db.Leaders.Where(l => l.UserId == n.AuthorUserId).Select(l => l.Title).FirstOrDefault(),
+                _db.Leaders.Where(l => l.UserId == n.AuthorUserId).Select(l => (Guid?)l.Id).FirstOrDefault()))
             .ToListAsync(ct).ConfigureAwait(false);
 
         return new PagedResult<NewsListItemDto>(items, total, page, pageSize);
@@ -101,7 +108,10 @@ public sealed class NewsRepository : INewsRepository
                 n.Category,
                 n.IsMembersOnly,
                 (n.PublishedAt ?? n.ModifiedAt),
-                n.CalendarDate))
+                n.CalendarDate,
+                _db.Users.Where(u => u.Id == n.AuthorUserId).Select(u => (u.FirstName + " " + u.LastName).Trim()).FirstOrDefault(),
+                _db.Leaders.Where(l => l.UserId == n.AuthorUserId).Select(l => l.Title).FirstOrDefault(),
+                _db.Leaders.Where(l => l.UserId == n.AuthorUserId).Select(l => (Guid?)l.Id).FirstOrDefault()))
             .ToListAsync(ct).ConfigureAwait(false);
 
         return new PagedResult<PublicNewsItemDto>(items, total, page, pageSize);

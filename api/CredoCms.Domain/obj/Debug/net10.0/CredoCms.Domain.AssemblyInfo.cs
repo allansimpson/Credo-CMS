@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Credo CMS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+37e4121fbbe0007f2808b9868fb51c54d66dd50b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+f27e55b4da2b4a489d67d1d176f2f734523891da")]
 [assembly: System.Reflection.AssemblyProductAttribute("Credo CMS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CredoCms.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.1.0.0")]
